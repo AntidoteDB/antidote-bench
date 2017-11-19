@@ -1,13 +1,12 @@
 import javax.swing.*;
-import javax.swing.event.ListSelectionEvent;
-import javax.swing.event.ListSelectionListener;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
+import javax.swing.event.DocumentEvent;
+import javax.swing.event.DocumentListener;
+import java.util.Arrays;
 
 public class AntidoteGUI {
     private JPanel panel1;
     private JButton executeButton;
-    private JTextField textFieldCommand;
+    private JTextField textFieldKey;
     private JComboBox comboBoxDatatype;
     private JList listViewCommandSelection;
     private JList listViewVarSelection;
@@ -16,52 +15,58 @@ public class AntidoteGUI {
     private JLabel labelDatatypeCommand;
     private JTextField textFieldCurrentValue;
     private JLabel labelCurrentValue;
+    private JTextField textFieldCommand;
+    private JTextField textFieldValue;
+
+    private DefaultListModel listViewVarSelectionModel = new DefaultListModel();
+    private DefaultListModel listViewCommandSelectionModel = new DefaultListModel();
 
     public AntidoteGUI() {
 
         JFrame frame = new JFrame("AntidoteGUI");
+
         frame.setContentPane(panel1);
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         frame.pack();
+        frame.setLocationRelativeTo(null);
         frame.setVisible(true);
         // TODO set initial values for everything
 
         DefaultComboBoxModel comboModel = new DefaultComboBoxModel();
         comboBoxDatatype.setModel(comboModel);
-        for (String type : Main.types)
+        for (String type : Main.guiTypeMap.keySet())
             comboModel.addElement(type);
 
         comboBoxDatatype.setSelectedIndex(0);
-        DefaultListModel listModel = new DefaultListModel();
-        listViewVarSelection.setModel(listModel);
-
-        DefaultListModel listModel2 = new DefaultListModel();
-        listViewCommandSelection.setModel(listModel2);
+        listViewVarSelection.setModel(listViewVarSelectionModel);
+        listViewCommandSelection.setModel(listViewCommandSelectionModel);
 
         refreshGUIDatatype();
 
-        executeButton.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-
-            }
+        executeButton.addActionListener(e -> {
+            Main.setKeyData(listViewVarSelection.getSelectedValue().toString(), listViewCommandSelection.getSelectedValue().toString(), textFieldCommandValue.getText());
+            refreshCurrentValue();
         });
-        listViewCommandSelection.addListSelectionListener(new ListSelectionListener() {
+        listViewCommandSelection.addListSelectionListener(e -> refreshGUICommand());
+        comboBoxDatatype.addActionListener(e -> refreshGUIDatatype());
+        listViewVarSelection.addListSelectionListener(e ->
+        {
+            refreshCurrentValue();
+        });
+        textFieldCommandValue.getDocument().addDocumentListener(new DocumentListener() {
             @Override
-            public void valueChanged(ListSelectionEvent e) {
+            public void insertUpdate(DocumentEvent e) {
                 refreshGUICommand();
             }
-        });
-        comboBoxDatatype.addActionListener(new ActionListener() {
+
             @Override
-            public void actionPerformed(ActionEvent e) {
-                refreshGUIDatatype();
+            public void removeUpdate(DocumentEvent e) {
+                refreshGUICommand();
             }
-        });
-        listViewVarSelection.addListSelectionListener(new ListSelectionListener() {
+
             @Override
-            public void valueChanged(ListSelectionEvent e) {
-                textFieldCurrentValue.setText(Main.getKeyData(listViewVarSelection.getSelectedValue().toString()));
+            public void changedUpdate(DocumentEvent e) {
+                refreshGUICommand();
             }
         });
     }
@@ -70,25 +75,33 @@ public class AntidoteGUI {
 
         String selectedKey = comboBoxDatatype.getSelectedItem().toString();
         labelDataTypeVar.setText("Select " + selectedKey);
-        DefaultListModel listModel = (DefaultListModel) listViewVarSelection.getModel();
-        listModel.clear();
-        for (String key : Main.getKeys(selectedKey))
-            listModel.addElement(key);
-        listViewVarSelection.setSelectedIndex(0);
+        listViewVarSelectionModel.clear();
+        for (String key : Main.getKeysForType(Main.guiTypeMap.get(selectedKey)))
+            listViewVarSelectionModel.addElement(key);
+        if (listViewVarSelection.getModel().getSize() > 0)
+            listViewVarSelection.setSelectedIndex(0);
         labelDatatypeCommand.setText(selectedKey + " Commands");
         labelCurrentValue.setText(selectedKey + " Value");
-        DefaultListModel listModel2 = (DefaultListModel) listViewCommandSelection.getModel();
-        listModel2.clear();
-        for (String key : Main.typeCommandMap.get(selectedKey))
-            listModel2.addElement(key);
-        listViewCommandSelection.setSelectedIndex(0);
+        listViewCommandSelectionModel.clear();
+        for (String key : Main.typeCommandMap.get(Main.guiTypeMap.get(selectedKey)))
+            listViewCommandSelectionModel.addElement(key);
+        if (listViewCommandSelection.getModel().getSize() > 0)
+            listViewCommandSelection.setSelectedIndex(0);
         refreshGUICommand();
     }
 
     private void refreshGUICommand() {
+        if (listViewVarSelection.getSelectedValue() != null)
+            textFieldKey.setText(listViewVarSelection.getSelectedValue().toString());
+        if (listViewCommandSelection.getSelectedValue() != null)
+            textFieldCommand.setText(listViewCommandSelection.getSelectedValue().toString());
+        if (textFieldCommandValue.getText() != null)
+            textFieldValue.setText(textFieldCommandValue.getText());
+    }
 
-        textFieldCommand.setText("Key: " + listViewVarSelection.getSelectedValue() + " Command: " + listViewCommandSelection.getSelectedValue().toString() + " Value: " + textFieldCommandValue.getText());
-
+    private void refreshCurrentValue() {
+        if (listViewVarSelection.getSelectedValue() != null)
+            textFieldCurrentValue.setText(Main.getKeyValue(listViewVarSelection.getSelectedValue().toString()));
     }
 
 }

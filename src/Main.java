@@ -8,6 +8,7 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 import java.net.InetSocketAddress;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -17,6 +18,7 @@ import static eu.antidotedb.client.Key.*;
 
 public class Main {
 
+    public static boolean resetContainer = false;
 
     public static void main(String[] args) {
         System.out.println("Checking docker images...\n");
@@ -39,127 +41,120 @@ public class Main {
         if (!container.contains("antidotetest")) {
             System.out.println("Standard Antidote Container was not found.");
             System.out.println("Running antidotetest...\n");
-            executeCommand("docker run -d -p 127.0.0.1:8087:8087 --name antidotetest antidotedb/antidote");
+            executeCommand("docker run -t -d -p 127.0.0.1:8087:8087 --name antidotetest antidotedb/antidote");
         } else {
-            System.out.println("Stopping antidotetest...\n");
-            executeCommand("docker stop antidotetest");
-            System.out.println("Removing antidotetest...\n");
-            executeCommand("docker container rm antidotetest");
-            System.out.println("Running antidotetest...\n");
-            executeCommand("docker run -d -p 127.0.0.1:8087:8087 --name antidotetest antidotedb/antidote");
+            if (resetContainer) {
+                System.out.println("Stopping antidotetest...\n");
+                executeCommand("docker stop antidotetest");
+                System.out.println("Removing antidotetest...\n");
+                executeCommand("docker container rm antidotetest");
+                System.out.println("Running antidotetest...\n");
+                executeCommand("docker run -t -d -p 127.0.0.1:8087:8087 --name antidotetest antidotedb/antidote");
+            } else {
+                System.out.println("Starting antidotetest...\n");
+                executeCommand("docker start antidotetest");
+            }
         }
 
         System.out.println("Ready Ready Standing By");
 
         antidote = new AntidoteClient(new InetSocketAddress("localhost", 8087));
 
-        // List of Things in the database
-        // counter1
-        // counter2
         bucket = Bucket.bucket("bucket");
 
+        createKeyMap();
 
         AntidoteGUI gui = new AntidoteGUI();
-
-
-
-
-        /*
-
-        CounterKey c1 = Key.counter("c1");
-        CounterKey c2 = Key.counter("c2");
-        BatchRead batchRead = antidote.newBatchRead();
-        BatchReadResult<Integer> c1val = bucket.read(batchRead, c1);
-        BatchReadResult<Integer> c2val = bucket.read(batchRead, c2);
-        batchRead.commit(antidote.noTransaction());
-        int sum = c1val.get() + c2val.get();
-        List<Integer> values = bucket.readAll(antidote.noTransaction(), Arrays.asList(c1, c2));
-
-        bucket.update(antidote.noTransaction(), Key.set("users").add("Hans Wurst"));
-
-
-        MapKey testmap = Key.map_aw("testmap2");
-
-        AntidoteStaticTransaction tx = antidote.createStaticTransaction();
-        bucket.update(tx,
-                testmap.update(
-                        Key.counter("a").increment(5),
-                        Key.register("b").assign("Hello")
-                ));
-
-        ValueCoder<Integer> intCoder = ValueCoder.stringCoder(Object::toString, Integer::valueOf);
-        CounterKey c = Key.counter("my_example_counter");
-        SetKey<Integer> numberSet = Key.set("set_of_numbers", intCoder);
-        try (InteractiveTransaction tx2 = antidote.startTransaction()) {
-            int val = bucket.read(tx2, c);
-            bucket.update(tx2, numberSet.add(val));
-        }*/
     }
 
     private static AntidoteClient antidote;
 
     private static Bucket bucket;
 
-    public static Map<String, Key> keyMap = createKeyMap();
-
-    private static Map<String, Key> createKeyMap()
-    {
-        Map<String,Key> myMap = new HashMap<>();
-        myMap.put("counter1", counter("counter1"));
-        myMap.put("counter2", counter("counter2"));
-        return myMap;
-    }
-
-    public static void setKeyData(String keyName, String command, String commandValue) {
+    // write
+    public static void setKeyData(String keyName, String command, Object commandValue) {
         Key key = keyMap.get(keyName);
-        AntidoteStaticTransaction tx = antidote.createStaticTransaction();
-        if (key.getType().equals(AntidotePB.CRDT_type.COUNTER)) {
-            CounterKey counterKey = (CounterKey) key;
-            switch (command) {
-                case "increment":
-                    bucket.update(tx, counterKey.increment(5));
-                    break;
-                case "decrement":
-                    bucket.update(tx, Key.counter("a").increment(5));
-                    break;
+        UpdateOp update = null;
+        if (!command.equals("reset")) {
+            if (command.equals("increment") || command.equals("decrement") || command.equals("set")) {
+                commandValue = Long.parseLong(commandValue.toString());
+                long value = (long) commandValue;
+                if (command.equals("decrement")) {
+                    command = "increment";
+                    value = -value;
+                }
+                if (command.equals("set")) {
+                    command = "assign";
+                }
+                Class[] par = new Class[1];
+                par[0] = long.class;
+                try {
+                    Method method = key.getClass().getMethod(command, par);
+                    update = (UpdateOp) method.invoke(key, value);
+                } catch (NoSuchMethodException e) {
+                    e.printStackTrace();
+                } catch (IllegalAccessException e) {
+                    e.printStackTrace();
+                } catch (InvocationTargetException e) {
+                    e.printStackTrace();
+                }
+            } else {
+                if (command.equals("assign")) {
+                    Class[] par = new Class[1];
+                    par[0] = Object.class;
+                    try {
+                        Method method = key.getClass().getMethod(command, par);
+                        update = (UpdateOp) method.invoke(key, commandValue);
+                    } catch (NoSuchMethodException e) {
+                        e.printStackTrace();
+                    } catch (IllegalAccessException e) {
+                        e.printStackTrace();
+                    } catch (InvocationTargetException e) {
+                        e.printStackTrace();
+                    }
+                }
+            }
+        } else {
+            try {
+                Method method = key.getClass().getMethod(command, null);
+                update = (UpdateOp) method.invoke(key, null);
+            } catch (NoSuchMethodException e) {
+                e.printStackTrace();
+            } catch (IllegalAccessException e) {
+                e.printStackTrace();
+            } catch (InvocationTargetException e) {
+                e.printStackTrace();
             }
         }
-    }
-
-    public static String getKeyData(String keyName) {
-    return "";
-    }
-
-    public static List<String> types = Stream.of(AntidotePB.CRDT_type.values())
-            .map(AntidotePB.CRDT_type::name)
-            .collect(Collectors.toList());
-
-    public static Map<String, List<String>> typeCommandMap = createTypeCommandMap();
-
-    private static Map<String, List<String>> createTypeCommandMap()
-    {
-        Map<String,List<String>> myMap = new HashMap<>();
-        myMap.put(AntidotePB.CRDT_type.COUNTER.name(), new ArrayList<>());
-        myMap.put(AntidotePB.CRDT_type.FATCOUNTER.name(), new ArrayList<>());
-        myMap.get(AntidotePB.CRDT_type.COUNTER.name()).add("increment");
-        myMap.get(AntidotePB.CRDT_type.COUNTER.name()).add("decrement");
-        return myMap;
-    }
-
-    public static List<String> getKeys(String type){
-        List<String> keyList = new ArrayList<>();
-        switch (AntidotePB.CRDT_type.valueOf(type)) {
-            case COUNTER:
-                keyMap.keySet().forEach(key -> {
-                    if (keyMap.get(key).getType().equals(AntidotePB.CRDT_type.COUNTER)) {
-                        keyList.add(key);
-                    }
-                });
-                break;
+        if (update != null) {
+            AntidoteStaticTransaction tx = antidote.createStaticTransaction();
+            bucket.update(tx, update);
+            tx.commitTransaction();
         }
-
-        return keyList;
     }
+
+    // read
+    public static String getKeyValue(String keyName) {
+        return bucket.read(antidote.noTransaction(), keyMap.get(keyName)).toString();
+    }
+
+    public static List<String> getKeysForType(AntidotePB.CRDT_type type) {
+        List<String> list = new ArrayList<>();
+        for (Key key : typeKeyMap.get(type)) {
+            list.add(key.getKey().toStringUtf8());
+        }
+        return list;
+    }
+
+    public static Map<String, Key> keyMap = new LinkedHashMap<>();
+
+    public static EnumMap<AntidotePB.CRDT_type, List<Key>> typeKeyMap = new EnumMap<>(AntidotePB.CRDT_type.class);
+
+    public static EnumMap<AntidotePB.CRDT_type, String> typeGUIMap = createTypeGUIMap();
+
+    public static Map<String, AntidotePB.CRDT_type> guiTypeMap = createGUITypeMap();
+
+    public static EnumMap<AntidotePB.CRDT_type, String[]> typeCommandMap = createTypeCommandMap();
 
     private static String executeCommand(String command) {
 
@@ -174,7 +169,7 @@ public class Main {
                     new BufferedReader(new InputStreamReader(p.getInputStream()));
 
             String line = "";
-            while ((line = reader.readLine())!= null) {
+            while ((line = reader.readLine()) != null) {
                 output.append(line + "\n");
             }
 
@@ -185,5 +180,127 @@ public class Main {
 
         return output.toString();
 
+    }
+
+    private static void addKey(String name, AntidotePB.CRDT_type type) {
+        keyMap.put(name, create(type, ByteString.copyFromUtf8(name)));
+        typeKeyMap.get(type).add(keyMap.get(name));
+        AntidoteStaticTransaction tx = antidote.createStaticTransaction();
+        bucket.update(tx, keyMap.get(name).reset());
+        tx.commitTransaction();
+    }
+
+    private static void addKeys(Map<String, AntidotePB.CRDT_type> keyList) {
+        List<UpdateOp> transactionKeyList = new ArrayList<>();
+        for (Map.Entry<String, AntidotePB.CRDT_type> key : keyList.entrySet()) {
+            keyMap.put(key.getKey(), create(key.getValue(), ByteString.copyFromUtf8(key.getKey())));
+            typeKeyMap.get(key.getValue()).add(keyMap.get(key.getKey()));
+            if (key.getValue().equals(AntidotePB.CRDT_type.LWWREG))
+                transactionKeyList.add(((RegisterKey) keyMap.get(key.getKey())).assign("0"));
+            else if (key.getValue().equals(AntidotePB.CRDT_type.COUNTER))
+                transactionKeyList.add(((CounterKey) keyMap.get(key.getKey())).increment(0));
+            else
+                transactionKeyList.add(keyMap.get(key.getKey()).reset());
+        }
+        AntidoteStaticTransaction tx = antidote.createStaticTransaction();
+        bucket.updates(tx, transactionKeyList);
+        tx.commitTransaction();
+    }
+
+    private static void createKeyMap() {
+        typeKeyMap.put(AntidotePB.CRDT_type.LWWREG, new ArrayList<>());
+        typeKeyMap.put(AntidotePB.CRDT_type.MVREG, new ArrayList<>());
+        typeKeyMap.put(AntidotePB.CRDT_type.COUNTER, new ArrayList<>());
+        typeKeyMap.put(AntidotePB.CRDT_type.FATCOUNTER, new ArrayList<>());
+        typeKeyMap.put(AntidotePB.CRDT_type.INTEGER, new ArrayList<>());
+        typeKeyMap.put(AntidotePB.CRDT_type.GMAP, new ArrayList<>());
+        typeKeyMap.put(AntidotePB.CRDT_type.AWMAP, new ArrayList<>());
+        typeKeyMap.put(AntidotePB.CRDT_type.RRMAP, new ArrayList<>());
+        typeKeyMap.put(AntidotePB.CRDT_type.ORSET, new ArrayList<>());
+        typeKeyMap.put(AntidotePB.CRDT_type.RWSET, new ArrayList<>());
+
+        Map<String, AntidotePB.CRDT_type> map = new LinkedHashMap<>();
+        map.put("register1", AntidotePB.CRDT_type.LWWREG);
+        map.put("register2", AntidotePB.CRDT_type.LWWREG);
+        map.put("register3", AntidotePB.CRDT_type.LWWREG);
+        map.put("multiregister1", AntidotePB.CRDT_type.MVREG);
+        map.put("multiregister2", AntidotePB.CRDT_type.MVREG);
+        map.put("multiregister3", AntidotePB.CRDT_type.MVREG);
+        map.put("counter1", AntidotePB.CRDT_type.COUNTER);
+        map.put("counter2", AntidotePB.CRDT_type.COUNTER);
+        map.put("counter3", AntidotePB.CRDT_type.COUNTER);
+        map.put("fatcounter1", AntidotePB.CRDT_type.FATCOUNTER);
+        map.put("fatcounter2", AntidotePB.CRDT_type.FATCOUNTER);
+        map.put("fatcounter3", AntidotePB.CRDT_type.FATCOUNTER);
+        map.put("integer1", AntidotePB.CRDT_type.INTEGER);
+        map.put("integer2", AntidotePB.CRDT_type.INTEGER);
+        map.put("integer3", AntidotePB.CRDT_type.INTEGER);
+        map.put("gmap1", AntidotePB.CRDT_type.GMAP);
+        map.put("gmap2", AntidotePB.CRDT_type.GMAP);
+        map.put("gmap3", AntidotePB.CRDT_type.GMAP);
+        map.put("awmap1", AntidotePB.CRDT_type.AWMAP);
+        map.put("awmap2", AntidotePB.CRDT_type.AWMAP);
+        map.put("awmap3", AntidotePB.CRDT_type.AWMAP);
+        map.put("rrmap1", AntidotePB.CRDT_type.RRMAP);
+        map.put("rrmap2", AntidotePB.CRDT_type.RRMAP);
+        map.put("rrmap3", AntidotePB.CRDT_type.RRMAP);
+        map.put("set1", AntidotePB.CRDT_type.ORSET);
+        map.put("set2", AntidotePB.CRDT_type.ORSET);
+        map.put("set3", AntidotePB.CRDT_type.ORSET);
+        map.put("removeset1", AntidotePB.CRDT_type.RWSET);
+        map.put("removeset2", AntidotePB.CRDT_type.RWSET);
+        map.put("removeset3", AntidotePB.CRDT_type.RWSET);
+        addKeys(map);
+    }
+
+    private static Map<String, AntidotePB.CRDT_type> createGUITypeMap() {
+        Map<String, AntidotePB.CRDT_type> map = new LinkedHashMap<>();
+        map.put("Last-writer-wins Register (LWW-Register)", AntidotePB.CRDT_type.LWWREG);
+        map.put("Multi-value Register (MV-Register)", AntidotePB.CRDT_type.MVREG);
+        map.put("Counter", AntidotePB.CRDT_type.COUNTER);
+        map.put("Fat Counter", AntidotePB.CRDT_type.FATCOUNTER);
+        map.put("Integer", AntidotePB.CRDT_type.INTEGER);
+        // No Flags
+        map.put("Grow-only Map (G-Map)", AntidotePB.CRDT_type.GMAP);
+        map.put("Add-wins Map (AW-Map)", AntidotePB.CRDT_type.AWMAP);
+        map.put("Remove-Resets Map (RR-Map)", AntidotePB.CRDT_type.RRMAP);
+        // No Grow-only Set (G-Set)
+        map.put("Add-wins Set (AW-Set / OR-Set)", AntidotePB.CRDT_type.ORSET);
+        map.put("Remove-wins Set (RW-Set)", AntidotePB.CRDT_type.RWSET);
+        return map;
+    }
+
+    private static EnumMap<AntidotePB.CRDT_type, String> createTypeGUIMap() {
+        EnumMap<AntidotePB.CRDT_type, String> map = new EnumMap<>(AntidotePB.CRDT_type.class);
+        map.put(AntidotePB.CRDT_type.LWWREG, "Last-writer-wins Register (LWW-Register)");
+        map.put(AntidotePB.CRDT_type.MVREG, "Multi-value Register (MV-Register)");
+        map.put(AntidotePB.CRDT_type.COUNTER, "Counter");
+        map.put(AntidotePB.CRDT_type.FATCOUNTER, "Fat Counter");
+        map.put(AntidotePB.CRDT_type.INTEGER, "Integer");
+        // No Flags
+        map.put(AntidotePB.CRDT_type.GMAP, "Grow-only Map (G-Map)");
+        map.put(AntidotePB.CRDT_type.AWMAP, "Add-wins Map (AW-Map)");
+        map.put(AntidotePB.CRDT_type.RRMAP, "Remove-Resets Map (RR-Map)");
+        // No Grow-only Set (G-Set)
+        map.put(AntidotePB.CRDT_type.ORSET, "Add-wins Set (AW-Set / OR-Set)");
+        map.put(AntidotePB.CRDT_type.RWSET, "Remove-wins Set (RW-Set)");
+        return map;
+    }
+
+    private static EnumMap<AntidotePB.CRDT_type, String[]> createTypeCommandMap() {
+        EnumMap<AntidotePB.CRDT_type, String[]> map = new EnumMap<>(AntidotePB.CRDT_type.class);
+        map.put(AntidotePB.CRDT_type.LWWREG, new String[]{"assign"});
+        map.put(AntidotePB.CRDT_type.MVREG, new String[]{"assign", "reset"});
+        map.put(AntidotePB.CRDT_type.COUNTER, new String[]{"increment", "decrement"});
+        map.put(AntidotePB.CRDT_type.FATCOUNTER, new String[]{"increment", "decrement", "reset"});
+        map.put(AntidotePB.CRDT_type.INTEGER, new String[]{"increment", "decrement", "set", "reset"});
+        // No Flags
+        map.put(AntidotePB.CRDT_type.GMAP, new String[]{"update", "removeKey", "removeKeys", "reset"});
+        map.put(AntidotePB.CRDT_type.AWMAP, new String[]{"update", "removeKey", "removeKeys", "reset"});
+        map.put(AntidotePB.CRDT_type.RRMAP, new String[]{"update", "removeKey", "removeKeys", "reset"});
+        // No Grow-only Set (G-Set)
+        map.put(AntidotePB.CRDT_type.ORSET, new String[]{"add", "addAll", "remove", "removeAll", "reset"});
+        map.put(AntidotePB.CRDT_type.RWSET, new String[]{"add", "addAll", "remove", "removeAll", "reset"});
+        return map;
     }
 }
