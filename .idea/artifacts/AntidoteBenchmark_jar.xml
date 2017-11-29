@@ -1,0 +1,11 @@
+<component name="ArtifactManager">
+  <artifact type="jar" name="AntidoteBenchmark:jar">
+    <output-path>$PROJECT_DIR$/out/artifacts/AntidoteBenchmark_jar</output-path>
+    <root id="archive" name="AntidoteBenchmark.jar">
+      <element id="module-output" name="AntidoteBenchmark" />
+      <element id="extracted-dir" path="$MAVEN_REPOSITORY$/eu/antidotedb/antidote-java-client/0.1.0/antidote-java-client-0.1.0.jar" path-in-jar="/" />
+      <element id="extracted-dir" path="$MAVEN_REPOSITORY$/com/google/protobuf/protobuf-java/3.0.0/protobuf-java-3.0.0.jar" path-in-jar="/" />
+      <element id="extracted-dir" path="$MAVEN_REPOSITORY$/com/google/code/findbugs/jsr305/3.0.2/jsr305-3.0.2.jar" path-in-jar="/" />
+    </root>
+  </artifact>
+</component>
