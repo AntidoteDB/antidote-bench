@@ -5,11 +5,15 @@ import com.spotify.docker.client.DockerClient;
 import com.spotify.docker.client.exceptions.DockerCertificateException;
 import com.spotify.docker.client.exceptions.DockerException;
 import com.spotify.docker.client.messages.*;
+import com.spotify.docker.client.messages.Container;
 
+import javax.swing.*;
+import java.awt.*;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.*;
+import java.util.List;
 
 public class DockerConnection
 {
@@ -32,7 +36,20 @@ public class DockerConnection
     {
         try {
             docker = DefaultDockerClient.fromEnv().readTimeoutMillis(10000).build();
-            if (docker.listImages().isEmpty()) {
+            if (docker.listImages(DockerClient.ListImagesParam.byName("antidotedb/antidote")).isEmpty()) {
+                System.out.println("Please run the following command in your commandline:\ndocker pull antidotedb/antidote");
+                JDialog dialog = new JDialog();
+                dialog.setTitle("Pull the antidote image first!");
+                dialog.setSize(400,100);
+                dialog.setModal(true);
+                dialog.setLayout(new FlowLayout());
+                dialog.add(new JLabel("Please run the following command in your commandline:"));
+                dialog.add(new JTextField("docker pull antidotedb/antidote"));
+                dialog.setLocationRelativeTo(null);
+                dialog.setVisible(true);
+                Runtime.getRuntime().exit(0);
+            }
+            if (docker.listImages(DockerClient.ListImagesParam.byName(antidoteDockerImageName)).isEmpty()) {
                 docker.build(Paths.get("./Dockerfile/"), antidoteDockerImageName);
             }
             boolean containsNetwork = false;
