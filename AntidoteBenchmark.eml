@@ -4,6 +4,8 @@
 	<exclude-output/>
 	<contentEntry url="file://$MODULE_DIR$"/>
 	<levels>
-		<level name="eu.antidotedb:antidote-java-client:0.1.0" value="project"/>
+		<level name="eu.antidotedb:antidote-java-client:Release" value="project"/>
+		<level name="com.spotify:docker-client:Release" value="project"/>
+		<level name="org.mapdb:mapdb:3.0.5" value="project"/>
 	</levels>
 </component>

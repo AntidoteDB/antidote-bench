@@ -7,6 +7,8 @@
     </content>
     <orderEntry type="inheritedJdk" />
     <orderEntry type="sourceFolder" forTests="false" />
-    <orderEntry type="library" name="eu.antidotedb:antidote-java-client:0.1.0" level="project" />
+    <orderEntry type="library" name="eu.antidotedb:antidote-java-client:Release" level="project" />
+    <orderEntry type="library" name="com.spotify:docker-client:Release" level="project" />
+    <orderEntry type="library" name="org.mapdb:mapdb:3.0.5" level="project" />
   </component>
 </module>

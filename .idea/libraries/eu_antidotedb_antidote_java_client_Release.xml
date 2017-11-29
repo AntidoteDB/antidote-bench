@@ -1,6 +1,6 @@
 <component name="libraryTable">
-  <library name="eu.antidotedb:antidote-java-client:0.1.0" type="repository">
-    <properties maven-id="eu.antidotedb:antidote-java-client:0.1.0" />
+  <library name="eu.antidotedb:antidote-java-client:Release" type="repository">
+    <properties maven-id="eu.antidotedb:antidote-java-client:RELEASE" />
     <CLASSES>
       <root url="jar://$MAVEN_REPOSITORY$/eu/antidotedb/antidote-java-client/0.1.0/antidote-java-client-0.1.0.jar!/" />
       <root url="jar://$MAVEN_REPOSITORY$/com/google/protobuf/protobuf-java/3.0.0/protobuf-java-3.0.0.jar!/" />
