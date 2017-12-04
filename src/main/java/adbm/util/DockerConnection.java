@@ -178,10 +178,10 @@ public class DockerConnection
         try {
             if (docker != null) {
                 for (Container container : docker
-                        .listContainers(DockerClient.ListContainersParam.filter("ancestor", antidoteDockerImageName),
+                        .listContainers(DockerClient.ListContainersParam.filter("ancestor", antidoteDockerImageName), DockerClient.ListContainersParam.allContainers(),
                                         DockerClient.ListContainersParam.withStatusRunning())) {
                     if (container.names().size() == 1) {
-                        containerSet.add(container.names().get(0));
+                        containerSet.add(container.names().get(0).substring(1));
                     }
                     else {
                         // TODO NOT ALLOWED
@@ -193,6 +193,7 @@ public class DockerConnection
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
+        System.out.println("Running Containers:\n" + containerSet);
         return new ArrayList<>(containerSet);
     }
 
@@ -203,19 +204,21 @@ public class DockerConnection
             if (docker != null) {
                 for (Container container : docker
                         .listContainers(DockerClient.ListContainersParam.filter("ancestor", antidoteDockerImageName),
-                                        DockerClient.ListContainersParam.withStatusExited())) {
+                                        DockerClient.ListContainersParam.allContainers(), DockerClient.ListContainersParam.withStatusExited()
+                                        )
+                        ) {
                     if (container.names().size() == 1) {
-                        containerSet.add(container.names().get(0));
+                        containerSet.add(container.names().get(0).substring(1));
                     }
                     else {
                         // TODO NOT ALLOWED
                     }
                 }
                 for (Container container : docker
-                        .listContainers(DockerClient.ListContainersParam.filter("ancestor", antidoteDockerImageName),
+                        .listContainers(DockerClient.ListContainersParam.filter("ancestor", antidoteDockerImageName), DockerClient.ListContainersParam.allContainers(),
                                         DockerClient.ListContainersParam.withStatusCreated())) {
                     if (container.names().size() == 1) {
-                        containerSet.add(container.names().get(0));
+                        containerSet.add(container.names().get(0).substring(1));
                     }
                     else {
                         // TODO NOT ALLOWED
@@ -228,6 +231,7 @@ public class DockerConnection
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
+        System.out.println("Not Running Containers:\n" + containerSet);
         return new ArrayList<>(containerSet);
     }
 
@@ -237,9 +241,9 @@ public class DockerConnection
         try {
             if (docker != null) {
                 for (Container container : docker
-                        .listContainers(DockerClient.ListContainersParam.filter("ancestor", antidoteDockerImageName))) {
+                        .listContainers(DockerClient.ListContainersParam.filter("ancestor", antidoteDockerImageName), DockerClient.ListContainersParam.allContainers())) {
                     if (container.names().size() == 1) {
-                        containerSet.add(container.names().get(0));
+                        containerSet.add(container.names().get(0).substring(1));
                     }
                     else {
                         // TODO NOT ALLOWED
@@ -259,7 +263,7 @@ public class DockerConnection
         try {
             if (docker != null) {
                 for (Container container : docker
-                        .listContainers(DockerClient.ListContainersParam.filter("name", name))) {
+                        .listContainers(DockerClient.ListContainersParam.filter("name", "/" + name))) {
                     List<Integer> portList = new ArrayList<>();
                     for (Container.PortMapping port : container.ports()) {
                         if (port.privatePort() == standardClientPort) {
