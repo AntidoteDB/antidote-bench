@@ -17,7 +17,7 @@ public class MapDBConnection
     private static HTreeMap<String, String> keyTypeMapDB;
 
     public static void startMapDB() {
-        mapDB = DBMaker.fileDB("./out/keyStoreDatabase").closeOnJvmShutdown().transactionEnable().make();
+        mapDB = DBMaker.fileDB("./target/keyStoreDatabase").closeOnJvmShutdown().transactionEnable().make();
         keyTypeMapDB = mapDB
                 .hashMap("keyTypeMapDB", Serializer.STRING, Serializer.STRING)
                 .createOrOpen();
