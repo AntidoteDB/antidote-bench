@@ -17,7 +17,6 @@ import static adbm.util.AntidoteUtil.*;
 public class AntidoteView
 {
     private JPanel panel1;
-    private JTabbedPane tabbedPane1;
 
     private JList listViewAllDCs;
 
