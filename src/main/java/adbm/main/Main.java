@@ -30,7 +30,7 @@ public class Main {
 
     public static void main(String[] args) {
         DockerConnection.startDocker();
-        MapDBConnection.startMapDB();
+        /*MapDBConnection.startMapDB();
         System.out.println("Ready!");
         List<String> runningContainers = DockerConnection.getRunningContainers();
         List<String> notRunningContainers = DockerConnection.getNotRunningContainers();
@@ -46,7 +46,7 @@ public class Main {
             startAntidoteClient("defaultAntidoteDC");
         }
         System.out.println("Done!");
-        AntidoteView gui = new AntidoteView(clientList.get(0));
+        AntidoteView gui = new AntidoteView(clientList.get(0));*/
     }
 
 

@@ -36,20 +36,22 @@ public class DockerConnection
     {
         try {
             docker = DefaultDockerClient.fromEnv().readTimeoutMillis(10000).build();
-            if (docker.listImages(DockerClient.ListImagesParam.byName("antidotedb/antidote")).isEmpty()) {
-                System.out.println("Please run the following command in your commandline:\ndocker pull antidotedb/antidote");
+            String reqImage = "erlang:19";
+            //docker.pull(reqImage);
+            if (docker.listImages(DockerClient.ListImagesParam.byName(reqImage)).isEmpty()) {
+                System.out.println("Please run the following command in your commandline:\ndocker pull " + reqImage);
                 JDialog dialog = new JDialog();
                 dialog.setTitle("Pull the antidote image first!");
                 dialog.setSize(400,100);
                 dialog.setModal(true);
                 dialog.setLayout(new FlowLayout());
                 dialog.add(new JLabel("Please run the following command in your commandline:"));
-                dialog.add(new JTextField("docker pull antidotedb/antidote"));
+                dialog.add(new JTextField("docker pull " + reqImage));
                 dialog.setLocationRelativeTo(null);
                 dialog.setVisible(true);
                 Runtime.getRuntime().exit(0);
             }
-            if (docker.listImages(DockerClient.ListImagesParam.byName(antidoteDockerImageName)).isEmpty()) {
+            /*if (docker.listImages(DockerClient.ListImagesParam.byName(antidoteDockerImageName)).isEmpty()) {
                 docker.build(Paths.get("./Dockerfile/"), antidoteDockerImageName);
             }
             boolean containsNetwork = false;
@@ -61,16 +63,16 @@ public class DockerConnection
             }
             if (!containsNetwork) {
                 docker.createNetwork(NetworkConfig.builder().name(antidoteDockerNetworkName).driver("bridge").build());
-            }
+            }*/
         } catch (DockerCertificateException e) {
             e.printStackTrace();
         } catch (DockerException e) {
             e.printStackTrace();
         } catch (InterruptedException e) {
             e.printStackTrace();
-        } catch (IOException e) {
+        } /*catch (IOException e) {
             e.printStackTrace();
-        }
+        }*/
     }
 
     public static boolean runContainer(String name)
