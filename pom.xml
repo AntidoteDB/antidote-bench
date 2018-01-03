@@ -66,5 +66,11 @@
             <version>0.1.0</version>
         </dependency>
 
+        <dependency>
+            <groupId>org.eclipse.jgit</groupId>
+            <artifactId>org.eclipse.jgit</artifactId>
+            <version>4.9.2.201712150930-r</version>
+        </dependency>
+
     </dependencies>
 </project>

@@ -1,7 +1,7 @@
-package adbm.gui;
+package adbm.antidote.ui;
 
 import adbm.antidote.AntidoteClientWrapper;
-import adbm.util.DockerConnection;
+import adbm.docker.DockerManager;
 
 import javax.swing.*;
 import javax.swing.event.DocumentEvent;
@@ -12,7 +12,7 @@ import java.awt.event.ActionListener;
 import java.beans.PropertyChangeEvent;
 import java.util.List;
 
-import static adbm.util.AntidoteUtil.*;
+import static adbm.antidote.AntidoteUtil.*;
 
 public class AntidoteView
 {
@@ -144,7 +144,7 @@ public class AntidoteView
 
     private void refreshDCList()
     {
-        List<String> runningContainers = DockerConnection.getRunningContainers();
+        List<String> runningContainers = DockerManager.getRunningContainers();
         if (!runningContainers.contains(activeAntidoteClient.name)) {
             //TODO NOT ALLOWED!
         }
@@ -176,7 +176,7 @@ public class AntidoteView
             }
             comboBoxRunningDCModel.setSelectedItem(selectedItem);
         }
-        List<String> allContainers = DockerConnection.getAllContainers();
+        List<String> allContainers = DockerManager.getAllContainers();
         listViewAllDCsModel.clear();
         for (String container : allContainers) {
             if (runningContainers.contains(container)) {

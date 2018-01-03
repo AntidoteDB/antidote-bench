@@ -1,9 +1,9 @@
 package adbm.antidote;
 
-import adbm.gui.AntidoteController;
-import adbm.gui.AntidoteModel;
-import adbm.util.DockerConnection;
-import adbm.util.MapDBConnection;
+import adbm.antidote.ui.AntidoteController;
+import adbm.antidote.ui.AntidoteModel;
+import adbm.docker.DockerManager;
+import adbm.settings.MapDBManager;
 import com.google.protobuf.ByteString;
 import eu.antidotedb.antidotepb.AntidotePB;
 import eu.antidotedb.client.*;
@@ -12,7 +12,7 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.net.InetSocketAddress;
 
-import static adbm.util.MapDBConnection.getTypeOfKey;
+import static adbm.settings.MapDBManager.getTypeOfKey;
 import static eu.antidotedb.client.Key.create;
 
 public class AntidoteClientWrapper extends AntidoteModel
@@ -31,7 +31,7 @@ public class AntidoteClientWrapper extends AntidoteModel
     public AntidoteClientWrapper(String name)
     {
         //docker run -i -t -d --name antidote1 -p 8087:8087 --network antidote_ntwk -e SHORT_NAME=true -e NODE_NAME=antidote@antidote1 antidotedb/antidote
-        hostPort = DockerConnection.getHostPortFromContainer(name);
+        hostPort = DockerManager.getHostPortFromContainer(name);
 
         antidote = new AntidoteClient(new InetSocketAddress("localhost", hostPort));
 
@@ -70,7 +70,7 @@ public class AntidoteClientWrapper extends AntidoteModel
 
     public void RemoveKey(String name){
         if (running) {
-            MapDBConnection.removeKey(name);
+            MapDBManager.removeKey(name);
             this.firePropertyChange(AntidoteController.KeyListChanged, "", "");
         }
     }

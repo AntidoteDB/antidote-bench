@@ -1,59 +1,73 @@
-package adbm.util;
+package adbm.docker;
 
+import adbm.git.GitManager;
+import adbm.settings.MapDBManager;
+import adbm.util.SimpleProgressHandler;
 import com.spotify.docker.client.DefaultDockerClient;
 import com.spotify.docker.client.DockerClient;
-import com.spotify.docker.client.exceptions.DockerCertificateException;
+import com.spotify.docker.client.ProgressHandler;
 import com.spotify.docker.client.exceptions.DockerException;
 import com.spotify.docker.client.messages.*;
 import com.spotify.docker.client.messages.Container;
+import org.eclipse.jgit.lib.ObjectId;
 
-import javax.swing.*;
-import java.awt.*;
-import java.io.IOException;
-import java.nio.file.Path;
+import java.io.File;
 import java.nio.file.Paths;
+import java.text.MessageFormat;
 import java.util.*;
 import java.util.List;
+import java.util.concurrent.ConcurrentHashMap;
 
-public class DockerConnection
+public class DockerManager
 {
 
     private static DockerClient docker;
 
-    private static String antidoteDockerNetworkName = "antidote_ntwk";
+    private static final String requiredImage = "erlang:19";
 
-    private static String antidoteDockerImageName = "antidotedb/antidotebm";
+    private static final String antidoteDockerNetworkName = "antidote_ntwk";
 
-    private static int standardClientPort = 8087;
+    private static final String antidoteDockerImageName = "antidotedb/benchmark";
 
-    private static int secondsToWaitBeforeKilling = 10;
+    private static final int standardClientPort = 8087;
 
-    private static List<Integer> hostPortList = new ArrayList<>(Arrays.asList(8087, 8088, 8089, 8090, 8091, 8092));
+    private static final int secondsToWaitBeforeKilling = 10;
+
+    private static final int commitHashLength = 7;
+
+    public static boolean isReady()
+    {
+        if (docker != null) return true;
+        System.out.println("The connection to Docker is not ready!");
+        System.out.println("Please start the Docker connection again!");
+        return false;
+    }
+
+    public static boolean isReadyNoText()
+    {
+        return docker != null;
+    }
+
+    private static final List<Integer> hostPortList = new ArrayList<>(
+            Arrays.asList(8087, 8088, 8089, 8090, 8091, 8092));
 
     // Containers are not allowed to have the same name! Therefore the returned list must have only one element!
 
-    public static void startDocker()
+    //TODO change that remote Docker can be used instead of local
+    public static boolean startDocker()
     {
+        if (!GitManager.isReady()) return false;
         try {
-            docker = DefaultDockerClient.fromEnv().readTimeoutMillis(10000).build();
-            String reqImage = "erlang:19";
-            //docker.pull(reqImage);
-            if (docker.listImages(DockerClient.ListImagesParam.byName(reqImage)).isEmpty()) {
-                System.out.println("Please run the following command in your commandline:\ndocker pull " + reqImage);
-                JDialog dialog = new JDialog();
-                dialog.setTitle("Pull the antidote image first!");
-                dialog.setSize(400,100);
-                dialog.setModal(true);
-                dialog.setLayout(new FlowLayout());
-                dialog.add(new JLabel("Please run the following command in your commandline:"));
-                dialog.add(new JTextField("docker pull " + reqImage));
-                dialog.setLocationRelativeTo(null);
-                dialog.setVisible(true);
-                Runtime.getRuntime().exit(0);
+            docker = DefaultDockerClient.fromEnv().readTimeoutMillis(3600000).build();
+            System.out.println("Checking that Image " + requiredImage + " is available...");
+            if (docker.listImages(DockerClient.ListImagesParam.byName(requiredImage)).isEmpty()) {
+                System.out.println("Image " + requiredImage + " is not available and will be pulled.");
+                docker.pull(requiredImage, new SimpleProgressHandler("Image"));
             }
-            /*if (docker.listImages(DockerClient.ListImagesParam.byName(antidoteDockerImageName)).isEmpty()) {
-                docker.build(Paths.get("./Dockerfile/"), antidoteDockerImageName);
+            else {
+                System.out.println(requiredImage + " is available.");
             }
+            System.out.println("Checking that Network " + antidoteDockerNetworkName + " exists...");
             boolean containsNetwork = false;
             for (Network network : docker.listNetworks()) {
                 if (network.name().equals(antidoteDockerNetworkName)) {
@@ -62,19 +76,54 @@ public class DockerConnection
                 }
             }
             if (!containsNetwork) {
+                System.out.println("Network " + antidoteDockerNetworkName + " does not exist and will be created.");
                 docker.createNetwork(NetworkConfig.builder().name(antidoteDockerNetworkName).driver("bridge").build());
-            }*/
-        } catch (DockerCertificateException e) {
+            }
+            System.out.println("Docker initialized!");
+            return true;
+        } catch (Exception e) {
             e.printStackTrace();
-        } catch (DockerException e) {
-            e.printStackTrace();
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        } /*catch (IOException e) {
-            e.printStackTrace();
-        }*/
+        }
+        return false;
     }
 
+    public static boolean buildBenchmarkImages(boolean local)
+    {
+        if (!isReady()) return false;
+        try {
+            for (String commit : MapDBManager.getBenchmarkCommits()) {
+                System.out.println("Checking if an Image for the Commit " + commit + " exists...");
+                String imageTag = ":" + ObjectId.fromString(commit).abbreviate(commitHashLength).name();
+                List<Image> images = docker
+                        .listImages(DockerClient.ListImagesParam.byName(antidoteDockerImageName + imageTag));
+                if (images.isEmpty()) {
+                    System.out.println("Image " + antidoteDockerImageName + imageTag + " does not exist and must be built.");
+                    if (local) GitManager.checkoutCommit(commit);
+                    DockerfileBuilder.createDockerfile(local, commit);
+                    File folder = new File("Dockerfile");
+                    String path = folder.getCanonicalPath();
+                    if (local) {
+                        folder = new File(MapDBManager.getAppSetting(MapDBManager.GitRepoLocationSetting)).getParentFile();
+                        if (folder != null) path = folder.getCanonicalPath();
+                    }
+                    System.out.println("Building Image " + antidoteDockerImageName + imageTag + " ...");
+                    docker.build(Paths.get(path), antidoteDockerImageName + imageTag,
+                                 new SimpleProgressHandler("Image"));
+                    System.out.println("Image " + antidoteDockerImageName + imageTag + " was successfully built.");
+                }
+                else {
+                    System.out.println("Image " + antidoteDockerImageName + imageTag + " already exists and does not have to be built.");
+                }
+            }
+            return true;
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return false;
+    }
+
+
+    //TODO automatic container removal
     public static boolean runContainer(String name)
     {
         List<String> containerList = getRunningContainers();
@@ -117,9 +166,7 @@ public class DockerConnection
                 docker.startContainer(createdContainer.id());
                 return true;
             }
-        } catch (DockerException e) {
-            e.printStackTrace();
-        } catch (InterruptedException e) {
+        } catch (Exception e) {
             e.printStackTrace();
         }
         return false;
@@ -135,9 +182,7 @@ public class DockerConnection
                     docker.removeContainer(container.id());
                 }
             }
-        } catch (DockerException e) {
-            e.printStackTrace();
-        } catch (InterruptedException e) {
+        } catch (Exception e) {
             e.printStackTrace();
         }
     }
@@ -151,9 +196,7 @@ public class DockerConnection
                     docker.stopContainer(container.id(), secondsToWaitBeforeKilling);
                 }
             }
-        } catch (DockerException e) {
-            e.printStackTrace();
-        } catch (InterruptedException e) {
+        } catch (Exception e) {
             e.printStackTrace();
         }
     }
@@ -167,9 +210,7 @@ public class DockerConnection
                     docker.startContainer(container.id());
                 }
             }
-        } catch (DockerException e) {
-            e.printStackTrace();
-        } catch (InterruptedException e) {
+        } catch (Exception e) {
             e.printStackTrace();
         }
     }
@@ -180,7 +221,8 @@ public class DockerConnection
         try {
             if (docker != null) {
                 for (Container container : docker
-                        .listContainers(DockerClient.ListContainersParam.filter("ancestor", antidoteDockerImageName), DockerClient.ListContainersParam.allContainers(),
+                        .listContainers(DockerClient.ListContainersParam.filter("ancestor", antidoteDockerImageName),
+                                        DockerClient.ListContainersParam.allContainers(),
                                         DockerClient.ListContainersParam.withStatusRunning())) {
                     if (container.names().size() == 1) {
                         containerSet.add(container.names().get(0).substring(1));
@@ -190,9 +232,7 @@ public class DockerConnection
                     }
                 }
             }
-        } catch (DockerException e) {
-            e.printStackTrace();
-        } catch (InterruptedException e) {
+        } catch (Exception e) {
             e.printStackTrace();
         }
         System.out.println("Running Containers:\n" + containerSet);
@@ -206,8 +246,9 @@ public class DockerConnection
             if (docker != null) {
                 for (Container container : docker
                         .listContainers(DockerClient.ListContainersParam.filter("ancestor", antidoteDockerImageName),
-                                        DockerClient.ListContainersParam.allContainers(), DockerClient.ListContainersParam.withStatusExited()
-                                        )
+                                        DockerClient.ListContainersParam.allContainers(),
+                                        DockerClient.ListContainersParam.withStatusExited()
+                        )
                         ) {
                     if (container.names().size() == 1) {
                         containerSet.add(container.names().get(0).substring(1));
@@ -217,7 +258,8 @@ public class DockerConnection
                     }
                 }
                 for (Container container : docker
-                        .listContainers(DockerClient.ListContainersParam.filter("ancestor", antidoteDockerImageName), DockerClient.ListContainersParam.allContainers(),
+                        .listContainers(DockerClient.ListContainersParam.filter("ancestor", antidoteDockerImageName),
+                                        DockerClient.ListContainersParam.allContainers(),
                                         DockerClient.ListContainersParam.withStatusCreated())) {
                     if (container.names().size() == 1) {
                         containerSet.add(container.names().get(0).substring(1));
@@ -228,9 +270,7 @@ public class DockerConnection
                 }
                 //TODO Think about other States
             }
-        } catch (DockerException e) {
-            e.printStackTrace();
-        } catch (InterruptedException e) {
+        } catch (Exception e) {
             e.printStackTrace();
         }
         System.out.println("Not Running Containers:\n" + containerSet);
@@ -243,7 +283,8 @@ public class DockerConnection
         try {
             if (docker != null) {
                 for (Container container : docker
-                        .listContainers(DockerClient.ListContainersParam.filter("ancestor", antidoteDockerImageName), DockerClient.ListContainersParam.allContainers())) {
+                        .listContainers(DockerClient.ListContainersParam.filter("ancestor", antidoteDockerImageName),
+                                        DockerClient.ListContainersParam.allContainers())) {
                     if (container.names().size() == 1) {
                         containerSet.add(container.names().get(0).substring(1));
                     }
@@ -252,9 +293,7 @@ public class DockerConnection
                     }
                 }
             }
-        } catch (DockerException e) {
-            e.printStackTrace();
-        } catch (InterruptedException e) {
+        } catch (Exception e) {
             e.printStackTrace();
         }
         return new ArrayList<>(containerSet);
@@ -280,9 +319,7 @@ public class DockerConnection
                     }
                 }
             }
-        } catch (DockerException e) {
-            e.printStackTrace();
-        } catch (InterruptedException e) {
+        } catch (Exception e) {
             e.printStackTrace();
         }
         return -1;
@@ -309,15 +346,11 @@ public class DockerConnection
                     }
                 }
             }
-        } catch (DockerException e) {
-            e.printStackTrace();
-        } catch (InterruptedException e) {
+        } catch (Exception e) {
             e.printStackTrace();
         }
         return portList;
     }
-
-
 
 
 }

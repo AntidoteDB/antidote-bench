@@ -1,4 +1,4 @@
-package adbm.gui;
+package adbm.antidote.ui;
 
 import java.beans.PropertyChangeListener;
 import java.beans.PropertyChangeSupport;

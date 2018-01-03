@@ -1,4 +1,4 @@
-package adbm.util;
+package adbm.antidote;
 
 import eu.antidotedb.antidotepb.AntidotePB;
 
@@ -22,11 +22,11 @@ public class AntidoteUtil {
         return list;
     }
 
-    static void addKey(String key, AntidotePB.CRDT_type type) {
+    public static void addKey(String key, AntidotePB.CRDT_type type) {
         typeKeyMap.get(type).add(key);
     }
 
-    static void removeKey(String key, AntidotePB.CRDT_type type) {
+    public static void removeKey(String key, AntidotePB.CRDT_type type) {
         typeKeyMap.get(type).remove(key);
     }
 
