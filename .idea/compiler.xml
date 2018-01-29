@@ -11,6 +11,7 @@
     </annotationProcessing>
     <bytecodeTargetLevel>
       <module name="AntidoteBenchmark" target="1.8" />
+      <module name="core" target="1.5" />
     </bytecodeTargetLevel>
   </component>
 </project>

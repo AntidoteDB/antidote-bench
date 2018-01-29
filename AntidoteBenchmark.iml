@@ -11,7 +11,7 @@
     </content>
     <orderEntry type="inheritedJdk" />
     <orderEntry type="sourceFolder" forTests="false" />
-    <orderEntry type="library" name="Maven: com.spotify:docker-client:8.9.2" level="project" />
+    <orderEntry type="library" name="Maven: com.spotify:docker-client:8.10.0" level="project" />
     <orderEntry type="library" name="Maven: org.slf4j:slf4j-api:1.7.22" level="project" />
     <orderEntry type="library" name="Maven: com.google.guava:guava:20.0" level="project" />
     <orderEntry type="library" name="Maven: com.fasterxml.jackson.jaxrs:jackson-jaxrs-json-provider:2.8.8" level="project" />
@@ -70,8 +70,17 @@
     <orderEntry type="library" name="Maven: eu.antidotedb:antidote-java-client:0.1.0" level="project" />
     <orderEntry type="library" name="Maven: com.google.protobuf:protobuf-java:3.0.0" level="project" />
     <orderEntry type="library" name="Maven: com.google.code.findbugs:jsr305:3.0.2" level="project" />
-    <orderEntry type="library" name="Maven: org.eclipse.jgit:org.eclipse.jgit:4.9.2.201712150930-r" level="project" />
+    <orderEntry type="library" name="Maven: org.eclipse.jgit:org.eclipse.jgit:4.10.0.201712302008-r" level="project" />
     <orderEntry type="library" name="Maven: com.jcraft:jsch:0.1.54" level="project" />
     <orderEntry type="library" name="Maven: com.googlecode.javaewah:JavaEWAH:1.1.6" level="project" />
+    <orderEntry type="library" name="Maven: org.apache.htrace:htrace-core4:4.1.0-incubating" level="project" />
+    <orderEntry type="library" name="Maven: org.codehaus.jackson:jackson-mapper-asl:1.9.13" level="project" />
+    <orderEntry type="library" name="Maven: org.codehaus.jackson:jackson-core-asl:1.9.13" level="project" />
+    <orderEntry type="library" scope="TEST" name="Maven: org.testng:testng:6.1.1" level="project" />
+    <orderEntry type="library" scope="TEST" name="Maven: junit:junit:3.8.1" level="project" />
+    <orderEntry type="library" scope="TEST" name="Maven: org.beanshell:bsh:2.0b4" level="project" />
+    <orderEntry type="library" scope="TEST" name="Maven: com.beust:jcommander:1.12" level="project" />
+    <orderEntry type="library" scope="TEST" name="Maven: org.yaml:snakeyaml:1.6" level="project" />
+    <orderEntry type="library" name="Maven: org.hdrhistogram:HdrHistogram:2.1.4" level="project" />
   </component>
 </module>

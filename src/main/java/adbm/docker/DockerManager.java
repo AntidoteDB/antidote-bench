@@ -1,22 +1,16 @@
 package adbm.docker;
 
 import adbm.git.GitManager;
-import adbm.settings.MapDBManager;
 import adbm.util.SimpleProgressHandler;
 import com.spotify.docker.client.DefaultDockerClient;
 import com.spotify.docker.client.DockerClient;
-import com.spotify.docker.client.ProgressHandler;
-import com.spotify.docker.client.exceptions.DockerException;
 import com.spotify.docker.client.messages.*;
 import com.spotify.docker.client.messages.Container;
-import org.eclipse.jgit.lib.ObjectId;
 
 import java.io.File;
 import java.nio.file.Paths;
-import java.text.MessageFormat;
 import java.util.*;
 import java.util.List;
-import java.util.concurrent.ConcurrentHashMap;
 
 public class DockerManager
 {
@@ -87,10 +81,30 @@ public class DockerManager
         return false;
     }
 
+    public static boolean IsBuildingImage = false;
+
     public static boolean buildBenchmarkImages(boolean local)
     {
         if (!isReady()) return false;
         try {
+            System.out.println("Checking if an Image for the master branch exists...");
+            List<Image> images = docker
+                    .listImages(DockerClient.ListImagesParam.byName(antidoteDockerImageName));
+            if (images.isEmpty()) {
+                System.out.println("Image " + antidoteDockerImageName + " does not exist and must be built.");
+                DockerfileBuilder.createDockerfile(false);
+                File folder = new File("Dockerfile");
+                String path = folder.getCanonicalPath();
+                System.out.println("Building Image " + antidoteDockerImageName + " ...");
+                docker.build(Paths.get(path), antidoteDockerImageName,
+                             new SimpleProgressHandler("Image"));
+                System.out.println("Image " + antidoteDockerImageName + " was successfully built.");
+            }
+            else {
+                System.out
+                        .println("Image " + antidoteDockerImageName + " already exists and does not have to be built.");
+            }
+            /*
             for (String commit : MapDBManager.getBenchmarkCommits()) {
                 System.out.println("Checking if an Image for the Commit " + commit + " exists...");
                 String imageTag = ":" + ObjectId.fromString(commit).abbreviate(commitHashLength).name();
@@ -99,7 +113,7 @@ public class DockerManager
                 if (images.isEmpty()) {
                     System.out.println("Image " + antidoteDockerImageName + imageTag + " does not exist and must be built.");
                     if (local) GitManager.checkoutCommit(commit);
-                    DockerfileBuilder.createDockerfile(local, commit);
+                    DockerfileBuilder.createDockerfile(local);
                     File folder = new File("Dockerfile");
                     String path = folder.getCanonicalPath();
                     if (local) {
@@ -115,6 +129,7 @@ public class DockerManager
                     System.out.println("Image " + antidoteDockerImageName + imageTag + " already exists and does not have to be built.");
                 }
             }
+            */
             return true;
         } catch (Exception e) {
             e.printStackTrace();
@@ -122,13 +137,21 @@ public class DockerManager
         return false;
     }
 
+    private static String normalizeName(String containerNameFromDocker)
+    {
+        if (containerNameFromDocker.startsWith("/")) return containerNameFromDocker.substring(1);
+        else return containerNameFromDocker;
+    }
 
     //TODO automatic container removal
     public static boolean runContainer(String name)
     {
+        System.out.println("Running the container \"" + name + "\"...");
         List<String> containerList = getRunningContainers();
         if (containerList.contains(name)) {
-            return false;
+            System.out.println("The container \"" + name + "\" is already running!");
+            System.out.println("The container \"" + name + "\" is restarted now!");
+            stopContainer(name);
         }
         containerList = getNotRunningContainers();
         if (containerList.contains(name)) {
@@ -136,7 +159,12 @@ public class DockerManager
             return true;
         }
         List<Integer> portList = getUsedHostPorts();
-        if (portList.containsAll(hostPortList)) return false;
+        if (portList.containsAll(hostPortList)) {
+            System.out.println("Port list contains all ports from the host port list!\n" +
+                                       "No new containers can be started!\n" +
+                                       "You have to extend the list of allowed host ports to run more containers!");
+            return false;
+        }
         int hostPort = 0;
         for (int port : hostPortList) {
             if (!portList.contains(port)) {
@@ -152,18 +180,21 @@ public class DockerManager
                                                 .networkMode(antidoteDockerNetworkName).build();
         try {
             if (docker != null) {
-                System.out.println("Creating Container!");
+                System.out.println("Creating a new container \"" + name + "\"...");
                 ContainerConfig containerConfig = ContainerConfig.builder()
                                                                  .image(antidoteDockerImageName)
                                                                  .hostConfig(hostConfig)
                                                                  .exposedPorts(Integer.toString(standardClientPort))
                                                                  .env("SHORT_NAME=true", "NODE_NAME=antidote@" + name)
                                                                  .tty(true)
-                                                                 .openStdin(true)
                                                                  .build();
                 ContainerCreation createdContainer = docker.createContainer(containerConfig, name);
-                System.out.println("Container created!");
+                System.out.println("Created new container \"" + name + "\"!");
+                System.out.println("Starting the new container \"" + name + "\"...");
                 docker.startContainer(createdContainer.id());
+                System.out.println("Started the new container \"" + name + "\"!");
+                System.out.println("Container ID: " + createdContainer.id());
+                System.out.println("State: " + docker.inspectContainer(createdContainer.id()).state());
                 return true;
             }
         } catch (Exception e) {
@@ -174,12 +205,14 @@ public class DockerManager
 
     public static void removeContainer(String name)
     {
+        System.out.println("Removing the container \"" + name + "\"...");
         try {
             if (docker != null) {
                 for (Container container : docker
                         .listContainers(DockerClient.ListContainersParam.filter("name", name))) {
                     docker.stopContainer(container.id(), secondsToWaitBeforeKilling);
                     docker.removeContainer(container.id());
+                    System.out.println("Removed the container \"" + name + "\"!");
                 }
             }
         } catch (Exception e) {
@@ -189,11 +222,13 @@ public class DockerManager
 
     public static void stopContainer(String name)
     {
+        System.out.println("Stopping the container \"" + name + "\"...");
         try {
             if (docker != null) {
                 for (Container container : docker
                         .listContainers(DockerClient.ListContainersParam.filter("name", name))) {
                     docker.stopContainer(container.id(), secondsToWaitBeforeKilling);
+                    System.out.println("Stopped the container \"" + name + "\"!");
                 }
             }
         } catch (Exception e) {
@@ -203,11 +238,16 @@ public class DockerManager
 
     public static void startContainer(String name)
     {
+        System.out.println("Starting the container \"" + name + "\"...");
         try {
             if (docker != null) {
                 for (Container container : docker
-                        .listContainers(DockerClient.ListContainersParam.filter("name", name))) {
+                        .listContainers(DockerClient.ListContainersParam.allContainers(),
+                                        DockerClient.ListContainersParam.filter("name", name))) {
                     docker.startContainer(container.id());
+                    System.out.println("Started the container \"" + name + "\"!");
+                    System.out.println("Container ID: " + container.id());
+                    System.out.println("State: " + docker.inspectContainer(container.id()).state());
                 }
             }
         } catch (Exception e) {
@@ -217,6 +257,7 @@ public class DockerManager
 
     public static List<String> getRunningContainers()
     {
+        System.out.println("Getting running containers...");
         Set<String> containerSet = new HashSet<>();
         try {
             if (docker != null) {
@@ -224,23 +265,44 @@ public class DockerManager
                         .listContainers(DockerClient.ListContainersParam.filter("ancestor", antidoteDockerImageName),
                                         DockerClient.ListContainersParam.allContainers(),
                                         DockerClient.ListContainersParam.withStatusRunning())) {
-                    if (container.names().size() == 1) {
-                        containerSet.add(container.names().get(0).substring(1));
+                    List<String> nameList = container.names();
+                    if (nameList == null) {
+                        System.out.println("ERROR: The container has no name!");
                     }
                     else {
-                        // TODO NOT ALLOWED
+                        if (nameList.size() > 0) {
+                            String firstName = normalizeName(nameList.get(0));
+                            if (nameList.size() > 1) {
+                                StringBuilder nameString = new StringBuilder();
+                                for (String name : nameList) {
+                                    nameString.append(normalizeName(name) + ", ");
+                                }
+                                String names = nameString.toString();
+                                if (names.length() > 2) {
+                                    System.out.println(
+                                            "A container has multiple names: " + names
+                                                    .substring(0, names.length() - 3));
+                                    System.out.println("Using the first name: " + firstName);
+                                }
+                            }
+                            containerSet.add(firstName);
+                        }
+                        else {
+                            System.out.println("ERROR: The container has no name!");
+                        }
                     }
                 }
             }
         } catch (Exception e) {
             e.printStackTrace();
         }
-        System.out.println("Running Containers:\n" + containerSet);
+        System.out.println("Running containers:\n" + containerSet);
         return new ArrayList<>(containerSet);
     }
 
     public static List<String> getNotRunningContainers()
     {
+        System.out.println("Getting exited and created containers...");
         Set<String> containerSet = new HashSet<>();
         try {
             if (docker != null) {
@@ -250,72 +312,155 @@ public class DockerManager
                                         DockerClient.ListContainersParam.withStatusExited()
                         )
                         ) {
-                    if (container.names().size() == 1) {
-                        containerSet.add(container.names().get(0).substring(1));
+                    List<String> nameList = container.names();
+                    if (nameList == null) {
+                        System.out.println("ERROR: The container has no name!");
                     }
                     else {
-                        // TODO NOT ALLOWED
+                        if (nameList.size() > 0) {
+                            String firstName = normalizeName(nameList.get(0));
+                            if (nameList.size() > 1) {
+                                StringBuilder nameString = new StringBuilder();
+                                for (String name : nameList) {
+                                    nameString.append(normalizeName(name) + ", ");
+                                }
+                                String names = nameString.toString();
+                                if (names.length() > 2) {
+                                    System.out.println(
+                                            "A container has multiple names: " + names
+                                                    .substring(0, names.length() - 3));
+                                    System.out.println("Using the first name: " + firstName);
+                                }
+                            }
+                            containerSet.add(firstName);
+                        }
+                        else {
+                            System.out.println("ERROR: The container has no name!");
+                        }
                     }
                 }
                 for (Container container : docker
                         .listContainers(DockerClient.ListContainersParam.filter("ancestor", antidoteDockerImageName),
                                         DockerClient.ListContainersParam.allContainers(),
                                         DockerClient.ListContainersParam.withStatusCreated())) {
-                    if (container.names().size() == 1) {
-                        containerSet.add(container.names().get(0).substring(1));
+                    List<String> nameList = container.names();
+                    if (nameList == null) {
+                        System.out.println("ERROR: The container has no name!");
                     }
                     else {
-                        // TODO NOT ALLOWED
+                        if (nameList.size() > 0) {
+                            String firstName = normalizeName(nameList.get(0));
+                            if (container.names().size() > 1) {
+                                StringBuilder nameString = new StringBuilder();
+                                for (String name : nameList) {
+                                    nameString.append(normalizeName(name) + ", ");
+                                }
+                                String names = nameString.toString();
+                                if (names.length() > 2) {
+                                    System.out.println(
+                                            "A container has multiple names: " + names
+                                                    .substring(0, names.length() - 3));
+                                    System.out.println("Using the first name: " + firstName);
+                                }
+                            }
+                            containerSet.add(firstName);
+                        }
+                        else {
+                            System.out.println("ERROR: The container has no name!");
+                        }
                     }
                 }
-                //TODO Think about other States
             }
         } catch (Exception e) {
             e.printStackTrace();
         }
-        System.out.println("Not Running Containers:\n" + containerSet);
+        System.out.println("Exited and created containers:\n" + containerSet);
         return new ArrayList<>(containerSet);
     }
 
     public static List<String> getAllContainers()
     {
+        System.out.println("Getting all containers...");
         Set<String> containerSet = new HashSet<>();
         try {
             if (docker != null) {
                 for (Container container : docker
                         .listContainers(DockerClient.ListContainersParam.filter("ancestor", antidoteDockerImageName),
                                         DockerClient.ListContainersParam.allContainers())) {
-                    if (container.names().size() == 1) {
-                        containerSet.add(container.names().get(0).substring(1));
+                    List<String> nameList = container.names();
+                    if (nameList == null) {
+                        System.out.println("ERROR: The container has no name!");
                     }
                     else {
-                        // TODO NOT ALLOWED
+                        if (nameList.size() > 0) {
+                            String firstName = normalizeName(nameList.get(0));
+                            if (nameList.size() > 1) {
+                                StringBuilder nameString = new StringBuilder();
+                                for (String name : nameList) {
+                                    nameString.append(normalizeName(name) + ", ");
+                                }
+                                String names = nameString.toString();
+                                if (names.length() > 2) {
+                                    System.out.println(
+                                            "A container has multiple names: " + names
+                                                    .substring(0, names.length() - 3));
+                                    System.out.println("Using the first name: " + firstName);
+                                }
+                            }
+                            containerSet.add(firstName);
+                        }
+                        else {
+                            System.out.println("ERROR: The container has no name!");
+                        }
                     }
                 }
             }
         } catch (Exception e) {
             e.printStackTrace();
         }
+        System.out.println("All containers:\n" + containerSet);
         return new ArrayList<>(containerSet);
     }
 
     public static int getHostPortFromContainer(String name)
     {
+        System.out.println("Getting host port form container \"" + name + "\"...");
         try {
             if (docker != null) {
                 for (Container container : docker
-                        .listContainers(DockerClient.ListContainersParam.filter("name", "/" + name))) {
+                        .listContainers(DockerClient.ListContainersParam.filter("name", name))) {
                     List<Integer> portList = new ArrayList<>();
-                    for (Container.PortMapping port : container.ports()) {
-                        if (port.privatePort() == standardClientPort) {
-                            portList.add(port.publicPort());
-                        }
-                    }
-                    if (portList.size() == 1) {
-                        return portList.get(0);
+                    List<Container.PortMapping> portMappingList = container.ports();
+                    if (portMappingList == null) {
+                        System.out.println("ERROR: The container has no host port!");
                     }
                     else {
-                        // TODO NOT ALLOWED!
+                        for (Container.PortMapping port : portMappingList) {
+                            if (port.privatePort() == standardClientPort) {
+                                portList.add(port.publicPort());
+                            }
+                        }
+                        if (portList.size() > 0) {
+                            int firstPort = portList.get(0);
+                            if (portList.size() > 1) {
+                                StringBuilder nameString = new StringBuilder();
+                                for (int port : portList) {
+                                    nameString.append(port + ", ");
+                                }
+                                String names = nameString.toString();
+                                if (names.length() > 2) {
+                                    System.out.println(
+                                            "The container \"" + name + "\" has multiple host ports: " + names
+                                                    .substring(0, names.length() - 3));
+                                    System.out.println("Using the first host port: " + firstPort);
+                                }
+                            }
+                            System.out.println("The host port of the container \"" + name + "\" is " + firstPort);
+                            return firstPort;
+                        }
+                        else {
+                            System.out.println("ERROR: The container has no host port!");
+                        }
                     }
                 }
             }
@@ -333,16 +478,36 @@ public class DockerManager
                 for (Container container : docker
                         .listContainers(DockerClient.ListContainersParam.filter("ancestor", antidoteDockerImageName))) {
                     List<Integer> singlePortList = new ArrayList<>();
-                    for (Container.PortMapping port : container.ports()) {
-                        if (port.privatePort() == standardClientPort) {
-                            singlePortList.add(port.publicPort());
-                        }
-                    }
-                    if (portList.size() == 1) {
-                        portList.add(singlePortList.get(0));
+                    List<Container.PortMapping> portMappingList = container.ports();
+                    if (portMappingList == null) {
+                        System.out.println("ERROR: The container has no host port!");
                     }
                     else {
-                        // TODO NOT ALLOWED!
+                        for (Container.PortMapping port : portMappingList) {
+                            if (port.privatePort() == standardClientPort) {
+                                singlePortList.add(port.publicPort());
+                            }
+                        }
+                        if (singlePortList.size() > 0) {
+                            int firstPort = singlePortList.get(0);
+                            if (singlePortList.size() > 1) {
+                                StringBuilder nameString = new StringBuilder();
+                                for (int port : singlePortList) {
+                                    nameString.append(port + ", ");
+                                }
+                                String names = nameString.toString();
+                                if (names.length() > 2) {
+                                    System.out.println(
+                                            "The container has multiple host ports: " + names
+                                                    .substring(0, names.length() - 3));
+                                    System.out.println("Using the first host port: " + firstPort);
+                                }
+                            }
+                            portList.add(firstPort);
+                        }
+                        else {
+                            System.out.println("ERROR: The container has no host port!");
+                        }
                     }
                 }
             }

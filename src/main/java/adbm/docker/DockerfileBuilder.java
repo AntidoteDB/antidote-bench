@@ -30,17 +30,21 @@ public class DockerfileBuilder
                 "RUN set -xe \\\n" +
                 "  && apt-get update \\\n" +
                 "  && apt-get install -y --no-install-recommends git openssl ca-certificates \\\n" +
-                "  && cd /usr/src \\\n" +
-                "  && cd " + repoDirName + " \\\n" +
+                "  && apt-get install -y dos2unix \\\n" +
+                "  && cd /usr/src/" + repoDirName + " \\\n" +
+                "  && find . -type f -print0 | xargs -0 dos2unix \\\n" +
                 "  && make rel \\\n" +
                 "  && cp -R _build/default/rel/antidote /opt/ \\\n" +
                 "  && sed -e '$i,{kernel, [{inet_dist_listen_min, 9100}, {inet_dist_listen_max, 9100}]}' /usr/src/" + repoDirName + "/_build/default/rel/antidote/releases/0.0.1/sys.config > /opt/antidote/releases/0.0.1/sys.config \\\n" +
-                "  && rm -rf /usr/src/" + repoDirName + " /var/lib/apt/lists/*\n" +
+                "  && rm -rf /var/lib/apt/lists/*\n" +
                 "\n" +
-                "ADD ./start_and_attach.sh /opt/antidote/\n" +
-                "ADD ./entrypoint.sh /\n" +
+                "COPY join_cluster_script.erl join_dcs_script.erl start_and_attach.sh /opt/antidote/\n" +
+                "COPY entrypoint.sh /\n" +
                 "\n" +
-                "RUN chmod a+x /opt/antidote/start_and_attach.sh \\\n" +
+                "RUN dos2unix /entrypoint.sh \\\n" +
+                "  && find /opt/antidote -type f -print0 | xargs -0 dos2unix \\\n" +
+                "  && apt-get --purge remove -y dos2unix \\\n" +
+                "  && chmod a+x /opt/antidote/start_and_attach.sh \\\n" +
                 "  && chmod a+x /entrypoint.sh\n" +
                 "\n" +
                 "# Distributed Erlang Port Mapper \n" +
@@ -55,15 +59,11 @@ public class DockerfileBuilder
                 "\n" +
                 "EXPOSE 9100 VOLUME /opt/antidote/data\n" +
                 "ENTRYPOINT [\"/entrypoint.sh\"]\n" +
-                "CMD [\"/opt/antidote/start_and_attach.sh\"]\n" +
-                "\n" +
-                "ADD ./join_cluster_script.erl /opt/antidote/\n" +
-                "ADD ./join_dcs_script.erl /opt/antidote/";
+                "CMD [\"/opt/antidote/start_and_attach.sh\"]";
     }
 
-    private static String getRemoteDockerfile(String commit)
+    private static String getRemoteDockerfile()
     {
-        if (commit == null) commit = "master";
         return "FROM erlang:19\n" +
                 "\n" +
                 "ENV HANDOFF_PORT \"8099\"\n" +
@@ -76,11 +76,12 @@ public class DockerfileBuilder
                 "ENV NODE_NAME \"antidote@127.0.0.1\"\n" +
                 "ENV SHORT_NAME \"false\"\n" +
                 "ENV ANTIDOTE_REPO \"https://github.com/SyncFree/antidote.git\"\n" +
-                "ENV ANTIDOTE_COMMIT \"" + commit + "\"\n" +
+                "ENV ANTIDOTE_COMMIT \"master\"\n" +
                 "\n" +
                 "RUN set -xe \\\n" +
                 "  && apt-get update \\\n" +
                 "  && apt-get install -y --no-install-recommends git openssl ca-certificates \\\n" +
+                "  && apt-get install -y dos2unix \\\n" +
                 "  && cd /usr/src \\\n" +
                 "  && git clone $ANTIDOTE_REPO \\\n" +
                 "  && cd antidote \\\n" +
@@ -88,12 +89,15 @@ public class DockerfileBuilder
                 "  && make rel \\\n" +
                 "  && cp -R _build/default/rel/antidote /opt/ \\\n" +
                 "  && sed -e '$i,{kernel, [{inet_dist_listen_min, 9100}, {inet_dist_listen_max, 9100}]}' /usr/src/antidote/_build/default/rel/antidote/releases/0.0.1/sys.config > /opt/antidote/releases/0.0.1/sys.config \\\n" +
-                "  && rm -rf /usr/src/antidote /var/lib/apt/lists/*\n" +
+                "  && rm -rf /var/lib/apt/lists/*\n" +
                 "\n" +
-                "ADD ./start_and_attach.sh /opt/antidote/\n" +
-                "ADD ./entrypoint.sh /\n" +
+                "COPY join_cluster_script.erl join_dcs_script.erl start_and_attach.sh /opt/antidote/\n" +
+                "COPY entrypoint.sh /\n" +
                 "\n" +
-                "RUN chmod a+x /opt/antidote/start_and_attach.sh \\\n" +
+                "RUN dos2unix /entrypoint.sh \\\n" +
+                "  && find /opt/antidote -type f -print0 | xargs -0 dos2unix \\\n" +
+                "  && apt-get --purge remove -y dos2unix \\\n" +
+                "  && chmod a+x /opt/antidote/start_and_attach.sh \\\n" +
                 "  && chmod a+x /entrypoint.sh\n" +
                 "\n" +
                 "# Distributed Erlang Port Mapper\n" +
@@ -108,13 +112,10 @@ public class DockerfileBuilder
                 "\n" +
                 "ENTRYPOINT [\"/entrypoint.sh\"]\n" +
                 "\n" +
-                "CMD [\"/opt/antidote/start_and_attach.sh\"]\n" +
-                "\n" +
-                "ADD ./join_cluster_script.erl /opt/antidote/\n" +
-                "ADD ./join_dcs_script.erl /opt/antidote/";
+                "CMD [\"/opt/antidote/start_and_attach.sh\"]";
     }
 
-    public static void createDockerfile(boolean local, String commit)
+    public static void createDockerfile(boolean local)
     {
         if (!GitManager.isReady()) return;
         String gitRepoLocation = MapDBManager.getAppSetting(MapDBManager.GitRepoLocationSetting);
@@ -123,7 +124,7 @@ public class DockerfileBuilder
         if (gitRepoParentFolder == null) return;
         String dockerfile;
         if (local) dockerfile = getLocalDockerfile(gitRepoFolder.getName());
-        else dockerfile = getRemoteDockerfile(commit);
+        else dockerfile = getRemoteDockerfile();
         try (Writer writer = new BufferedWriter(new OutputStreamWriter(
                 new FileOutputStream("Dockerfile/Dockerfile", false), "utf-8")))
         {

@@ -1,11 +1,14 @@
 package adbm.main.ui;
 
+import adbm.antidote.AntidoteClientWrapper;
+import adbm.antidote.ui.AntidoteView;
 import adbm.docker.DockerfileBuilder;
 import adbm.docker.DockerManager;
 import adbm.git.GitManager;
 import adbm.git.ui.SelectBranchDialog;
 import adbm.settings.MapDBManager;
 import adbm.settings.ui.SettingsDialog;
+import org.apache.commons.lang.time.StopWatch;
 
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -65,17 +68,34 @@ public class MainWindow
         });
         buttonStartAntidote.addActionListener(e -> {
             if (DockerManager.isReady())
-                ;
+                new AntidoteView(new AntidoteClientWrapper("TestAntidote"));
             //TODO
         });
         buttonCreateDockerfile.addActionListener(e -> {
             if (GitManager.isReady())
-                DockerfileBuilder.createDockerfile(false, null);
+                DockerfileBuilder.createDockerfile(false);
         });
         buttonBuildBenchmarkImages.addActionListener(e -> {
             if (DockerManager.isReady()) {
-                executorService.execute(() -> DockerManager.buildBenchmarkImages(false));
+                executorService.execute(() -> {
+                    DockerManager.IsBuildingImage = true;
+                    DockerManager.buildBenchmarkImages(false);
+                    DockerManager.IsBuildingImage = false;
+                });
                 buttonBuildBenchmarkImages.setEnabled(false);
+                Executors.newSingleThreadExecutor().execute(() -> {
+                    StopWatch watch = new StopWatch();
+                    watch.start();
+                    while (DockerManager.IsBuildingImage) {
+                        System.out.println("Image is building...");
+                        System.out.println("Elapsed time: " + watch.getTime()/1000 + "s");
+                        try {
+                            Thread.sleep(10000);
+                        } catch (InterruptedException e1) {
+                            e1.printStackTrace();
+                        }
+                    }
+                });
             }
         });
     }

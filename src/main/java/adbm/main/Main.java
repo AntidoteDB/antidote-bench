@@ -5,34 +5,52 @@ import adbm.docker.DockerManager;
 import adbm.git.GitManager;
 import adbm.main.ui.MainWindow;
 import adbm.settings.MapDBManager;
+import eu.antidotedb.antidotepb.AntidotePB;
 
 import java.util.ArrayList;
 import java.util.List;
 
-public class Main {
+public class Main
+{
 
     public static List<AntidoteClientWrapper> clientList = new ArrayList<>();
 
-    public static void startAntidoteClient(String name) {
-        if (DockerManager.runContainer(name)) clientList.add(new AntidoteClientWrapper(name));
+    public static AntidoteClientWrapper client;
+
+    public static AntidoteClientWrapper startAntidoteClient(String name)
+    {
+
+        if (DockerManager.runContainer(name)) {
+            AntidoteClientWrapper clientWrapper = new AntidoteClientWrapper(name);
+            clientList.add(clientWrapper);
+            return clientWrapper;
+        }
+        return null;
     }
 
-    public static void stopAntidoteClient(String name) {
+    public static void stopAntidoteClient(String name)
+    {
         DockerManager.stopContainer(name);
         clientList.remove(name);
     }
 
-    public static void removeAntidoteClient(String name) {
+    public static void removeAntidoteClient(String name)
+    {
         DockerManager.removeContainer(name);
         clientList.remove(name);
     }
 
-    public static void main(String[] args) {
+    public static void main(String[] args)
+    {
         MapDBManager.startMapDB();
-        //GitManager.startGit();
-        //DockerManager.startDocker();
-        /*System.out.println("Ready!");
-        List<String> runningContainers = DockerManager.getRunningContainers();
+        GitManager.startGit();
+        DockerManager.startDocker();
+        System.out.println("Ready!");
+        //client = new AntidoteClientWrapper("TestAntidote");
+        //System.out.println("Ok!");
+        //client.AddKey("Test", AntidotePB.CRDT_type.COUNTER);
+        //System.out.println(client.getKeyValue("Test"));
+        /*List<String> runningContainers = DockerManager.getRunningContainers();
         List<String> notRunningContainers = DockerManager.getNotRunningContainers();
         for (String container : runningContainers) {
             clientList.add(new AntidoteClientWrapper(container));
@@ -60,16 +78,6 @@ public class Main {
                                    "\n\nThe building time for an Image is several minutes and may fail completely because Docker is not in the right state (Before building Images restart Docker to be safe)." +
                                    "\n");
     }
-
-
-
-
-
-
-
-
-
-
 
 
 }

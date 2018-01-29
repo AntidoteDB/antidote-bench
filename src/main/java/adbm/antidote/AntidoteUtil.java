@@ -1,5 +1,6 @@
 package adbm.antidote;
 
+import adbm.settings.MapDBManager;
 import eu.antidotedb.antidotepb.AntidotePB;
 
 import java.util.*;
@@ -28,6 +29,10 @@ public class AntidoteUtil {
 
     public static void removeKey(String key, AntidotePB.CRDT_type type) {
         typeKeyMap.get(type).remove(key);
+    }
+
+    public static String getDefaultOperation(String keyName) {
+        return typeOperationMap.get(MapDBManager.getTypeOfKey(keyName))[0];
     }
 
     private static Map<String, AntidotePB.CRDT_type> createGUITypeMap() {

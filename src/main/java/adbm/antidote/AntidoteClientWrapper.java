@@ -28,9 +28,14 @@ public class AntidoteClientWrapper extends AntidoteModel
 
     private boolean running;
 
+    public void isReady() {
+
+    }
+
     public AntidoteClientWrapper(String name)
     {
         //docker run -i -t -d --name antidote1 -p 8087:8087 --network antidote_ntwk -e SHORT_NAME=true -e NODE_NAME=antidote@antidote1 antidotedb/antidote
+        DockerManager.runContainer(name);
         hostPort = DockerManager.getHostPortFromContainer(name);
 
         antidote = new AntidoteClient(new InetSocketAddress("localhost", hostPort));
@@ -96,11 +101,7 @@ public class AntidoteClientWrapper extends AntidoteModel
                     try {
                         Method method = key.getClass().getMethod(operation, par);
                         update = (UpdateOp) method.invoke(key, lvalue);
-                    } catch (NoSuchMethodException e) {
-                        e.printStackTrace();
-                    } catch (IllegalAccessException e) {
-                        e.printStackTrace();
-                    } catch (InvocationTargetException e) {
+                    } catch (Exception e) {
                         e.printStackTrace();
                     }
                 }
@@ -111,11 +112,7 @@ public class AntidoteClientWrapper extends AntidoteModel
                         try {
                             Method method = key.getClass().getMethod(operation, par);
                             update = (UpdateOp) method.invoke(key, value);
-                        } catch (NoSuchMethodException e) {
-                            e.printStackTrace();
-                        } catch (IllegalAccessException e) {
-                            e.printStackTrace();
-                        } catch (InvocationTargetException e) {
+                        } catch (Exception e) {
                             e.printStackTrace();
                         }
                     }
@@ -125,11 +122,7 @@ public class AntidoteClientWrapper extends AntidoteModel
                 try {
                     Method method = key.getClass().getMethod(operation, null);
                     update = (UpdateOp) method.invoke(key, null);
-                } catch (NoSuchMethodException e) {
-                    e.printStackTrace();
-                } catch (IllegalAccessException e) {
-                    e.printStackTrace();
-                } catch (InvocationTargetException e) {
+                } catch (Exception e) {
                     e.printStackTrace();
                 }
             }

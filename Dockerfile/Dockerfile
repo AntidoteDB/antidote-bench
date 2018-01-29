@@ -10,11 +10,12 @@ ENV PLATFORM_DATA_DIR "data"
 ENV NODE_NAME "antidote@127.0.0.1"
 ENV SHORT_NAME "false"
 ENV ANTIDOTE_REPO "https://github.com/SyncFree/antidote.git"
-ENV ANTIDOTE_COMMIT "b50374d300924961cc5b59e41efc21968b9bb0cf"
+ENV ANTIDOTE_COMMIT "master"
 
 RUN set -xe \
   && apt-get update \
   && apt-get install -y --no-install-recommends git openssl ca-certificates \
+  && apt-get install -y dos2unix \
   && cd /usr/src \
   && git clone $ANTIDOTE_REPO \
   && cd antidote \
@@ -22,12 +23,15 @@ RUN set -xe \
   && make rel \
   && cp -R _build/default/rel/antidote /opt/ \
   && sed -e '$i,{kernel, [{inet_dist_listen_min, 9100}, {inet_dist_listen_max, 9100}]}' /usr/src/antidote/_build/default/rel/antidote/releases/0.0.1/sys.config > /opt/antidote/releases/0.0.1/sys.config \
-  && rm -rf /usr/src/antidote /var/lib/apt/lists/*
+  && rm -rf /var/lib/apt/lists/*
 
-ADD ./start_and_attach.sh /opt/antidote/
-ADD ./entrypoint.sh /
+COPY join_cluster_script.erl join_dcs_script.erl start_and_attach.sh /opt/antidote/
+COPY entrypoint.sh /
 
-RUN chmod a+x /opt/antidote/start_and_attach.sh \
+RUN dos2unix /entrypoint.sh \
+  && find /opt/antidote -type f -print0 | xargs -0 dos2unix \
+  && apt-get --purge remove -y dos2unix \
+  && chmod a+x /opt/antidote/start_and_attach.sh \
   && chmod a+x /entrypoint.sh
 
 # Distributed Erlang Port Mapper
@@ -43,6 +47,3 @@ VOLUME /opt/antidote/data
 ENTRYPOINT ["/entrypoint.sh"]
 
 CMD ["/opt/antidote/start_and_attach.sh"]
-
-ADD ./join_cluster_script.erl /opt/antidote/
-ADD ./join_dcs_script.erl /opt/antidote/
