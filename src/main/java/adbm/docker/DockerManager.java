@@ -114,17 +114,14 @@ public class DockerManager
                 docker.createNetwork(NetworkConfig.builder().name(antidoteDockerNetworkName).driver("bridge").build());
             }
             log.info("Docker initialized!");
+            Runtime.getRuntime().addShutdownHook(
+                    new Thread(() -> getRunningContainers().forEach(DockerManager::stopContainer)));
             if (!getRunningContainers().isEmpty()) {
                 log.error("ERROR: The Antidote Benchmark containers cannot be running when the DockerManager starts!" +
                                   "\nPlease restart Docker manually!");
-                JOptionPane.showMessageDialog(null,
-                        "A previously built Image of the Antidote Benchmark exists.\n" +
-                                "Do you want to rebuilt the image and remove the existing image?\n" +
-                                "If you choose \"Yes\" then all containers that were created from the existing image will be stopped and removed.");
+                //JOptionPane.showMessageDialog(null,"");
                 return false;
             }
-            Runtime.getRuntime().addShutdownHook(
-                    new Thread(() -> getRunningContainers().forEach(DockerManager::stopContainer)));
             return true;
         } catch (Exception e) {
             e.printStackTrace();
