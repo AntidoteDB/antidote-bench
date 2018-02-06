@@ -9,6 +9,8 @@ import eu.antidotedb.antidotepb.AntidotePB;
 import eu.antidotedb.client.*;
 
 import java.net.InetSocketAddress;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 
 import static adbm.settings.MapDBManager.getTypeOfKey;
@@ -75,7 +77,6 @@ public class AntidoteClientWrapper extends AntidoteModel {
     }
 
     /**
-     *
      * @param name
      * @param type
      */
@@ -90,7 +91,6 @@ public class AntidoteClientWrapper extends AntidoteModel {
     }
 
     /**
-     *
      * @param name
      */
     public void RemoveKey(String name) {
@@ -102,111 +102,214 @@ public class AntidoteClientWrapper extends AntidoteModel {
 
     /**
      * To write to Antidote. Executes all the operations of antidote
+     * With Notransaction
      *
-     * @param name
      * @param operation
-     * @param value
      */
-    public void ExecuteKeyOperation(String name, String operation, Object value) {
+    public UpdateOp getKeyUpdate(Operation operation) {
 
         if (running) {
+            String name = operation.keyName;
+            String operationName = operation.operationName;
+            Object value = operation.value;
             Key key = create(getTypeOfKey(name), ByteString.copyFromUtf8(name));
             UpdateOp update = null;
             Long longObject = null;
 
             if (key.getType().equals(AntidotePB.CRDT_type.LWWREG)) {
-                if (operation.equals("assign")) {
+                if (operationName.equals("assign")) {
                     RegisterKey lwwregKey = (RegisterKey) key;
                     update = lwwregKey.assign(value);
                 }
 
             } else if (key.getType().equals(AntidotePB.CRDT_type.MVREG)) {
                 MVRegisterKey mvregKey = (MVRegisterKey) key;
-                if (operation.equals("assign")) {
+                if (operationName.equals("assign")) {
                     update = mvregKey.assign(value);
-                } else if (operation.equals("reset")) {
+                } else if (operationName.equals("reset")) {
                     update = mvregKey.reset();
                 }
             } else if ((key.getType().equals(AntidotePB.CRDT_type.COUNTER)) || (key.getType().equals(AntidotePB.CRDT_type.FATCOUNTER))) {
 
                 CounterKey counterKey = (CounterKey) key;
                 longObject = Long.parseLong(value.toString());
-                if (operation.equals("increment")) {
+                if (operationName.equals("increment")) {
                     update = counterKey.increment(longObject);
-                } else if (operation.equals("decrement")) {
+                } else if (operationName.equals("decrement")) {
                     update = counterKey.increment(-longObject);
-                } else if (operation.equals("reset")) {
+                } else if (operationName.equals("reset")) {
                     update = counterKey.reset();
                 }
             } else if (key.getType().equals(AntidotePB.CRDT_type.INTEGER)) {
                 IntegerKey integerKey = (IntegerKey) key;
                 longObject = Long.parseLong(value.toString());
-                if (operation.equals("increment")) {
+                if (operationName.equals("increment")) {
                     update = integerKey.increment(longObject);
-                } else if (operation.equals("decrement")) {
+                } else if (operationName.equals("decrement")) {
                     update = integerKey.increment(-longObject);
-                } else if (operation.equals("reset")) {
+                } else if (operationName.equals("reset")) {
                     update = integerKey.reset();
-                } else if (operation.equals("set")) {
-                    operation = "assign";
+                } else if (operationName.equals("set")) {
+                    operationName = "assign";
                     update = integerKey.assign(longObject);
                 }
             } else if ((key.getType().equals(AntidotePB.CRDT_type.GMAP)) || (key.getType().equals(AntidotePB.CRDT_type.AWMAP)) || (key.getType().equals(AntidotePB.CRDT_type.RRMAP))) {
                 MapKey gmapKey = (MapKey) key;
 
-                if (operation.equals("update")) {
+                if (operationName.equals("update")) {
                     update = gmapKey.update(); // Check with Kevin
-                } else if (operation.equals("removeKey")) {
+                } else if (operationName.equals("removeKey")) {
                     update = gmapKey.removeKey(key);
 
-                } else if (operation.equals("removeKeys")) {
+                } else if (operationName.equals("removeKeys")) {
                     // update = gmapKey.removeKeys(getMapKeyValue(gmapKey))
 
-                } else if (operation.equals("reset")) {
+                } else if (operationName.equals("reset")) {
                     update = gmapKey.reset();
                 }
             } else if ((key.getType().equals(AntidotePB.CRDT_type.ORSET)) || (key.getType().equals(AntidotePB.CRDT_type.RWSET))) {
 
                 SetKey rwsetSetKey = (SetKey) key;
 
-                if (operation.equals("add")) {
+                if (operationName.equals("add")) {
                     update = rwsetSetKey.add(value);
 
-                } else if (operation.equals("addAll")) {
+                } else if (operationName.equals("addAll")) {
                     //update=rwsetSetKey.addAll()
 
-                } else if (operation.equals("remove")) {
+                } else if (operationName.equals("remove")) {
                     update = rwsetSetKey.remove(value);
 
-                } else if (operation.equals("removeAll")) {
+                } else if (operationName.equals("removeAll")) {
 
-                } else if (operation.equals("reset")) {
+                } else if (operationName.equals("reset")) {
                     update = rwsetSetKey.reset();
                 }
             }
+            //bucket.update(antidote.noTransaction(), update);
+            return update;
+        }
+        return null;
+    }
+
+    /**
+     * To write to Antidote. Executes all the operations of antidote
+     * With Notransaction
+     *
+     * @param operations
+     */
+    public void ExecuteKeyOperations(List<Operation> operations) {
+
+        if (running) {
+            List<UpdateOp> updates = new ArrayList<>();
+
+            for (Operation operation : operations) {
+                updates.add(getKeyUpdate(operation));
+            }
+
+            InteractiveTransaction tx = antidote.startTransaction();
+            bucket.updates(tx, updates);
+            tx.commitTransaction();
 
         }
     }
 
     /**
+     * To write to Antidote. Executes all the operations of antidote
+     * With Notransaction
+     *
+     * @param operation
+     */
+    public void ExecuteSingleKeyOperation(Operation operation) {
+
+        if (running) {
+            InteractiveTransaction tx = antidote.startTransaction();
+            bucket.update(tx, getKeyUpdate(operation));
+            tx.commitTransaction();
+
+        }
+    }
+
+    /**
+     * @param keys
+     * @param operations
+     */
+    public void ExecuteKeyRW(List<String> keys, List<Operation> operations) {
+        // TODO different data structure
+        if (running) {
+            InteractiveTransaction tx = antidote.startTransaction();
+            for (int i = 0; i < keys.size(); i++) {
+                Operation op = operations.get(i);
+                if (op == null) {
+                    bucket.read(tx, createKey(keys.get(i)));
+                } else {
+                    bucket.update(tx, getKeyUpdate(op));
+                }
+            }
+            tx.commitTransaction();
+        }
+    }
+
+    class Operation {
+        public final String keyName;
+        public final String operationName;
+        public final Object value;
+
+        public Operation(String keyName, String operationName, Object value) {
+            this.keyName = keyName;
+            this.operationName = operationName;
+            this.value = value;
+        }
+    }
+
+
+    /**
      * To read from Antidote. Execute all operations
+     * With no transaction
      *
      * @param name
      * @return
      */
-    // read
-    public String getKeyValue(String name) {
+    public String getKeyValueNoTransaction(String name) {
         if (running) {
             Key key = createKey(name);
-            if (key.getType().equals(AntidotePB.CRDT_type.COUNTER) || key.getType().equals(AntidotePB.CRDT_type.FATCOUNTER) || key.getType().equals(AntidotePB.CRDT_type.INTEGER)) {
+
+            //Assuming that every CRDT type returns String
+            return bucket.read(antidote.noTransaction(), createKey(name)).toString();
+
+           /*
+            if (key.getType().equals(AntidotePB.CRDT_type.LWWREG)) {
+            } else if (key.getType().equals(AntidotePB.CRDT_type.MVREG)) {
+            } else if (key.getType().equals(AntidotePB.CRDT_type.COUNTER) || key.getType().equals(AntidotePB.CRDT_type.FATCOUNTER) || key.getType().equals(AntidotePB.CRDT_type.INTEGER)) {
                 return bucket.read(antidote.noTransaction(), createKey(name)).toString();
             } else if ((key.getType().equals(AntidotePB.CRDT_type.GMAP)) || (key.getType().equals(AntidotePB.CRDT_type.AWMAP)) || (key.getType().equals(AntidotePB.CRDT_type.RRMAP))) {
                 // return bucket.read(antidote.noTransaction(),)
             } else if ((key.getType().equals(AntidotePB.CRDT_type.ORSET)) || (key.getType().equals(AntidotePB.CRDT_type.RWSET))) {
+            }*/
+        } else
+            return null;
+    }
+
+    public List<String> getKeyValues(List<String> keyNames) {
+        List<String> results = new ArrayList<>();
+        if (running) {
+            List<Key> keyList = new ArrayList<>();
+            for (String name : keyNames) {
+                keyList.add(createKey(name));
+            }
+            BatchRead batchRead = antidote.newBatchRead();
+            List<BatchReadResult> res = new ArrayList<>();
+            for (Key key : keyList) {
+                res.add(bucket.read(batchRead, key));
+            }
+            batchRead.commit(antidote.noTransaction());
+            for (BatchReadResult result : res) {
+                results.add(result.get().toString());
             }
         }
-        return null;
+        return results;
     }
+
 
     /**
      * @param key
@@ -223,7 +326,7 @@ public class AntidoteClientWrapper extends AntidoteModel {
     private Key createKey(String name) {
         if (running) {
             return create(getTypeOfKey(name), ByteString.copyFromUtf8(name));
-        }
-        return null;
+        } else
+            return null;
     }
 }
