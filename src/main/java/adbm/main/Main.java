@@ -54,10 +54,10 @@ public class Main
         AntidoteClientWrapper f1 = startAntidoteClient("antidote1");
         AntidoteClientWrapper f2 = startAntidoteClient("antidote2");
         log.warn("Rebuilding!");
-        f1.AddKeyNoTransaction("Test", AntidotePB.CRDT_type.INTEGER);
-        log.info(f1.getKeyValueNoTransaction("Test"));
+        f1.AddKey("Test", AntidotePB.CRDT_type.INTEGER);
+        log.info(f1.getKeyValue("Test"));
         f1.ExecuteKeyOperation("Test", "increment", 3);
-        log.info(f1.getKeyValueNoTransaction("Test"));
+        log.info(f1.getKeyValue("Test"));
         f1.AddKey("Test1", AntidotePB.CRDT_type.INTEGER);
         //log.info(f.getKeyValue("Test"));
         //DockerManager.rebuildAntidoteInContainer("TestAntidote", "2742f58a2e28d64dbfcf226b1a7b4d53303cd6b6");

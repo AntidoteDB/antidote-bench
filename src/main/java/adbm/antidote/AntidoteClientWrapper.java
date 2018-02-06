@@ -32,8 +32,8 @@ public class AntidoteClientWrapper extends AntidoteModel {
 
     private boolean running;
 
-    public void isReady() {
-
+    public boolean isReady() {
+        return true;
     }
 
     /**
@@ -44,7 +44,7 @@ public class AntidoteClientWrapper extends AntidoteModel {
 
     public AntidoteClientWrapper(String name) {
         //docker run -i -t -d --name antidote1 -p 8087:8087 --network antidote_ntwk -e SHORT_NAME=true -e NODE_NAME=antidote@antidote1 antidotedb/antidote
-        DockerManager.runContainer(name);
+        //DockerManager.runContainer(name);
         hostPort = DockerManager.getHostPortFromContainer(name);
 
         antidote = new AntidoteClient(new InetSocketAddress("localhost", hostPort));
@@ -72,7 +72,7 @@ public class AntidoteClientWrapper extends AntidoteModel {
 
     public void AddKey(String name, AntidotePB.CRDT_type type) {
         if (running) {
-            AntidoteStaticTransaction tx = antidote.createStaticTransaction();
+            InteractiveTransaction tx = antidote.startTransaction();
             bucket.update(tx, create(type, ByteString.copyFromUtf8(name)).reset());
             tx.commitTransaction();
             this.firePropertyChange(AntidoteController.KeyListChanged, "", "");
