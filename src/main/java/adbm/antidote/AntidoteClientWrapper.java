@@ -8,13 +8,11 @@ import com.google.protobuf.ByteString;
 import eu.antidotedb.antidotepb.AntidotePB;
 import eu.antidotedb.client.*;
 
-import java.lang.reflect.Method;
 import java.net.InetSocketAddress;
 import java.util.Map;
 
 import static adbm.settings.MapDBManager.getTypeOfKey;
 import static eu.antidotedb.client.Key.create;
-import static eu.antidotedb.client.Key.map_g;
 
 /**
  * Bridge between Antidote and YCSB
@@ -32,8 +30,8 @@ public class AntidoteClientWrapper extends AntidoteModel {
 
     private boolean running;
 
-    public void isReady() {
-
+    public boolean isReady() {
+        return true;
     }
 
     /**
@@ -72,7 +70,7 @@ public class AntidoteClientWrapper extends AntidoteModel {
 
     public void AddKey(String name, AntidotePB.CRDT_type type) {
         if (running) {
-            AntidoteStaticTransaction tx = antidote.createStaticTransaction();
+            InteractiveTransaction tx = antidote.startTransaction();
             bucket.update(tx, create(type, ByteString.copyFromUtf8(name)).reset());
             tx.commitTransaction();
             this.firePropertyChange(AntidoteController.KeyListChanged, "", "");
