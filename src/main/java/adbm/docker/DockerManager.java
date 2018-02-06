@@ -394,9 +394,24 @@ public class DockerManager
                 log.info("Started the container {}", name);
                 log.info("Container ID: {}", container.id());
                 log.info("State: {}", docker.inspectContainer(container.id()).state());
+                //TODO more efficient
+                Thread.sleep(500);
+                String logs;
+                try (LogStream stream = docker.logs(container.id(), DockerClient.LogsParam.stdout(), DockerClient.LogsParam.stderr())) {
+                    logs = stream.readFully();
+                }
+                int start = logs.lastIndexOf("NODE_NAME");
+                while (!logs.substring(start).contains("Application antidote started on node")) {
+                    Thread.sleep(500);
+                    log.info("Container is not ready yet!");
+                    try (LogStream stream = docker.logs(container.id(), DockerClient.LogsParam.stdout(), DockerClient.LogsParam.stderr())) {
+                        logs = stream.readFully();
+                    }
+                    start = logs.lastIndexOf("NODE_NAME");
+                }
             }
         } catch (Exception e) {
-            log.error("An error has occured while starting a container!", e);
+            log.error("An error has occurred while starting a container!", e);
         }
     }
 
