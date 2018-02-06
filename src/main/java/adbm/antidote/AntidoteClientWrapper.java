@@ -32,8 +32,8 @@ public class AntidoteClientWrapper extends AntidoteModel {
 
     private boolean running;
 
-    public boolean isReady() {
-        return true;
+    public void isReady() {
+
     }
 
     /**
@@ -44,7 +44,7 @@ public class AntidoteClientWrapper extends AntidoteModel {
 
     public AntidoteClientWrapper(String name) {
         //docker run -i -t -d --name antidote1 -p 8087:8087 --network antidote_ntwk -e SHORT_NAME=true -e NODE_NAME=antidote@antidote1 antidotedb/antidote
-        //DockerManager.runContainer(name);
+        DockerManager.runContainer(name);
         hostPort = DockerManager.getHostPortFromContainer(name);
 
         antidote = new AntidoteClient(new InetSocketAddress("localhost", hostPort));
@@ -72,7 +72,7 @@ public class AntidoteClientWrapper extends AntidoteModel {
 
     public void AddKey(String name, AntidotePB.CRDT_type type) {
         if (running) {
-            InteractiveTransaction tx = antidote.startTransaction();
+            AntidoteStaticTransaction tx = antidote.createStaticTransaction();
             bucket.update(tx, create(type, ByteString.copyFromUtf8(name)).reset());
             tx.commitTransaction();
             this.firePropertyChange(AntidoteController.KeyListChanged, "", "");
@@ -88,6 +88,7 @@ public class AntidoteClientWrapper extends AntidoteModel {
 
     /**
      * To write to Antidote. Executes all the operations of antidote
+     *
      * @param name
      * @param operation
      * @param value
@@ -101,35 +102,16 @@ public class AntidoteClientWrapper extends AntidoteModel {
 
             if (key.getType().equals(AntidotePB.CRDT_type.LWWREG)) {
                 if (operation.equals("assign")) {
-                    Class[] par = new Class[1];
-                    par[0] = Object.class;
-
-                    try {
-                        Method method = key.getClass().getMethod(operation, par);
-                        update = (UpdateOp) method.invoke(key, value);
-                    } catch (Exception e) {
-                        e.printStackTrace();
-                    }
+                    RegisterKey lwwregKey = (RegisterKey) key;
+                    update = lwwregKey.assign(value);
                 }
 
             } else if (key.getType().equals(AntidotePB.CRDT_type.MVREG)) {
+                MVRegisterKey mvregKey = (MVRegisterKey) key;
                 if (operation.equals("assign")) {
-                    Class[] par = new Class[1];
-                    par[0] = Object.class;
-
-                    try {
-                        Method method = key.getClass().getMethod(operation, par);
-                        update = (UpdateOp) method.invoke(key, value);
-                    } catch (Exception e) {
-                        e.printStackTrace();
-                    }
+                    update = mvregKey.assign(value);
                 } else if (operation.equals("reset")) {
-                    try {
-                        Method method = key.getClass().getMethod(operation, null);
-                        update = (UpdateOp) method.invoke(key, null);
-                    } catch (Exception e) {
-                        e.printStackTrace();
-                    }
+                    update = mvregKey.reset();
                 }
             } else if ((key.getType().equals(AntidotePB.CRDT_type.COUNTER)) || (key.getType().equals(AntidotePB.CRDT_type.FATCOUNTER))) {
 
@@ -140,12 +122,7 @@ public class AntidoteClientWrapper extends AntidoteModel {
                 } else if (operation.equals("decrement")) {
                     update = counterKey.increment(-longObject);
                 } else if (operation.equals("reset")) {
-                    try {
-                        //Method method = key.getClass().getMethod(operation, null);
-                        update = counterKey.reset();//(UpdateOp) method.invoke(key, null);
-                    } catch (Exception e) {
-                        e.printStackTrace();
-                    }
+                    update = counterKey.reset();
                 }
             } else if (key.getType().equals(AntidotePB.CRDT_type.INTEGER)) {
                 IntegerKey integerKey = (IntegerKey) key;
@@ -155,24 +132,10 @@ public class AntidoteClientWrapper extends AntidoteModel {
                 } else if (operation.equals("decrement")) {
                     update = integerKey.increment(-longObject);
                 } else if (operation.equals("reset")) {
-                    try {
-                        Method method = key.getClass().getMethod(operation, null);
-                        update = (UpdateOp) method.invoke(key, null);
-                    } catch (Exception e) {
-                        e.printStackTrace();
-                    }
+                    update = integerKey.reset();
                 } else if (operation.equals("set")) {
                     operation = "assign";
-
-                    Class[] par = new Class[1];
-                    par[0] = Object.class;
-
-                    try {
-                        Method method = key.getClass().getMethod(operation, par);
-                        update = (UpdateOp) method.invoke(key, value);
-                    } catch (Exception e) {
-                        e.printStackTrace();
-                    }
+                    update = integerKey.assign(longObject);
                 }
             } else if ((key.getType().equals(AntidotePB.CRDT_type.GMAP)) || (key.getType().equals(AntidotePB.CRDT_type.AWMAP)) || (key.getType().equals(AntidotePB.CRDT_type.RRMAP))) {
                 MapKey gmapKey = (MapKey) key;
@@ -186,12 +149,7 @@ public class AntidoteClientWrapper extends AntidoteModel {
                     // update = gmapKey.removeKeys(getMapKeyValue(gmapKey))
 
                 } else if (operation.equals("reset")) {
-                    try {
-                        Method method = key.getClass().getMethod(operation, null);
-                        update = (UpdateOp) method.invoke(key, null);
-                    } catch (Exception e) {
-                        e.printStackTrace();
-                    }
+                    update = gmapKey.reset();
                 }
             } else if ((key.getType().equals(AntidotePB.CRDT_type.ORSET)) || (key.getType().equals(AntidotePB.CRDT_type.RWSET))) {
 
@@ -209,20 +167,16 @@ public class AntidoteClientWrapper extends AntidoteModel {
                 } else if (operation.equals("removeAll")) {
 
                 } else if (operation.equals("reset")) {
-                    try {
-                        Method method = key.getClass().getMethod(operation, null);
-                        update = (UpdateOp) method.invoke(key, null);
-                    } catch (Exception e) {
-                        e.printStackTrace();
-                    }
+                    update = rwsetSetKey.reset();
                 }
             }
-            
+
         }
     }
 
     /**
      * To read from Antidote. Execute all operations
+     *
      * @param name
      * @return
      */
@@ -241,7 +195,6 @@ public class AntidoteClientWrapper extends AntidoteModel {
     }
 
     /**
-     *
      * @param key
      * @return
      */
@@ -250,7 +203,6 @@ public class AntidoteClientWrapper extends AntidoteModel {
     }
 
     /**
-     *
      * @param name
      * @return
      */
