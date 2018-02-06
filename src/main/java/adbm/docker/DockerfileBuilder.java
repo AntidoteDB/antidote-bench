@@ -2,6 +2,8 @@ package adbm.docker;
 
 import adbm.git.GitManager;
 import adbm.settings.MapDBManager;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import java.io.*;
 import java.nio.file.Files;
@@ -10,6 +12,9 @@ import java.nio.file.StandardCopyOption;
 
 public class DockerfileBuilder
 {
+
+    private static final Logger log = LogManager.getLogger(DockerfileBuilder.class);
+    
     private static String getLocalDockerfile(String repoDirName)
     {
         if (repoDirName == null) repoDirName = "antidote";
@@ -130,7 +135,7 @@ public class DockerfileBuilder
         {
             writer.write(dockerfile);
             writer.close();
-            System.out.println("Dockerfile created!");
+            log.info("Dockerfile created!");
             if (!local) return;
             File[] files = new File("Dockerfile").listFiles();
             if (files == null) return;
@@ -143,7 +148,7 @@ public class DockerfileBuilder
                         StandardCopyOption.COPY_ATTRIBUTES,
                         LinkOption.NOFOLLOW_LINKS);
             }
-            System.out.println("Dockerfile deployed!");
+            log.info("Dockerfile deployed!");
         } catch (Exception e) {
             e.printStackTrace();
         }

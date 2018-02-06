@@ -16,11 +16,7 @@ public class AntidoteUtil {
     public static final EnumMap<AntidotePB.CRDT_type, List<String>> typeKeyMap = createTypeKeyMap();
 
     public static List<String> getKeysForType(AntidotePB.CRDT_type type) {
-        List<String> list = new ArrayList<>();
-        for (String key : typeKeyMap.get(type)) {
-            list.add(key);
-        }
-        return list;
+        return new ArrayList<>(typeKeyMap.get(type));
     }
 
     public static void addKey(String key, AntidotePB.CRDT_type type) {

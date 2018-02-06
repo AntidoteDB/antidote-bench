@@ -120,7 +120,7 @@
                   <text value="Select Key Datatype"/>
                 </properties>
               </component>
-              <component id="cc935" class="javax.swing.JComboBox" binding="comboBoxKeyDatatype">
+              <component id="cc935" class="javax.swing.JComboBox" binding="comboBoxKeyType">
                 <constraints>
                   <grid row="1" column="0" row-span="1" col-span="3" vsize-policy="0" hsize-policy="2" anchor="8" fill="1" indent="0" use-parent-layout="false"/>
                 </constraints>

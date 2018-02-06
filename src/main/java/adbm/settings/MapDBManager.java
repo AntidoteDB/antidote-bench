@@ -2,6 +2,8 @@ package adbm.settings;
 
 import adbm.antidote.AntidoteUtil;
 import eu.antidotedb.antidotepb.AntidotePB;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.mapdb.DB;
 import org.mapdb.DBMaker;
 import org.mapdb.HTreeMap;
@@ -9,11 +11,13 @@ import org.mapdb.Serializer;
 
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Map;
 
 public class MapDBManager
 {
+    private static final Logger log = LogManager.getLogger(MapDBManager.class);
+    
+    private static String location = "./target/keyStoreDatabase";
 
     private static DB mapDB;
 
@@ -25,7 +29,7 @@ public class MapDBManager
 
     public static void startMapDB()
     {
-        mapDB = DBMaker.fileDB("./target/keyStoreDatabase").closeOnJvmShutdown().transactionEnable().make();
+        mapDB = DBMaker.fileDB(location).closeOnJvmShutdown().transactionEnable().make();
         keyTypeMapDB = mapDB
                 .hashMap("keyTypeMapDB", Serializer.STRING, Serializer.STRING)
                 .createOrOpen();
@@ -85,12 +89,7 @@ public class MapDBManager
 
     public static String getAppSetting(String setting)
     {
-        if (appSettings.containsKey(setting)) {
-            return appSettings.get(setting);
-        }
-        else {
-            return "";
-        }
+        return appSettings.getOrDefault(setting, "");
     }
 
     public static void setAppSetting(String setting, String value)
@@ -106,7 +105,7 @@ public class MapDBManager
 
     public static boolean isReady() {
         if (mapDB != null && keyTypeMapDB != null && appSettings != null) return true;
-        System.out.println("ERROR: The settings are not initialized!\nPlease restart the application!");
+        log.error("ERROR: The settings are not initialized!\nPlease restart the application!");
         return false;
     }
 

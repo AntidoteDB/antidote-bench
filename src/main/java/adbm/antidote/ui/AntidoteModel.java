@@ -1,10 +1,15 @@
 package adbm.antidote.ui;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
 import java.beans.PropertyChangeListener;
 import java.beans.PropertyChangeSupport;
 
 public class AntidoteModel
 {
+
+    private static final Logger log = LogManager.getLogger(AntidoteModel.class);
 
     protected PropertyChangeSupport propertyChangeSupport;
 

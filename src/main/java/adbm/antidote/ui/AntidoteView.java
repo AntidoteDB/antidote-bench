@@ -2,13 +2,13 @@ package adbm.antidote.ui;
 
 import adbm.antidote.AntidoteClientWrapper;
 import adbm.docker.DockerManager;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import javax.swing.*;
 import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
 
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
 import java.beans.PropertyChangeEvent;
 import java.util.List;
 
@@ -16,15 +16,17 @@ import static adbm.antidote.AntidoteUtil.*;
 
 public class AntidoteView
 {
+
+    private static final Logger log = LogManager.getLogger(AntidoteView.class);
     private JPanel panel1;
 
-    private JList listViewAllDCs;
+    private JList<String> listViewAllDCs;
 
-    private JList listViewKeySelection;
-    private JList listViewOperationSelection;
-    private JList listViewKeyValue;
+    private JList<String> listViewKeySelection;
+    private JList<String> listViewOperationSelection;
+    private JList<String> listViewKeyValue;
 
-    private JList listViewConnectedDCs;
+    private JList<String> listViewConnectedDCs;
 
     private JTextField textFieldDCName;
 
@@ -49,38 +51,52 @@ public class AntidoteView
     private JButton buttonRemoveDCConnection;
     private JButton buttonSuspendDCConnection;
 
-    private JComboBox comboBoxWindowDC;
-    private JComboBox comboBoxKeyDatatype; // No Change
-    private JComboBox comboBoxRunningDC;
+    private JComboBox<String> comboBoxWindowDC;
 
-    private DefaultListModel listViewAllDCsModel = new DefaultListModel();
-    private DefaultListModel listViewKeySelectionModel = new DefaultListModel();
-    private DefaultListModel listViewOperationSelectionModel = new DefaultListModel();
-    private DefaultListModel listViewKeyValueModel = new DefaultListModel();
-    private DefaultListModel listViewConnectedDCsModel = new DefaultListModel();
+    private JComboBox<String> comboBoxKeyType; // No Change
 
-    private DefaultComboBoxModel comboBoxWindowDCModel = new DefaultComboBoxModel();
-    private DefaultComboBoxModel comboBoxKeyDatatypeModel = new DefaultComboBoxModel();
-    private DefaultComboBoxModel comboBoxRunningDCModel = new DefaultComboBoxModel();
+    private JComboBox<String> comboBoxRunningDC;
+
+    private DefaultListModel<String> listViewAllDCsModel = new DefaultListModel<>();
+    private DefaultListModel<String> listViewKeySelectionModel = new DefaultListModel<>();
+    private DefaultListModel<String> listViewOperationSelectionModel = new DefaultListModel<>();
+    private DefaultListModel<String> listViewKeyValueModel = new DefaultListModel<>(); // TODO could  be different type
+    private DefaultListModel<String> listViewConnectedDCsModel = new DefaultListModel<>();
+
+    private DefaultComboBoxModel<String> comboBoxWindowDCModel = new DefaultComboBoxModel<>();
+    private DefaultComboBoxModel<String> comboBoxKeyTypeModel = new DefaultComboBoxModel<>();
+    private DefaultComboBoxModel<String> comboBoxRunningDCModel = new DefaultComboBoxModel<>();
 
     private AntidoteClientWrapper activeAntidoteClient;
 
+    public boolean isReady()
+    {
+        if (activeAntidoteClient == null) {
+            log.error("ERROR: Antidote Client was null!");
+            return false;
+        }
+        if (activeAntidoteClient.isReady()) return true;
+        log.warn("Antidote Client is inactive!");
+        return false;
+    }
+
     public AntidoteView(AntidoteClientWrapper startClient)
     {
+        if (startClient == null) return;
         activeAntidoteClient = startClient;
         JFrame frame = new JFrame("AntidoteView");
 
         frame.setContentPane(panel1);
-        frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        frame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
         frame.pack();
         frame.setLocationRelativeTo(null);
         frame.setVisible(true);
         // TODO set initial values for everything
 
-        comboBoxKeyDatatype.setModel(comboBoxKeyDatatypeModel);
+        comboBoxKeyType.setModel(comboBoxKeyTypeModel);
         for (String type : guiTypeMap.keySet())
-            comboBoxKeyDatatypeModel.addElement(type);
-        comboBoxKeyDatatype.setSelectedIndex(0);
+            comboBoxKeyTypeModel.addElement(type);
+        comboBoxKeyType.setSelectedIndex(0);
 
         comboBoxRunningDC.setModel(comboBoxRunningDCModel);
         comboBoxWindowDC.setModel(comboBoxWindowDCModel);
@@ -93,52 +109,46 @@ public class AntidoteView
 
         refreshDCList();
 
-        refreshKeyDatatype();
-
+        refreshKeyList();
 
 
         executeButton.addActionListener(e -> {
             if (activeAntidoteClient != null) {
-                //activeAntidoteClient.ExecuteKeyOperation(listViewKeySelection.getSelectedValue().toString(),
-                                                         //listViewOperationSelection.getSelectedValue().toString(),
-                                                         //textFieldOperationValue.getText());
+                activeAntidoteClient.ExecuteKeyOperation(listViewKeySelection.getSelectedValue(),
+                                                         listViewOperationSelection.getSelectedValue(),
+                                                         textFieldOperationValue.getText());
             }
-            //refreshCurrentValue();
         });
-        listViewOperationSelection.addListSelectionListener(e -> refreshGUICommand());
-        comboBoxKeyDatatype.addActionListener(e -> refreshKeyDatatype());
-        listViewKeySelection.addListSelectionListener(e ->
-                                                      {
-                                                          //refreshCurrentValue();
-                                                      });
+        listViewOperationSelection.addListSelectionListener(e -> refreshCommandTextFields());
+        comboBoxKeyType.addActionListener(e -> refreshKeyList());
+        listViewKeySelection.addListSelectionListener(e -> refreshKeyValue());
         textFieldOperationValue.getDocument().addDocumentListener(new DocumentListener()
         {
             @Override
             public void insertUpdate(DocumentEvent e)
             {
-                //refreshGUICommand();
+                refreshCommandTextFields();
             }
 
             @Override
             public void removeUpdate(DocumentEvent e)
             {
-                //refreshGUICommand();
+                refreshCommandTextFields();
             }
 
             @Override
             public void changedUpdate(DocumentEvent e)
             {
-                //refreshGUICommand();
+                refreshCommandTextFields();
             }
         });
-        buttonAddDC.addActionListener(new ActionListener()
-        {
-            @Override
-            public void actionPerformed(ActionEvent e)
-            {
-                //if (textFieldDCName.getText() != null && !textFieldDCName.getText().isEmpty())
-                    //modelPropertyChange(new PropertyChangeEvent(this, "addDC", "", textFieldDCName.getText()));
-            }
+        buttonAddDC.addActionListener(e -> {
+            if (textFieldDCName.getText() != null && !textFieldDCName.getText().isEmpty())
+                modelPropertyChange(new PropertyChangeEvent(this, "addDC", "", textFieldDCName.getText()));
+        });
+        //TODO add all commands
+        buttonAddKey.addActionListener(e -> {
+
         });
     }
 
@@ -146,7 +156,9 @@ public class AntidoteView
     {
         List<String> runningContainers = DockerManager.getRunningContainers();
         if (!runningContainers.contains(activeAntidoteClient.name)) {
-            //TODO NOT ALLOWED!
+            log.error(
+                    "ERROR: The Antidote Client with the name {} is no longer running despite there being a window opened on it!\n",
+                    activeAntidoteClient.name);
         }
         comboBoxWindowDCModel.removeAllElements();
         for (String container : runningContainers)
@@ -159,7 +171,9 @@ public class AntidoteView
             for (String container : runningContainers)
                 comboBoxRunningDCModel.addElement(container);
             if (comboBoxRunningDCModel.getIndexOf(activeAntidoteClient.name) == -1) {
-                //TODO NOT ALLOWED!
+                log.error(
+                        "ERROR: The Antidote Client with the name {} was not found despite there being a window opened on it!\n",
+                        activeAntidoteClient.name);
             }
             selectedItem = activeAntidoteClient.name;
             comboBoxRunningDCModel.setSelectedItem(selectedItem);
@@ -170,7 +184,9 @@ public class AntidoteView
                 comboBoxRunningDCModel.addElement(container);
             if (comboBoxRunningDCModel.getIndexOf(selectedItem) == -1) {
                 if (comboBoxRunningDCModel.getIndexOf(activeAntidoteClient.name) == -1) {
-                    //TODO NOT ALLOWED!
+                    log.error(
+                            "ERROR: The Antidote Client with the name {} was not found despite there being a window opened on it!\n",
+                            activeAntidoteClient.name);
                 }
                 selectedItem = activeAntidoteClient.name;
             }
@@ -181,19 +197,24 @@ public class AntidoteView
         for (String container : allContainers) {
             if (runningContainers.contains(container)) {
                 listViewAllDCsModel.addElement(container + " (Running)");
-            } else {
-                listViewAllDCsModel.addElement(container + " (Stopped)");
+            }
+            else {
+                listViewAllDCsModel.addElement(container + " (Not Running)");
             }
         }
         // TODO Connected DCs
     }
 
-    private void refreshKeyDatatype()
+    private void refreshKeyList()
     {
-        if (comboBoxKeyDatatype.getSelectedItem() == null) {
-            comboBoxKeyDatatype.setSelectedIndex(0);
+        if (comboBoxKeyType.getSelectedItem() == null) {
+            comboBoxKeyType.setSelectedIndex(0);
         }
-        String selectedKey = comboBoxKeyDatatype.getSelectedItem().toString();
+        if (comboBoxKeyType.getSelectedItem() == null) {
+            log.error("ERROR: No Antidote Key Type was found!");
+            return;
+        }
+        String selectedKey = comboBoxKeyType.getSelectedItem().toString();
         listViewKeySelectionModel.clear();
         for (String key : getKeysForType(guiTypeMap.get(selectedKey)))
             listViewKeySelectionModel.addElement(key);
@@ -204,24 +225,27 @@ public class AntidoteView
             listViewOperationSelectionModel.addElement(key);
         if (listViewOperationSelection.getModel().getSize() > 0)
             listViewOperationSelection.setSelectedIndex(0);
-        refreshGUICommand();
+        refreshCommandTextFields();
     }
 
-    private void refreshGUICommand()
+    private void refreshKeyValue()
+    {
+        if (listViewKeySelection.getSelectedValue() != null && activeAntidoteClient != null)
+            listViewKeyValueModel.clear();
+        listViewKeyValueModel
+                .addElement(activeAntidoteClient.getKeyValue(listViewKeySelection.getSelectedValue()));
+        if (listViewOperationSelection.getModel().getSize() > 0)
+            listViewOperationSelection.setSelectedIndex(0);
+    }
+
+    private void refreshCommandTextFields()
     {
         if (listViewKeySelection.getSelectedValue() != null)
-            textFieldCommitKey.setText(listViewKeySelection.getSelectedValue().toString());
+            textFieldCommitKey.setText(listViewKeySelection.getSelectedValue());
         if (listViewOperationSelection.getSelectedValue() != null)
-            textFieldCommitOperation.setText(listViewOperationSelection.getSelectedValue().toString());
+            textFieldCommitOperation.setText(listViewOperationSelection.getSelectedValue());
         if (textFieldOperationValue.getText() != null)
             textFieldCommitValue.setText(textFieldOperationValue.getText());
-    }
-
-    private void refreshCurrentValue()
-    {
-        //if (listViewKeySelection.getSelectedValue() != null && activeAntidoteClient != null)
-        //textFieldCurrentValue
-        //.setText(activeAntidoteClient.getKeyValue(listViewKeySelection.getSelectedValue().toString()));
     }
 
     public void modelPropertyChange(final PropertyChangeEvent evt)
@@ -229,5 +253,17 @@ public class AntidoteView
         if (evt.getPropertyName().equals(AntidoteController.DCListChanged)) {
             refreshDCList();
         }
+        if (evt.getPropertyName().equals(AntidoteController.KeyValueChanged)) {
+            refreshKeyValue();
+        }
+        if (evt.getPropertyName().equals(AntidoteController.KeyListChanged)) {
+            refreshKeyList();
+        }
     }
+
+    public String getSelectedKey()
+    {
+        return null;
+    }
+
 }

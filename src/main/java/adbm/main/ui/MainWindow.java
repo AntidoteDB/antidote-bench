@@ -8,12 +8,11 @@ import adbm.git.GitManager;
 import adbm.git.ui.SelectBranchDialog;
 import adbm.settings.MapDBManager;
 import adbm.settings.ui.SettingsDialog;
+import adbm.util.TextPaneAppender;
 import org.apache.commons.lang.time.StopWatch;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
-import java.io.*;
-import java.awt.*;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import javax.swing.*;
@@ -22,7 +21,9 @@ import javax.swing.text.*;
 public class MainWindow
 {
 
-    private JTextArea textAreaConsole;
+    private static final Logger log = LogManager.getLogger(MainWindow.class);
+    
+    private JTextPane textPaneConsole;
     private JPanel panel;
     private JButton buttonSettings;
     private JButton buttonStartDocker;
@@ -32,39 +33,35 @@ public class MainWindow
     private JButton buttonCreateDockerfile;
     private JButton buttonBuildBenchmarkImages;
     private Document document;
-    ExecutorService executorService = Executors.newSingleThreadExecutor();
+    private ExecutorService executorService = Executors.newSingleThreadExecutor();
 
     public MainWindow()
     {
         JFrame frame = new JFrame("ConsoleLog");
 
         frame.setContentPane(panel);
-        frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        frame.setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
         frame.pack();
         frame.setLocationRelativeTo(null);
         frame.setVisible(true);
-        this.document = textAreaConsole.getDocument();
-        ConsoleOutputStream cos = new ConsoleOutputStream(null, System.out);
-        System.setOut(new PrintStream(cos, true));
-        ConsoleOutputStream cos2 = new ConsoleOutputStream(Color.RED, System.err);
-        System.setErr(new PrintStream(cos2, true));
+        TextPaneAppender.addTextPane(textPaneConsole);
         buttonSettings.addActionListener(e -> {
             if (MapDBManager.isReady())
-            new SettingsDialog();
+                new SettingsDialog();
         });
         buttonStartGit.addActionListener(e -> {
             if (!GitManager.isReadyNoText())
-            executorService.execute(() -> GitManager.startGit());
-            else System.out.println("Git is already started!");
+                executorService.execute(GitManager::startGit);
+            else log.info("Git is already started!");
         });
         buttonStartDocker.addActionListener(e -> {
             if (!DockerManager.isReadyNoText())
-            executorService.execute(() -> DockerManager.startDocker());
-            else System.out.println("Docker is already started!");
+                executorService.execute(DockerManager::startDocker);
+            else log.info("Docker is already started!");
         });
         buttonShowGitSettings.addActionListener(e -> {
             if (GitManager.isReady())
-            new SelectBranchDialog();
+                new SelectBranchDialog();
         });
         buttonStartAntidote.addActionListener(e -> {
             if (DockerManager.isReady())
@@ -77,22 +74,37 @@ public class MainWindow
         });
         buttonBuildBenchmarkImages.addActionListener(e -> {
             if (DockerManager.isReady()) {
+                int confirm = JOptionPane.showConfirmDialog(
+                        frame,
+                        "Are you sure you want to build the Image of the Antidote Benchmark?\n" +
+                                "This will take about 5 minutes and shows progress every 10 seconds.",
+                        "Confirmation",
+                        JOptionPane.YES_NO_OPTION);
+                if (confirm != JOptionPane.YES_OPTION) return;
+                if (DockerManager.imageExists()) {
+                    confirm = JOptionPane.showConfirmDialog(
+                            frame,
+                            "A previously built Image of the Antidote Benchmark exists.\n" +
+                                    "Do you want to rebuilt the image and remove the existing image?\n" +
+                                    "If you choose \"Yes\" then all containers that were created from the existing image will be stopped and removed.",
+                            "Confirmation",
+                            JOptionPane.YES_NO_OPTION);
+                    if (confirm != JOptionPane.YES_OPTION) return;
+                }
                 executorService.execute(() -> {
-                    DockerManager.IsBuildingImage = true;
-                    DockerManager.buildBenchmarkImages(false);
-                    DockerManager.IsBuildingImage = false;
+                    DockerManager.buildBenchmarkImage(false);
                 });
                 buttonBuildBenchmarkImages.setEnabled(false);
                 Executors.newSingleThreadExecutor().execute(() -> {
                     StopWatch watch = new StopWatch();
                     watch.start();
-                    while (DockerManager.IsBuildingImage) {
-                        System.out.println("Image is building...");
-                        System.out.println("Elapsed time: " + watch.getTime()/1000 + "s");
+                    //TODO race condition
+                    while (DockerManager.isBuildingImage()) {
+                        log.info("Image is building... Elapsed time: {}s", watch.getTime() / 1000);
                         try {
                             Thread.sleep(10000);
-                        } catch (InterruptedException e1) {
-                            e1.printStackTrace();
+                        } catch (InterruptedException ex) {
+                            ex.printStackTrace();
                         }
                     }
                 });
@@ -100,109 +112,4 @@ public class MainWindow
         });
     }
 
-    /*
-     *	Class to intercept output from a PrintStream and add it to a Document.
-     *  The output can optionally be redirected to a different PrintStream.
-     *  The text displayed in the Document can be color coded to indicate
-     *  the output source.
-     */
-    private class ConsoleOutputStream extends ByteArrayOutputStream
-    {
-        private final String EOL = System.getProperty("line.separator");
-        private SimpleAttributeSet attributes;
-        private PrintStream printStream;
-        private StringBuffer buffer = new StringBuffer(80);
-        private boolean isFirstLine;
-
-        /*
-         *  Specify the option text color and PrintStream
-         */
-        public ConsoleOutputStream(Color textColor, PrintStream printStream)
-        {
-            if (textColor != null) {
-                attributes = new SimpleAttributeSet();
-                StyleConstants.setForeground(attributes, textColor);
-            }
-
-            this.printStream = printStream;
-            isFirstLine = true;
-        }
-
-        /*
-         *  Override this method to intercept the output text. Each line of text
-         *  output will actually involve invoking this method twice:
-         *
-         *  a) for the actual text message
-         *  b) for the newLine string
-         *
-         *  The message will be treated differently depending on whether the line
-         *  will be appended or inserted into the Document
-         */
-        public void flush()
-        {
-            String message = toString();
-
-            if (message.length() == 0) return;
-
-            handleAppend(message);
-
-            reset();
-        }
-
-        /*
-         *	We don't want to have blank lines in the Document. The first line
-         *  added will simply be the message. For additional lines it will be:
-         *
-         *  newLine + message
-         */
-        private void handleAppend(String message)
-        {
-            //  This check is needed in case the text in the Document has been
-            //	cleared. The buffer may contain the EOL string from the previous
-            //  message.
-
-            if (document.getLength() == 0)
-                buffer.setLength(0);
-
-            if (EOL.equals(message)) {
-                buffer.append(message);
-            }
-            else {
-                buffer.append(message);
-                clearBuffer();
-            }
-
-        }
-
-        /*
-         *  The message and the newLine have been added to the buffer in the
-         *  appropriate order so we can now update the Document and send the
-         *  text to the optional PrintStream.
-         */
-        private void clearBuffer()
-        {
-            //  In case both the standard out and standard err are being redirected
-            //  we need to insert a newline character for the first line only
-
-            if (isFirstLine && document.getLength() != 0) {
-                buffer.insert(0, "\n");
-            }
-
-            isFirstLine = false;
-            String line = buffer.toString();
-
-            try {
-                int offset = document.getLength();
-                document.insertString(offset, line, attributes);
-                textAreaConsole.setCaretPosition(document.getLength());
-            } catch (BadLocationException ble) {
-            }
-
-            if (printStream != null) {
-                printStream.print(line);
-            }
-
-            buffer.setLength(0);
-        }
-    }
 }

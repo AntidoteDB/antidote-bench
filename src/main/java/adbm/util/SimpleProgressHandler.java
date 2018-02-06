@@ -3,16 +3,20 @@ package adbm.util;
 import com.spotify.docker.client.ProgressHandler;
 import com.spotify.docker.client.exceptions.DockerException;
 import com.spotify.docker.client.messages.ProgressMessage;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import java.text.MessageFormat;
 
 public class SimpleProgressHandler implements ProgressHandler
 {
-    private String _type;
+    private static final Logger log = LogManager.getLogger(SimpleProgressHandler.class);
+
+    private String type;
 
     public SimpleProgressHandler(String type) {
-        if (type != null) _type = type;
-        else _type = "ID";
+        if (type != null) this.type = type;
+        else this.type = "ID";
     }
 
     @Override
@@ -29,16 +33,16 @@ public class SimpleProgressHandler implements ProgressHandler
     void handleProgress(String id, String status, String progress)
     {
         if (progress == null) {
-            System.out.println(MessageFormat.format(_type + " {0}: {1}", id, status));
+            log.info(MessageFormat.format(type + " {0}: {1}", id, status));
         }
         else {
-            System.out.println(MessageFormat.format(_type + " {0}: {1} {2}", id, status, progress));
+            log.info(MessageFormat.format(type + " {0}: {1} {2}", id, status, progress));
         }
     }
 
     void handleError(String error) throws DockerException
     {
-        System.out.println(error);
+        log.error(error);
         throw new DockerException(error);
     }
 }

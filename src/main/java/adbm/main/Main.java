@@ -6,23 +6,29 @@ import adbm.git.GitManager;
 import adbm.main.ui.MainWindow;
 import adbm.settings.MapDBManager;
 import eu.antidotedb.antidotepb.AntidotePB;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 public class Main
 {
 
-    public static List<AntidoteClientWrapper> clientList = new ArrayList<>();
+    private static final Logger log = LogManager.getLogger(Main.class);
+
+    public static Map<String, AntidoteClientWrapper> clientList = new HashMap<>();
 
     public static AntidoteClientWrapper client;
 
     public static AntidoteClientWrapper startAntidoteClient(String name)
     {
-
+        if (clientList.containsKey(name)) return clientList.get(name);
         if (DockerManager.runContainer(name)) {
             AntidoteClientWrapper clientWrapper = new AntidoteClientWrapper(name);
-            clientList.add(clientWrapper);
+            clientList.put(name, clientWrapper);
             return clientWrapper;
         }
         return null;
@@ -31,7 +37,6 @@ public class Main
     public static void stopAntidoteClient(String name)
     {
         DockerManager.stopContainer(name);
-        clientList.remove(name);
     }
 
     public static void removeAntidoteClient(String name)
@@ -45,11 +50,22 @@ public class Main
         MapDBManager.startMapDB();
         GitManager.startGit();
         DockerManager.startDocker();
-        System.out.println("Ready!");
+        log.warn("Ready!");
+        AntidoteClientWrapper f1 = startAntidoteClient("antidote1");
+        AntidoteClientWrapper f2 = startAntidoteClient("antidote2");
+        log.warn("Rebuilding!");
+        f1.AddKeyNoTransaction("Test", AntidotePB.CRDT_type.INTEGER);
+        log.info(f1.getKeyValueNoTransaction("Test"));
+        f1.ExecuteKeyOperation("Test", "increment", 3);
+        log.info(f1.getKeyValueNoTransaction("Test"));
+        f1.AddKey("Test1", AntidotePB.CRDT_type.INTEGER);
+        //log.info(f.getKeyValue("Test"));
+        //DockerManager.rebuildAntidoteInContainer("TestAntidote", "2742f58a2e28d64dbfcf226b1a7b4d53303cd6b6");
+        //TODO set up
         //client = new AntidoteClientWrapper("TestAntidote");
-        //System.out.println("Ok!");
+        //log.info("Ok!");
         //client.AddKey("Test", AntidotePB.CRDT_type.COUNTER);
-        //System.out.println(client.getKeyValue("Test"));
+        //log.info(client.getKeyValue("Test"));
         /*List<String> runningContainers = DockerManager.getRunningContainers();
         List<String> notRunningContainers = DockerManager.getNotRunningContainers();
         for (String container : runningContainers) {
@@ -63,10 +79,10 @@ public class Main
         if (clientList.isEmpty()) {
             startAntidoteClient("defaultAntidoteDC");
         }
-        System.out.println("Done!");
+        log.info("Done!");
         AntidoteView gui = new AntidoteView(clientList.get(0));*/
         new MainWindow();
-        System.out.println("Using the Application:" +
+        log.info("Using the Application:" +
                                    "\nFirst click on Application Settings and select Folder for the Antidote Repository." +
                                    "\nThe Folder must be empty or contain only an existing Antidote Repository (it must be in a clean state)." +
                                    "\n\nNow start the Git Connection and then the selected directory is evaluated and if it is empty the current Antidote Repository is pulled. (about 20MB)" +

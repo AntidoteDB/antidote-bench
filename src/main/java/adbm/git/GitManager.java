@@ -1,7 +1,10 @@
 package adbm.git;
 
+import adbm.docker.DockerManager;
 import adbm.settings.MapDBManager;
 import adbm.settings.ui.SettingsDialog;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.eclipse.jgit.api.CreateBranchCommand;
 import org.eclipse.jgit.api.Git;
 import org.eclipse.jgit.api.ListBranchCommand;
@@ -20,6 +23,8 @@ import java.util.List;
 
 public class GitManager
 {
+
+    private static final Logger log = LogManager.getLogger(GitManager.class);
     private static Git git;
 
     private static final String gitUrl = "https://github.com/SyncFree/antidote.git";
@@ -30,16 +35,16 @@ public class GitManager
         try {
             String repoLocation = MapDBManager.getAppSetting(MapDBManager.GitRepoLocationSetting);
             if (repoLocation.equals("")) {
-                System.out.println("No location for the git repository was selected!");
-                System.out.println("Please select a valid location in the settings!");
+                log.info("No location for the git repository was selected!");
+                log.info("Please select a valid location in the settings!");
                 new SettingsDialog();
             }
             else {
                 File directory = new File(repoLocation);
                 File[] contents = directory.listFiles();
                 if (contents == null) {
-                    System.out.println("The location for the git repository is not a directory!");
-                    System.out.println("Please select a valid location in the settings!");
+                    log.info("The location for the git repository is not a directory!");
+                    log.info("Please select a valid location in the settings!");
                 }
                 try {
                     git = Git.open(new File(repoLocation));
@@ -50,32 +55,32 @@ public class GitManager
                     if (git.status().call().isClean()) {
                         String url = git.getRepository().getConfig().getString("remote", "origin", "url");
                         if (url.equals(gitUrl)) {
-                            System.out.println("Git connection was successfully established!");
-                            System.out.println(
+                            log.info("Git connection was successfully established!");
+                            log.info(
                                     "This application does not yet automatically fetch remote changes and that must be done manually!");//TODO add fetch
                         }
                         else {
-                            System.out.println(
+                            log.info(
                                     "The location for the git repository contains a another repository that is not equal to " + gitUrl + "!");
-                            System.out.println(
+                            log.info(
                                     "Please select another location in the settings or remove that git repository first!");
                             git = null;
                         }
                     }
                     else {
-                        System.out.println("The git repository is not clean!");
-                        System.out.println("Please commit all changes before using this application!");
+                        log.info("The git repository is not clean!");
+                        log.info("Please commit all changes before using this application!");
                         git = null;
                     }
 
                 }
                 else {
-                    System.out.println("There is currently no git repository at the selected location!");
-                    System.out.println(
+                    log.info("There is currently no git repository at the selected location!");
+                    log.info(
                             "The git repository " + gitUrl + " will be cloned to the selected location if there are no files in that directory.");
 
                     if (contents.length == 0) {
-                        System.out.println(
+                        log.info(
                                 "Cloning the git repository " + gitUrl + " to the location " + repoLocation + "!");
                         git = Git.cloneRepository()
                                  .setURI(gitUrl)
@@ -85,9 +90,9 @@ public class GitManager
                     }
                     else {
                         // TODO Add Setting that allows this!
-                        System.out.println(
+                        log.info(
                                 "The directory at selected location contains files and cannot be used as a git repository.");
-                        System.out.println(
+                        log.info(
                                 "Please select an empty directory in the settings or remove the existing files in that directory!");
                     }
                 }
@@ -106,10 +111,10 @@ public class GitManager
                 git.checkout().
                         setName(branchName).
                            call();
-                System.out.println("Checkout of local Branch " + branchName + " was successful!");
+                log.info("Checkout of local Branch " + branchName + " was successful!");
             }
             else if (getAllNonLocalRemoteBranches().contains(branchName)) {
-                System.out.println(
+                log.info(
                         "Local branch for the remote branch" + branchName + " does not exist and is added now!");
                 git.checkout().
                         setCreateBranch(true).
@@ -117,10 +122,10 @@ public class GitManager
                            setUpstreamMode(CreateBranchCommand.SetupUpstreamMode.TRACK).
                            setStartPoint("origin/" + branchName).
                            call();
-                System.out.println("Local branch " + branchName + " was created and successfully checked out!");
+                log.info("Local branch " + branchName + " was created and successfully checked out!");
             }
             else {
-                System.out.println("Branch " + branchName + " could not be checked out!");
+                log.info("Branch " + branchName + " could not be checked out!");
             }
         } catch (Exception e) {
             e.printStackTrace();
@@ -131,7 +136,7 @@ public class GitManager
     {
         if (!isReady()) return;
         try {
-            System.out.println("Checking out commit " + commit + " and detaching HEAD!");
+            log.info("Checking out commit " + commit + " and detaching HEAD!");
             git.checkout().setName(commit).call();
         } catch (Exception e) {
             e.printStackTrace();
@@ -220,15 +225,15 @@ public class GitManager
         } catch (IOException e) {
             e.printStackTrace();
         }
-        System.out.println("The ID " + id + " did not match any commits!");
+        log.info("The ID " + id + " did not match any commits!");
         return null;
     }
 
     public static boolean isReady()
     {
         if (git != null) return true;
-        System.out.println("The connection to Git is not ready!");
-        System.out.println("Please start Git connection again!");
+        log.info("The connection to Git is not ready!");
+        log.info("Please start Git connection again!");
         return false;
     }
 
@@ -247,19 +252,19 @@ public class GitManager
 
                 for (Ref branch : branches) {
                     String branchName = branch.getName();
-                    System.out.println("Commits of branch: " + branch.getName());
-                    System.out.println("---------------------------------");
-                    System.out.println("---------------------------------");
-                    System.out.println("---------------------------------");
-                    System.out.println("---------------------------------");
-                    System.out.println("---------------------------------");
-                    System.out.println("---------------------------------");
-                    System.out.println("---------------------------------");
-                    System.out.println("---------------------------------");
-                    System.out.println("---------------------------------");
-                    System.out.println("---------------------------------");
-                    System.out.println("---------------------------------");
-                    System.out.println("---------------------------------");
+                    log.info("Commits of branch: " + branch.getName());
+                    log.info("---------------------------------");
+                    log.info("---------------------------------");
+                    log.info("---------------------------------");
+                    log.info("---------------------------------");
+                    log.info("---------------------------------");
+                    log.info("---------------------------------");
+                    log.info("---------------------------------");
+                    log.info("---------------------------------");
+                    log.info("---------------------------------");
+                    log.info("---------------------------------");
+                    log.info("---------------------------------");
+                    log.info("---------------------------------");
 
 
                     Iterable<RevCommit> commits = git.log().all().call();
@@ -284,10 +289,10 @@ public class GitManager
                         }
 
                         if (foundInThisBranch) {
-                            System.out.println(commit.getName());
-                            System.out.println(commit.getAuthorIdent().getName());
-                            System.out.println(new Date((long)commit.getCommitTime()*1000));
-                            System.out.println(commit.getFullMessage());
+                            log.info(commit.getName());
+                            log.info(commit.getAuthorIdent().getName());
+                            log.info(new Date((long)commit.getCommitTime()*1000));
+                            log.info(commit.getFullMessage());
                         }
                     }
                 }

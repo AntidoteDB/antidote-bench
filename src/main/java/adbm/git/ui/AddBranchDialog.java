@@ -3,6 +3,7 @@ package adbm.git.ui;
 import adbm.git.GitManager;
 
 import javax.swing.*;
+import java.awt.*;
 import java.awt.event.WindowEvent;
 
 public class AddBranchDialog
@@ -26,11 +27,11 @@ public class AddBranchDialog
         listAvailableBranches.setModel(listAvailableBranchesModel);
 
         buttonAddBranch.addActionListener(e -> {
-            if (listAvailableBranches.getSelectedValue() != null)
-            {
+            if (listAvailableBranches.getSelectedValue() != null) {
                 GitManager.checkoutBranch(listAvailableBranches.getSelectedValue().toString());
                 frame.dispatchEvent(new WindowEvent(frame, WindowEvent.WINDOW_CLOSING));
             }
         });
     }
+
 }
