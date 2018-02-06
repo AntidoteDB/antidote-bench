@@ -56,7 +56,7 @@ public class AntidoteYCSBClient extends DB
     public Status update(String table, String key, HashMap<String, ByteIterator> values)
     {
         for (Map.Entry<String, ByteIterator> entry : values.entrySet()) {
-            Main.client.getKeyUpdate(entry.getKey(), AntidoteUtil.getDefaultOperation(entry.getKey()), entry.getValue()); //TODO Value may be bad
+            Main.client.getKeyUpdate(new Operation(entry.getKey(), AntidoteUtil.getDefaultOperation(entry.getKey()), entry.getValue())); //TODO Value may be bad
         }
         return Status.OK;
     }

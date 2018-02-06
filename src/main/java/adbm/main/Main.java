@@ -1,6 +1,7 @@
 package adbm.main;
 
 import adbm.antidote.AntidoteClientWrapper;
+import adbm.antidote.Operation;
 import adbm.docker.DockerManager;
 import adbm.git.GitManager;
 import adbm.main.ui.MainWindow;
@@ -71,7 +72,7 @@ public class Main
         log.warn("Rebuilding!");
         f1.AddKey("Test", AntidotePB.CRDT_type.INTEGER);
         log.info(f1.getKeyValueNoTransaction("Test"));
-        f1.getKeyUpdate("Test", "increment", 3);
+        f1.getKeyUpdate(new Operation("Test", "increment", 3));
         log.info(f1.getKeyValueNoTransaction("Test"));
         f1.AddKey("Test1", AntidotePB.CRDT_type.INTEGER);
         //log.info(f.getKeyValue("Test"));

@@ -1,6 +1,7 @@
 package adbm.antidote.ui;
 
 import adbm.antidote.AntidoteClientWrapper;
+import adbm.antidote.Operation;
 import adbm.docker.DockerManager;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -114,9 +115,9 @@ public class AntidoteView
 
         executeButton.addActionListener(e -> {
             if (activeAntidoteClient != null) {
-                activeAntidoteClient.getKeyUpdate(listViewKeySelection.getSelectedValue(),
-                                                         listViewOperationSelection.getSelectedValue(),
-                                                         textFieldOperationValue.getText());
+                activeAntidoteClient.getKeyUpdate(new Operation(listViewKeySelection.getSelectedValue(),
+                                                  listViewOperationSelection.getSelectedValue(),
+                                                  textFieldOperationValue.getText()));
             }
         });
         listViewOperationSelection.addListSelectionListener(e -> refreshCommandTextFields());
