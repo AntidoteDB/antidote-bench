@@ -36,12 +36,12 @@ public class AntidoteYCSBClient extends DB
     {
         if (set != null) {
             for (String field : set) {
-                hashMap.put(field, new ByteArrayByteIterator(Main.client.getKeyValue(field).getBytes()));
+                hashMap.put(field, new ByteArrayByteIterator(Main.client.getKeyValueNoTransaction(field).getBytes()));
             }
         }
         else {
             for (String key : MapDBManager.getAllKeys().keySet())
-            hashMap.put(key, new ByteArrayByteIterator(Main.client.getKeyValue(key).getBytes()));
+            hashMap.put(key, new ByteArrayByteIterator(Main.client.getKeyValueNoTransaction(key).getBytes()));
         }
         return Status.OK;
     }
@@ -56,7 +56,7 @@ public class AntidoteYCSBClient extends DB
     public Status update(String table, String key, HashMap<String, ByteIterator> values)
     {
         for (Map.Entry<String, ByteIterator> entry : values.entrySet()) {
-            Main.client.ExecuteKeyOperation(entry.getKey(), AntidoteUtil.getDefaultOperation(entry.getKey()), entry.getValue()); //TODO Value may be bad
+            Main.client.getKeyUpdate(entry.getKey(), AntidoteUtil.getDefaultOperation(entry.getKey()), entry.getValue()); //TODO Value may be bad
         }
         return Status.OK;
     }

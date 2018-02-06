@@ -18,7 +18,7 @@ import static eu.antidotedb.client.Key.create;
 
 /**
  * Bridge between Antidote and YCSB
- * Fetch information from Antidote
+ * Fetch the neccessary information from Antidote
  */
 public class AntidoteClientWrapper extends AntidoteModel {
 
@@ -38,10 +38,8 @@ public class AntidoteClientWrapper extends AntidoteModel {
 
     /**
      * Constructor of the class
-     *
      * @param name
      */
-
     public AntidoteClientWrapper(String name) {
         //docker run -i -t -d --name antidote1 -p 8087:8087 --network antidote_ntwk -e SHORT_NAME=true -e NODE_NAME=antidote@antidote1 antidotedb/antidote
         DockerManager.runContainer(name);
@@ -77,6 +75,7 @@ public class AntidoteClientWrapper extends AntidoteModel {
     }
 
     /**
+     * To
      * @param name
      * @param type
      */

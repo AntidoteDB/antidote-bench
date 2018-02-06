@@ -9,9 +9,7 @@ import eu.antidotedb.antidotepb.AntidotePB;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
 public class Main
@@ -23,6 +21,11 @@ public class Main
 
     public static AntidoteClientWrapper client;
 
+    /**
+     *
+     * @param name
+     * @return
+     */
     public static AntidoteClientWrapper startAntidoteClient(String name)
     {
         if (clientList.containsKey(name)) return clientList.get(name);
@@ -34,17 +37,29 @@ public class Main
         return null;
     }
 
+    /**
+     *
+     * @param name
+     */
     public static void stopAntidoteClient(String name)
     {
         DockerManager.stopContainer(name);
     }
 
+    /**
+     *
+     * @param name
+     */
     public static void removeAntidoteClient(String name)
     {
         DockerManager.removeContainer(name);
         clientList.remove(name);
     }
 
+    /**
+     *
+     * @param args
+     */
     public static void main(String[] args)
     {
         MapDBManager.startMapDB();
@@ -55,9 +70,9 @@ public class Main
         AntidoteClientWrapper f2 = startAntidoteClient("antidote2");
         log.warn("Rebuilding!");
         f1.AddKey("Test", AntidotePB.CRDT_type.INTEGER);
-        log.info(f1.getKeyValue("Test"));
-        f1.ExecuteKeyOperation("Test", "increment", 3);
-        log.info(f1.getKeyValue("Test"));
+        log.info(f1.getKeyValueNoTransaction("Test"));
+        f1.getKeyUpdate("Test", "increment", 3);
+        log.info(f1.getKeyValueNoTransaction("Test"));
         f1.AddKey("Test1", AntidotePB.CRDT_type.INTEGER);
         //log.info(f.getKeyValue("Test"));
         //DockerManager.rebuildAntidoteInContainer("TestAntidote", "2742f58a2e28d64dbfcf226b1a7b4d53303cd6b6");
@@ -94,6 +109,4 @@ public class Main
                                    "\n\nThe building time for an Image is several minutes and may fail completely because Docker is not in the right state (Before building Images restart Docker to be safe)." +
                                    "\n");
     }
-
-
 }

@@ -19,7 +19,7 @@ public class AntidoteController implements PropertyChangeListener
 
     public static final String AddKey = "AddKey";
     public static final String RemoveKey = "RemoveKey";
-    public static final String ExecuteKeyOperation = "ExecuteKeyOperation";
+    public static final String ExecuteKeyOperation = "getKeyUpdate";
 
     public static final String ResetDCConnection = "ResetDCConnection";
 
@@ -35,68 +35,115 @@ public class AntidoteController implements PropertyChangeListener
 
     public static final String DCConnectionListChanged = "DCConnectionListChanged";
 
+    private ArrayList<AntidoteView> registeredViews;
+    private ArrayList<AntidoteModel> registeredModels;
 
+    /**
+     *
+     * @param name
+     */
     public void StartDCEvent(String name)
     {
         setModelProperty(StartDC, name);
     }
 
+    /**
+     *
+     * @param name
+     */
     public void StopDCEvent(String name)
     {
         setModelProperty(StopDC, name);
     }
 
+    /**
+     *
+     * @param name
+     */
     public void AddDCEvent(String name)
     {
         setModelProperty(AddDC, name);
     }
 
+    /**
+     *
+     * @param name
+     */
     public void RemoveDCEvent(String name)
     {
         setModelProperty(RemoveDC, name);
     }
 
+    /**
+     *
+     * @param name
+     * @param type
+     */
     public void AddKeyEvent(String name, String type)
     {
         setModelProperty(AddKey, name, type);
     }
 
+    /**
+     *
+     * @param name
+     */
     //A key can only have a single type
     public void RemoveKeyEvent(String name)
     {
         setModelProperty(RemoveKey, name);
     }
 
+    /**
+     *
+     * @param name
+     * @param operation
+     * @param value
+     */
     public void ExecuteKeyOperationEvent(String name, String operation, String value)
     {
         setModelProperty(ExecuteKeyOperation, name, operation, value);
     }
 
+    /**
+     *
+     * @param name
+     */
     public void ResetDCConnectionEvent(String name)
     {
         setModelProperty(ResetDCConnection, name);
     }
 
+    /**
+     *
+     * @param dc1name
+     * @param dc2name
+     */
     public void AddDCConnectionEvent(String dc1name, String dc2name)
     {
         setModelProperty(AddDCConnection, dc1name, dc2name);
     }
 
+    /**
+     *
+     * @param dc1name
+     * @param dc2name
+     */
     public void RemoveDCConnectionEvent(String dc1name, String dc2name)
     {
         setModelProperty(RemoveDCConnection, dc1name, dc2name);
     }
 
+    /**
+     *
+     * @param dc1name
+     * @param dc2name
+     */
     public void SuspendDCConnectionEvent(String dc1name, String dc2name)
     {
         setModelProperty(SuspendDCConnection, dc1name, dc2name);
     }
 
-
-
-
-    private ArrayList<AntidoteView> registeredViews;
-    private ArrayList<AntidoteModel> registeredModels;
 
     public AntidoteController() {
         registeredViews = new ArrayList<AntidoteView>();
@@ -122,11 +169,10 @@ public class AntidoteController implements PropertyChangeListener
         registeredViews.remove(view);
     }
 
-
-    //  Use this to observe property changes from registered models
-    //  and propagate them on to all the views.
-
-
+    /**
+     * Use this to observe property changes from registered models and propagate them on to all the views.
+     * @param evt
+     */
     public void propertyChange(PropertyChangeEvent evt) {
 
         for (AntidoteView view: registeredViews) {
@@ -165,6 +211,12 @@ public class AntidoteController implements PropertyChangeListener
         }
     }
 
+    /**
+     *
+     * @param propertyName
+     * @param newValue1
+     * @param newValue2
+     */
     protected void setModelProperty(String propertyName, Object newValue1, Object newValue2) {
 
         for (AntidoteModel model : registeredModels) {
@@ -179,6 +231,13 @@ public class AntidoteController implements PropertyChangeListener
         }
     }
 
+    /**
+     *
+     * @param propertyName
+     * @param newValue1
+     * @param newValue2
+     * @param newValue3
+     */
     protected void setModelProperty(String propertyName, Object newValue1, Object newValue2, Object newValue3) {
 
         for (AntidoteModel model : registeredModels) {

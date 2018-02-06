@@ -114,7 +114,7 @@ public class AntidoteView
 
         executeButton.addActionListener(e -> {
             if (activeAntidoteClient != null) {
-                activeAntidoteClient.ExecuteKeyOperation(listViewKeySelection.getSelectedValue(),
+                activeAntidoteClient.getKeyUpdate(listViewKeySelection.getSelectedValue(),
                                                          listViewOperationSelection.getSelectedValue(),
                                                          textFieldOperationValue.getText());
             }
@@ -233,7 +233,7 @@ public class AntidoteView
         if (listViewKeySelection.getSelectedValue() != null && activeAntidoteClient != null)
             listViewKeyValueModel.clear();
         listViewKeyValueModel
-                .addElement(activeAntidoteClient.getKeyValue(listViewKeySelection.getSelectedValue()));
+                .addElement(activeAntidoteClient.getKeyValueNoTransaction(listViewKeySelection.getSelectedValue()));
         if (listViewOperationSelection.getModel().getSize() > 0)
             listViewOperationSelection.setSelectedIndex(0);
     }
