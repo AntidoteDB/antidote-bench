@@ -54,6 +54,9 @@ public class AntidoteClientWrapper extends AntidoteModel {
         running = true;
     }
 
+    /**
+     *
+     */
     public void stop() {
         if (running) {
             this.firePropertyChange(AntidoteController.DCListChanged, "", "");
@@ -61,6 +64,9 @@ public class AntidoteClientWrapper extends AntidoteModel {
         }
     }
 
+    /**
+     *
+     */
     public void start() {
         if (!running) {
             this.firePropertyChange(AntidoteController.DCListChanged, "", "");
@@ -68,15 +74,25 @@ public class AntidoteClientWrapper extends AntidoteModel {
         }
     }
 
+    /**
+     *
+     * @param name
+     * @param type
+     */
     public void AddKey(String name, AntidotePB.CRDT_type type) {
         if (running) {
             InteractiveTransaction tx = antidote.startTransaction();
             bucket.update(tx, create(type, ByteString.copyFromUtf8(name)).reset());
             tx.commitTransaction();
+            MapDBManager.addKey(name, type);
             this.firePropertyChange(AntidoteController.KeyListChanged, "", "");
         }
     }
 
+    /**
+     *
+     * @param name
+     */
     public void RemoveKey(String name) {
         if (running) {
             MapDBManager.removeKey(name);

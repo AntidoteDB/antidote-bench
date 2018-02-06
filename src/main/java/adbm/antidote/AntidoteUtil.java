@@ -5,6 +5,9 @@ import eu.antidotedb.antidotepb.AntidotePB;
 
 import java.util.*;
 
+/**
+ *
+ */
 public class AntidoteUtil {
 
     public static final EnumMap<AntidotePB.CRDT_type, String> typeGUIMap = createTypeGUIMap();
@@ -15,22 +18,46 @@ public class AntidoteUtil {
 
     public static final EnumMap<AntidotePB.CRDT_type, List<String>> typeKeyMap = createTypeKeyMap();
 
+    /**
+     *
+     * @param type
+     * @return
+     */
     public static List<String> getKeysForType(AntidotePB.CRDT_type type) {
         return new ArrayList<>(typeKeyMap.get(type));
     }
 
+    /**
+     *
+     * @param key
+     * @param type
+     */
     public static void addKey(String key, AntidotePB.CRDT_type type) {
         typeKeyMap.get(type).add(key);
     }
 
+    /**
+     *
+     * @param key
+     * @param type
+     */
     public static void removeKey(String key, AntidotePB.CRDT_type type) {
         typeKeyMap.get(type).remove(key);
     }
 
+    /**
+     *
+     * @param keyName
+     * @return
+     */
     public static String getDefaultOperation(String keyName) {
         return typeOperationMap.get(MapDBManager.getTypeOfKey(keyName))[0];
     }
 
+    /**
+     *
+     * @return
+     */
     private static Map<String, AntidotePB.CRDT_type> createGUITypeMap() {
         Map<String, AntidotePB.CRDT_type> map = new LinkedHashMap<>();
         map.put("Last-writer-wins Register (LWW-Register)", AntidotePB.CRDT_type.LWWREG);
@@ -48,6 +75,10 @@ public class AntidoteUtil {
         return map;
     }
 
+    /**
+     *
+     * @return
+     */
     private static EnumMap<AntidotePB.CRDT_type, String> createTypeGUIMap() {
         EnumMap<AntidotePB.CRDT_type, String> map = new EnumMap<>(AntidotePB.CRDT_type.class);
         map.put(AntidotePB.CRDT_type.LWWREG, "Last-writer-wins Register (LWW-Register)");
@@ -65,6 +96,10 @@ public class AntidoteUtil {
         return map;
     }
 
+    /**
+     *
+     * @return
+     */
     private static EnumMap<AntidotePB.CRDT_type, String[]> createTypeOperationMap() {
         EnumMap<AntidotePB.CRDT_type, String[]> map = new EnumMap<>(AntidotePB.CRDT_type.class);
         map.put(AntidotePB.CRDT_type.LWWREG, new String[]{"assign"});
@@ -82,6 +117,10 @@ public class AntidoteUtil {
         return map;
     }
 
+    /**
+     *
+     * @return
+     */
     private static EnumMap<AntidotePB.CRDT_type, List<String>> createTypeKeyMap() {
         EnumMap<AntidotePB.CRDT_type, List<String>> map = new EnumMap<>(AntidotePB.CRDT_type.class);
         map.put(AntidotePB.CRDT_type.LWWREG, new ArrayList<>());
