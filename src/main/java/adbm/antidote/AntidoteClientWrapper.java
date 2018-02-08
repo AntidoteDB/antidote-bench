@@ -43,7 +43,7 @@ public class AntidoteClientWrapper extends AntidoteModel {
     public AntidoteClientWrapper(String name) {
         //docker run -i -t -d --name antidote1 -p 8087:8087 --network antidote_ntwk -e SHORT_NAME=true -e NODE_NAME=antidote@antidote1 antidotedb/antidote
         DockerManager.runContainer(name);
-        hostPort = DockerManager.getHostPortFromContainer(name);
+        hostPort = DockerManager.getHostPortsFromContainer(name).get(0); //TODO exception
 
         antidote = new AntidoteClient(new InetSocketAddress("localhost", hostPort));
 

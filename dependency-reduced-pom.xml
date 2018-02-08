@@ -7,6 +7,28 @@
   <build>
     <plugins>
       <plugin>
+        <artifactId>maven-assembly-plugin</artifactId>
+        <executions>
+          <execution>
+            <id>make-assembly</id>
+            <phase>package</phase>
+            <goals>
+              <goal>single</goal>
+            </goals>
+          </execution>
+        </executions>
+        <configuration>
+          <archive>
+            <manifest>
+              <mainClass>fully.qualified.MainClass</mainClass>
+            </manifest>
+          </archive>
+          <descriptorRefs>
+            <descriptorRef>jar-with-dependencies</descriptorRef>
+          </descriptorRefs>
+        </configuration>
+      </plugin>
+      <plugin>
         <artifactId>maven-compiler-plugin</artifactId>
         <version>3.7.0</version>
         <configuration>
@@ -32,6 +54,23 @@
             </configuration>
           </execution>
         </executions>
+      </plugin>
+      <plugin>
+        <groupId>org.codehaus.mojo</groupId>
+        <artifactId>ideauidesigner-maven-plugin</artifactId>
+        <version>1.0-beta-2-17.1.5</version>
+        <executions>
+          <execution>
+            <goals>
+              <goal>javac2</goal>
+            </goals>
+          </execution>
+        </executions>
+        <configuration>
+          <fork>true</fork>
+          <debug>true</debug>
+          <failOnError>true</failOnError>
+        </configuration>
       </plugin>
     </plugins>
   </build>

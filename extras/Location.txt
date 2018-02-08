@@ -1,0 +1,3 @@
+C:\MasterProjectRepo\AntidoteBenchmark\extras\asm-all.jar
+C:\MasterProjectRepo\AntidoteBenchmark\extras\forms_rt.jar
+C:\MasterProjectRepo\AntidoteBenchmark\extras\javac2.jar

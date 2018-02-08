@@ -17,7 +17,7 @@ public class MapDBManager
 {
     private static final Logger log = LogManager.getLogger(MapDBManager.class);
     
-    private static String location = "./target/keyStoreDatabase";
+    private static String location = "./keyStoreDatabase";
 
     private static DB mapDB;
 

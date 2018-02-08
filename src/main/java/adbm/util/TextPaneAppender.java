@@ -50,20 +50,23 @@ public final class TextPaneAppender extends AbstractAppender
 
         // append log text to TextArea
         try {
-            if (event.getLevel().equals(Level.DEBUG)) {
-                appendToPane(message, Color.CYAN.darker().darker());
+            if (event.getLevel().equals(Level.TRACE)) {
+                appendToPane(message, Color.PINK.darker().darker(), 8);
+            }
+            else if (event.getLevel().equals(Level.DEBUG)) {
+                appendToPane(message, Color.CYAN.darker().darker(), 10);
             }
             else if (event.getLevel().equals(Level.INFO)) {
-                appendToPane(message, Color.GREEN.darker().darker());
+                appendToPane(message, Color.GREEN.darker().darker(), 12);
             }
             else if (event.getLevel().equals(Level.WARN)) {
-                appendToPane(message, Color.YELLOW.darker().darker());
+                appendToPane(message, Color.ORANGE.darker().darker(), 14);
             }
             else if (event.getLevel().equals(Level.ERROR)) {
-                appendToPane(message, Color.ORANGE.darker().darker());
+                appendToPane(message, Color.RED.darker().darker(), 16);
             }
             else if (event.getLevel().equals(Level.FATAL)) {
-                appendToPane(message, Color.RED.darker().darker());
+                appendToPane(message, Color.RED, 18);
             }
         } catch (Exception ex) {
             // Do not log exceptions that were caused by logging.
@@ -108,7 +111,7 @@ public final class TextPaneAppender extends AbstractAppender
         TextPaneAppender.textPaneList.add(textPane);
     }
 
-    private void appendToPane(String msg, Color c)
+    private void appendToPane(String msg, Color c, int fontSize)
     {
         SwingUtilities.invokeLater(() -> {
             for (JTextPane tp : textPaneList) {
@@ -116,6 +119,7 @@ public final class TextPaneAppender extends AbstractAppender
 
                 Style style = tp.addStyle("ConsoleStyle", null);
                 StyleConstants.setForeground(style, c);
+                StyleConstants.setFontSize(style, fontSize);
 
                 try {
                     doc.insertString(doc.getLength(), msg + "\n", style);

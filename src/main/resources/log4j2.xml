@@ -8,7 +8,7 @@
                 </pattern>
             </PatternLayout>
         </Console>
-        <RandomAccessFile name="RandomAccessFileAppender" fileName="./target/logs/adbmLogs.log" immediateFlush="false" append="false">
+        <RandomAccessFile name="RandomAccessFileAppender" fileName="./logs/adbmLogs.log" immediateFlush="false" append="false">
             <PatternLayout>
                 <pattern>
                     [%-5level] %d{yyyy-MM-dd HH:mm:ss.SSS} [%t] %c{1} - %msg%n
@@ -22,9 +22,9 @@
         </TextPaneAppender>
     </Appenders>
     <Loggers>
-        <Root level="debug" includeLocation="false">
+        <Root level="trace" includeLocation="false">
             <AppenderRef ref="RandomAccessFileAppender"/>
-            <AppenderRef ref="ConsoleAppender"/>
+            <AppenderRef ref="ConsoleAppender" level="info"/>
             <AppenderRef ref="VisualAppender"/>
         </Root>
     </Loggers>
