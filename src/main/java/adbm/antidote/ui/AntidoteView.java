@@ -235,7 +235,7 @@ public class AntidoteView
         if (listViewKeySelection.getSelectedValue() != null && activeAntidoteClient != null)
             listViewKeyValueModel.clear();
         listViewKeyValueModel
-                .addElement(activeAntidoteClient.getKeyValueNoTransaction(listViewKeySelection.getSelectedValue()));
+                .addElement(activeAntidoteClient.getKeyValueNoTx(listViewKeySelection.getSelectedValue()));
         if (listViewOperationSelection.getModel().getSize() > 0)
             listViewOperationSelection.setSelectedIndex(0);
     }

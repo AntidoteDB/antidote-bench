@@ -38,6 +38,7 @@ public class AntidoteClientWrapper extends AntidoteModel {
 
     /**
      * Constructor of the class
+     *
      * @param name
      */
     public AntidoteClientWrapper(String name) {
@@ -76,6 +77,7 @@ public class AntidoteClientWrapper extends AntidoteModel {
 
     /**
      * To
+     *
      * @param name
      * @param type
      */
@@ -100,10 +102,94 @@ public class AntidoteClientWrapper extends AntidoteModel {
     }
 
     /**
-     * To write to Antidote. Executes all the operations of antidote
-     * With Notransaction
+     * Single read with noTransaction - Case 1
      *
-     * @param operation
+     * @param name
+     * @return - the read string
+     */
+    public String getKeyValueNoTx(String name) {
+        if (running) {
+            Key key = createKey(name);
+
+            //Assuming that every CRDT type returns String
+            return bucket.read(antidote.noTransaction(), createKey(name)).toString();
+        } else
+            return null;
+    }
+
+    /**
+     * Single read with Transaction - Case 2
+     *
+     * @param name * @return - the read string
+     */
+    public String getKeyValueTx(String name) {
+        if (running) {
+            String returnString;
+            InteractiveTransaction tx = antidote.startTransaction();
+            returnString = bucket.read(tx, createKey(name)).toString();
+            tx.commitTransaction();
+            return returnString;
+        } else
+            return null;
+    }
+
+    /**
+     * Single write with noTransaction - Case 3
+     *
+     * @param operation operations (key, operation, value)
+     */
+    public void addKeyNoTx(Operation operation) {
+        if (running) {
+            bucket.update(antidote.noTransaction(), getKeyUpdate(operation));
+        }
+    }
+
+    /**
+     * Single write with Transaction - Case 4
+     *
+     * @param operation operations (key, operation, value)
+     */
+    public void addKeyTx(Operation operation) {
+        if (running) {
+            InteractiveTransaction tx = antidote.startTransaction();
+            bucket.update(tx, getKeyUpdate(operation));
+            tx.commitTransaction();
+        }
+    }
+
+    /**
+     * Multiple read and write as a single Transaction - Case 5
+     *
+     * @param keys
+     * @param operations operations (key, operation, value)
+     */
+    public List<String> executeKeyRW(List<String> keys, List<Operation> operations) {
+        // TODO different data structure
+
+        List<String> returnList = new ArrayList<>();
+        if (running) {
+
+            InteractiveTransaction tx = antidote.startTransaction();
+            for (int i = 0; i < keys.size(); i++) {
+                Operation op = operations.get(i);
+                //Assuming that if the operation is null then its a read else a write
+                if (op == null) {
+                    returnList.add(bucket.read(tx, createKey(keys.get(i))).toString());
+                } else {
+                    bucket.update(tx, getKeyUpdate(op));
+                }
+            }
+            tx.commitTransaction();
+        }
+        return returnList;
+    }
+
+    /**
+     * For write
+     * Executing all operations
+     *
+     * @param operation - operations (key, operation,value)
+     * @return - update operation in write
      */
     public UpdateOp getKeyUpdate(Operation operation) {
 
@@ -185,20 +271,17 @@ public class AntidoteClientWrapper extends AntidoteModel {
                     update = rwsetSetKey.reset();
                 }
             }
-            //bucket.update(antidote.noTransaction(), update);
             return update;
         }
         return null;
     }
 
     /**
-     * To write to Antidote. Executes all the operations of antidote
-     * With Notransaction
+     * For multiple writes
      *
-     * @param operations
+     * @param operations - List of operations (key, operation,value) which are write)
      */
-    public void ExecuteKeyOperations(List<Operation> operations) {
-
+    public void addKeyValues(List<Operation> operations) {
         if (running) {
             List<UpdateOp> updates = new ArrayList<>();
 
@@ -214,69 +297,11 @@ public class AntidoteClientWrapper extends AntidoteModel {
     }
 
     /**
-     * To write to Antidote. Executes all the operations of antidote
-     * With Notransaction
+     * For multiple reads
      *
-     * @param operation
+     * @param keyNames - A list of key names which are read
+     * @return - String of reads
      */
-    public void ExecuteSingleKeyOperation(Operation operation) {
-
-        if (running) {
-            InteractiveTransaction tx = antidote.startTransaction();
-            bucket.update(tx, getKeyUpdate(operation));
-            tx.commitTransaction();
-
-        }
-    }
-
-    /**
-     * @param keys
-     * @param operations
-     */
-    public void ExecuteKeyRW(List<String> keys, List<Operation> operations) {
-        // TODO different data structure
-        if (running) {
-            InteractiveTransaction tx = antidote.startTransaction();
-            for (int i = 0; i < keys.size(); i++) {
-                Operation op = operations.get(i);
-                if (op == null) {
-                    bucket.read(tx, createKey(keys.get(i)));
-                } else {
-                    bucket.update(tx, getKeyUpdate(op));
-                }
-            }
-            tx.commitTransaction();
-        }
-    }
-
-
-    /**
-     * To read from Antidote. Execute all operations
-     * With no transaction
-     *
-     * @param name
-     * @return
-     */
-    public String getKeyValueNoTransaction(String name) {
-        if (running) {
-            Key key = createKey(name);
-
-            //Assuming that every CRDT type returns String
-            return bucket.read(antidote.noTransaction(), createKey(name)).toString();
-
-           /*
-            if (key.getType().equals(AntidotePB.CRDT_type.LWWREG)) {
-            } else if (key.getType().equals(AntidotePB.CRDT_type.MVREG)) {
-            } else if (key.getType().equals(AntidotePB.CRDT_type.COUNTER) || key.getType().equals(AntidotePB.CRDT_type.FATCOUNTER) || key.getType().equals(AntidotePB.CRDT_type.INTEGER)) {
-                return bucket.read(antidote.noTransaction(), createKey(name)).toString();
-            } else if ((key.getType().equals(AntidotePB.CRDT_type.GMAP)) || (key.getType().equals(AntidotePB.CRDT_type.AWMAP)) || (key.getType().equals(AntidotePB.CRDT_type.RRMAP))) {
-                // return bucket.read(antidote.noTransaction(),)
-            } else if ((key.getType().equals(AntidotePB.CRDT_type.ORSET)) || (key.getType().equals(AntidotePB.CRDT_type.RWSET))) {
-            }*/
-        } else
-            return null;
-    }
-
     public List<String> getKeyValues(List<String> keyNames) {
         List<String> results = new ArrayList<>();
         if (running) {
@@ -299,6 +324,8 @@ public class AntidoteClientWrapper extends AntidoteModel {
 
 
     /**
+     * To get the map keys
+     *
      * @param key
      * @return
      */
