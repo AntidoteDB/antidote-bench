@@ -8,7 +8,21 @@
                 </pattern>
             </PatternLayout>
         </Console>
-        <RandomAccessFile name="RandomAccessFileAppender" fileName="./logs/adbmLogs.log" immediateFlush="false" append="false">
+        <RandomAccessFile name="RandomAccessFileAppenderError" fileName="logs/adbmErrorLog.log" immediateFlush="false" append="true">
+            <PatternLayout>
+                <pattern>
+                    [%-5level] %d{yyyy-MM-dd HH:mm:ss.SSS} [%t] %c{1} - %msg%n
+                </pattern>
+            </PatternLayout>
+        </RandomAccessFile>
+        <RandomAccessFile name="RandomAccessFileAppenderInfo" fileName="logs/adbmInfoLog.log" immediateFlush="false" append="true">
+            <PatternLayout>
+                <pattern>
+                    [%-5level] %d{yyyy-MM-dd HH:mm:ss.SSS} [%t] %c{1} - %msg%n
+                </pattern>
+            </PatternLayout>
+        </RandomAccessFile>
+        <RandomAccessFile name="RandomAccessFileAppenderTrace" fileName="logs/adbmTraceLog.log" immediateFlush="false" append="true">
             <PatternLayout>
                 <pattern>
                     [%-5level] %d{yyyy-MM-dd HH:mm:ss.SSS} [%t] %c{1} - %msg%n
@@ -23,9 +37,11 @@
     </Appenders>
     <Loggers>
         <Root level="trace" includeLocation="false">
-            <AppenderRef ref="RandomAccessFileAppender"/>
+            <AppenderRef ref="RandomAccessFileAppenderError" level="error"/>
+            <AppenderRef ref="RandomAccessFileAppenderInfo" level="info"/>
+            <AppenderRef ref="RandomAccessFileAppenderTrace"/>
             <AppenderRef ref="ConsoleAppender" level="info"/>
-            <AppenderRef ref="VisualAppender"/>
+            <AppenderRef ref="VisualAppender" level="info"/>
         </Root>
     </Loggers>
 </Configuration>

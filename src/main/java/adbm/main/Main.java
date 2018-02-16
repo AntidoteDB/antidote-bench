@@ -27,7 +27,7 @@ public class Main
 
     public static boolean guiMode = true;
 
-    public static boolean useSettings = true;
+    public static boolean userSettings = true;
 
     public static void closeApp()
     {
@@ -78,12 +78,10 @@ public class Main
         Option gui = new Option( "gui", "activate gui mode" );
         Option version = new Option( "version", "print the version information" );
         Option debug = new Option( "debug", "print debugging information" );
-        Option emacs = new Option( "emacs",
-                                   "produce logging information without adornments" );
-        Option logfile   = Option.builder().argName( "logfile" )
+        Option logfile   = Option.builder().argName( "logfolder" )
                                         .hasArg()
-                                        .desc(  "use given file for log" )
-                                        .longOpt("logfile")
+                                        .desc(  "use given folder for log files" )
+                                        .longOpt("logfolder")
                                         .build();
 
         Option antidoterepofolder  = Option.builder().argName( "adrepo" )

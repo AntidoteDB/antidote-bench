@@ -2,6 +2,7 @@ package adbm.antidote;
 
 public class Operation
 {
+    //TODO maybe do getters
     public final String keyName;
     public final String operationName;
     public final Object value;
