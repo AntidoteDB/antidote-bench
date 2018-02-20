@@ -243,6 +243,11 @@ public class GitManager
         return false;
     }
 
+    public static boolean isCommitId(String value)
+    {
+        return getCommitFromID(value) != null;
+    }
+
     /*if (git == null) { TODO for later
             }
             else {

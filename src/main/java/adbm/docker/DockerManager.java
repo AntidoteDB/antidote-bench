@@ -153,7 +153,7 @@ public class DockerManager
             if (docker.listImages(DockerClient.ListImagesParam.byName(requiredImage)).isEmpty()) {
                 log.info("Image {} is not available and must be pulled.", requiredImage);
                 //TODO add confirm
-                if (Main.guiMode) JOptionPane.showConfirmDialog(null,
+                if (Main.getGuiMode()) JOptionPane.showConfirmDialog(null,
                                                                 "The image " + requiredImage + " is not available in Docker and must be pulled before the " + Main.appName + " application can be used.\nPressing \"Cancel\" this will terminate the application.",
                                                                 "Image need to be pulled", JOptionPane.OK_CANCEL_OPTION,
                                                                 JOptionPane.INFORMATION_MESSAGE);

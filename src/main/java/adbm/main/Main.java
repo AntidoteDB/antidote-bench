@@ -6,28 +6,36 @@ import adbm.docker.DockerManager;
 import adbm.git.GitManager;
 import adbm.main.ui.MainWindow;
 import adbm.settings.MapDBManager;
+import com.yahoo.ycsb.Client;
 import eu.antidotedb.antidotepb.AntidotePB;
 import org.apache.commons.cli.*;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.eclipse.jgit.api.Git;
 
-import java.util.HashMap;
-import java.util.Map;
+import java.util.*;
 
 public class Main
 {
 
     private static final Logger log = LogManager.getLogger(Main.class);
 
-    public static Map<String, AntidoteClientWrapper> clientList = new HashMap<>();
+    public static final Map<String, AntidoteClientWrapper> clientList = new HashMap<>();
 
     public static AntidoteClientWrapper client;
 
     public static final String appName = "Antidote Benchmark";
 
-    public static boolean guiMode = true;
+    private static boolean guiMode = true;
 
-    public static boolean userSettings = true;
+    public static boolean getGuiMode()
+    {
+        return guiMode;
+    }
+
+    public static AntidotePB.CRDT_type usedKeyType = AntidotePB.CRDT_type.COUNTER;
+
+    public static final List<String> benchmarkCommits = new ArrayList<>();
 
     public static void closeApp()
     {
@@ -35,10 +43,6 @@ public class Main
         DockerManager.stopAllContainers();
     }
 
-    /**
-     * @param name
-     * @return
-     */
     public static AntidoteClientWrapper startAntidoteClient(String name)
     {
         if (clientList.containsKey(name)) return clientList.get(name);
@@ -50,95 +54,110 @@ public class Main
         return null;
     }
 
-    /**
-     * @param name
-     */
     public static void stopAntidoteClient(String name)
     {
         DockerManager.stopContainer(name);
     }
 
-    /**
-     * @param name
-     */
     public static void removeAntidoteClient(String name)
     {
         DockerManager.removeContainer(name);
         clientList.remove(name);
     }
 
-    /**
-     * @param args
-     */
     public static void main(String[] args)
     {
         Handler handler = new Handler();
         Thread.setDefaultUncaughtExceptionHandler(handler);
-        Option help = new Option( "help", "show help" );
-        Option gui = new Option( "gui", "activate gui mode" );
-        Option version = new Option( "version", "print the version information" );
-        Option debug = new Option( "debug", "print debugging information" );
-        Option logfile   = Option.builder().argName( "logfolder" )
-                                        .hasArg()
-                                        .desc(  "use given folder for log files" )
-                                        .longOpt("logfolder")
-                                        .build();
+        if (args != null && args.length > 0) {
+            Option gui = new Option("gui", "activate gui mode");
+            Option debug = new Option("debug", "print debugging information");
+            Option config = Option.builder().argName("config")
+                                  .hasArg()
+                                  .desc("set the used configuration file")
+                                  .longOpt("config")
+                                  .build();
+            Option commits = Option.builder().argName("commits")
+                                   .hasArgs()
+                                   .desc("set the commits you want to benchmark and compare")
+                                   .longOpt("commits")
+                                   .build();
+            Options options = new Options();
+            options.addOption(gui);
+            options.addOption(debug);
+            options.addOption(config);
+            options.addOption(commits);
 
-        Option antidoterepofolder  = Option.builder().argName( "adrepo" )
-                                        .hasArg()
-                                        .desc( "add an instance of class as ")
-                                           .longOpt("antidoterepofolder")
-                                        .build();
+            CommandLineParser parser = new DefaultParser();
+            try {
+                // parse the command line arguments
+                CommandLine line = parser.parse(options, args);
+                if (line.hasOption("debug")) {
+
+                    //TODO print debug information
+                }
+                if (line.hasOption("gui")) {
+                    guiMode = true;
+                    //TODO open GUI and ignore other commands
+                }
+                else {
+                    guiMode = false;
+                    if (!line.hasOption("config")) {
+
+                        //TODO return error
+                    }
+                    else {
+
+                    }
+                    if (line.hasOption("commits")) {
+
+                        //TODO parsing
+                        for (String value : line.getOptionValues("commits")) {
+                            if (GitManager.isCommitId(value)) {
+                                benchmarkCommits.add(value);
+                            }
+                            else {
+                                log.warn(
+                                        "The commit id {} was not found in the repository and cannot be added benchmark!",
+                                        value);
+                            }
+                        }
+                        //TODO return error
+                    }
+                    if (!benchmarkCommits.isEmpty()) {
+                        for (String commit : benchmarkCommits) {
+                            //TODO start a client
+                            //Client.main(new String[0]);
+                        }
+                        //Client.main(new String[0]);
+                    }
+                }
+                //TODO config
+            } catch (ParseException exp) {
+                // oops, something went wrong
+                log.error("Parsing failed.  Reason: " + exp.getMessage());
+            }
+        }
         //MapDBManager.startMapDB();
         //GitManager.startGit();
         //DockerManager.startDocker();
-        log.warn("Ready!");
-        //AntidoteClientWrapper f1 = startAntidoteClient("antidote1");
-        //AntidoteClientWrapper f2 = startAntidoteClient("antidote2");
-        //log.warn("Rebuilding!");
-        //f1.AddKey("Test", AntidotePB.CRDT_type.INTEGER);
-        //log.info(f1.getKeyValueNoTransaction("Test"));
-        //f1.getKeyUpdate(new Operation("Test", "increment", 3));
-        //log.info(f1.getKeyValueNoTransaction("Test"));
-        //f1.AddKey("Test1", AntidotePB.CRDT_type.INTEGER);
-        //log.info(f.getKeyValue("Test"));
-        //DockerManager.rebuildAntidoteInContainer("TestAntidote", "2742f58a2e28d64dbfcf226b1a7b4d53303cd6b6");
-        //TODO set up
-        //client = new AntidoteClientWrapper("TestAntidote");
-        //log.info("Ok!");
-        //client.AddKey("Test", AntidotePB.CRDT_type.COUNTER);
-        //log.info(client.getKeyValue("Test"));
-        /*List<String> runningContainers = DockerManager.getNamesOfRunningContainers();
-        List<String> notRunningContainers = DockerManager.getNamesOfNotRunningContainers();
-        for (String container : runningContainers) {
-            clientList.add(new AntidoteClientWrapper(container));
+        if (guiMode) {
+            new MainWindow();
+            log.info("Using the Application:" +
+                             "\nFirst click on Application Settings and select Folder for the Antidote Repository." +
+                             "\nThe Folder must be empty or contain only an existing Antidote Repository (it must be in a clean state)." +
+                             "\n\nNow start the Git Connection and then the selected directory is evaluated and if it is empty the current Antidote Repository is pulled. (about 20MB)" +
+                             "\n\nOnce the Git Connection is initialized the other functionality that is enabled can be used." +
+                             "\n\nThe Git Settings are there to select Commits for which an Image shall be built." +
+                             "\nDockerfiles are created automatically when Images are built but a generic Dockerfile can be created with the corresponding button." +
+                             "\n\nDo not use the Image building yet! It works but takes 5-10 minutes for each selected Benchmark Commit selected in the Git Settings." +
+                             "\nThe Image building is an asynchronous process that will build an Image for all selected Benchmark Commits." +
+                             "\n\nThe building time for an Image is several minutes and may fail completely because Docker is not in the right state (Before building Images restart Docker to be safe)." +
+                             "\n");
         }
-        if (clientList.isEmpty()) {
-            if (!notRunningContainers.isEmpty()) {
-                DockerManager.startContainer(notRunningContainers.get(0));
-            }
-        }
-        if (clientList.isEmpty()) {
-            startAntidoteClient("defaultAntidoteDC");
-        }
-        log.info("Done!");
-        AntidoteView gui = new AntidoteView(clientList.get(0));*/
-        new MainWindow();
-        log.info("Using the Application:" +
-                         "\nFirst click on Application Settings and select Folder for the Antidote Repository." +
-                         "\nThe Folder must be empty or contain only an existing Antidote Repository (it must be in a clean state)." +
-                         "\n\nNow start the Git Connection and then the selected directory is evaluated and if it is empty the current Antidote Repository is pulled. (about 20MB)" +
-                         "\n\nOnce the Git Connection is initialized the other functionality that is enabled can be used." +
-                         "\n\nThe Git Settings are there to select Commits for which an Image shall be built." +
-                         "\nDockerfiles are created automatically when Images are built but a generic Dockerfile can be created with the corresponding button." +
-                         "\n\nDo not use the Image building yet! It works but takes 5-10 minutes for each selected Benchmark Commit selected in the Git Settings." +
-                         "\nThe Image building is an asynchronous process that will build an Image for all selected Benchmark Commits." +
-                         "\n\nThe building time for an Image is several minutes and may fail completely because Docker is not in the right state (Before building Images restart Docker to be safe)." +
-                         "\n");
-        log.debug("Testing Debug!");
-        log.trace("Testing Trace!");
     }
-//TODO test
+
+    //TODO test
     private static class Handler implements Thread.UncaughtExceptionHandler
     {
         public void uncaughtException(Thread t, Throwable e)

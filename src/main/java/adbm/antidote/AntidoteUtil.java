@@ -1,6 +1,7 @@
 package adbm.antidote;
 
 import adbm.settings.MapDBManager;
+import com.google.common.collect.Maps;
 import eu.antidotedb.antidotepb.AntidotePB;
 
 import java.util.*;
@@ -114,6 +115,16 @@ public class AntidoteUtil {
         // No Grow-only Set (G-Set)
         map.put(AntidotePB.CRDT_type.ORSET, new String[]{"add", "addAll", "remove", "removeAll", "reset"});
         map.put(AntidotePB.CRDT_type.RWSET, new String[]{"add", "addAll", "remove", "removeAll", "reset"});
+        return map;
+    }
+
+    public static final Map<String, AntidotePB.CRDT_type> STRING_CRDT_TYPE_MAP = createStringEnumMap(AntidotePB.CRDT_type.values());
+
+    private static <T extends Enum<T>> Map<String, T> createStringEnumMap(T[] values) {
+        Map<String, T> map = Maps.newHashMapWithExpectedSize(values.length);
+        for (T value : values) {
+            map.put(value.name().toUpperCase(), value);
+        }
         return map;
     }
 

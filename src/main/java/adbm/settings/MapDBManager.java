@@ -1,6 +1,7 @@
 package adbm.settings;
 
 import adbm.antidote.AntidoteUtil;
+import adbm.main.Main;
 import eu.antidotedb.antidotepb.AntidotePB;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -27,8 +28,17 @@ public class MapDBManager
 
     private static HTreeMap.KeySet<String> benchmarkCommits;
 
+    private static boolean useSettings() {
+        if (!Main.getGuiMode()) {
+            log.warn("Settings can't be used when the application is not in GUI mode!");
+            return false;
+        }
+        return true;
+    }
+
     public static void startMapDB()
     {
+        if (!useSettings()) return;
         mapDB = DBMaker.fileDB(location).closeOnJvmShutdown().transactionEnable().make();
         keyTypeMapDB = mapDB
                 .hashMap("keyTypeMapDB", Serializer.STRING, Serializer.STRING)
@@ -42,6 +52,7 @@ public class MapDBManager
 
     public static Map<String, AntidotePB.CRDT_type> getAllKeys()
     {
+        if (!useSettings()) return new HashMap<>();
         Map<String, AntidotePB.CRDT_type> res = new HashMap<>();
         for (Map.Entry<String, String> entry : keyTypeMapDB.getEntries()) {
             res.put(entry.getKey(), AntidotePB.CRDT_type.valueOf(entry.getValue()));
@@ -51,11 +62,13 @@ public class MapDBManager
 
     public static AntidotePB.CRDT_type getTypeOfKey(String name)
     {
-        return AntidotePB.CRDT_type.valueOf(keyTypeMapDB.get(name));
+        if (!useSettings() || !keyTypeMapDB.containsKey(name)) return Main.usedKeyType;
+            return AntidotePB.CRDT_type.valueOf(keyTypeMapDB.get(name));
     }
 
     public static void addKey(String name, AntidotePB.CRDT_type type)
     {
+        if (!useSettings()) return;
         keyTypeMapDB.put(name, type.name());
         AntidoteUtil.addKey(name, type);
         mapDB.commit();
@@ -63,6 +76,7 @@ public class MapDBManager
 
     public static void removeKey(String name)
     {
+        if (!useSettings()) return;
         AntidotePB.CRDT_type type = AntidotePB.CRDT_type.valueOf(keyTypeMapDB.get(name));
         keyTypeMapDB.remove(name);
         AntidoteUtil.removeKey(name, type);
@@ -77,6 +91,7 @@ public class MapDBManager
     }
 
     public static void resetKeyTypeSettings() {
+        if (!useSettings()) return;
         keyTypeMapDB.clear();
         mapDB.commit();
     }
@@ -89,47 +104,56 @@ public class MapDBManager
 
     public static String getAppSetting(String setting)
     {
+        if (!useSettings()) return "";
         return appSettings.getOrDefault(setting, "");
     }
 
     public static void setAppSetting(String setting, String value)
     {
+        if (!useSettings()) return;
         appSettings.put(setting, value);
         mapDB.commit();
     }
 
     public static void resetAppSettings() {
+        if (!useSettings()) return;
         appSettings.clear();
         mapDB.commit();
     }
 
     public static boolean isReady() {
+        if (!useSettings()) return false;
         if (mapDB != null && keyTypeMapDB != null && appSettings != null) return true;
-        log.error("ERROR: The settings are not initialized!\nPlease restart the application!");
+        log.error("The settings are not initialized!\nPlease restart the application!");
         return false;
     }
 
     public static boolean isReadyNoText() {
+        if (!useSettings()) return false;
         if (mapDB != null && keyTypeMapDB != null && appSettings != null) return true;
         return false;
     }
 
 
     public static HashSet<String> getBenchmarkCommits() {
+        if (!useSettings()) return new HashSet<>();
         return new HashSet<>(benchmarkCommits);
     }
     //TODO decide on length
     public static void addBenchmarkCommit(String commitHash) {
+        if (!useSettings()) return;
         benchmarkCommits.add(commitHash);
         mapDB.commit();
     }
 
     public static void removeBenchmarkCommit(String commitHash) {
+        if (!useSettings()) return;
         benchmarkCommits.remove(commitHash);
         mapDB.commit();
     }
 
     public static void resetBenchmarkCommits() {
+        if (!useSettings()) return;
         benchmarkCommits.clear();
         mapDB.commit();
     }
