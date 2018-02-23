@@ -1,7 +1,6 @@
 package adbm.main;
 
 import adbm.antidote.AntidoteClientWrapper;
-import adbm.antidote.Operation;
 import adbm.docker.DockerManager;
 import adbm.git.GitManager;
 import adbm.main.ui.MainWindow;
@@ -11,9 +10,13 @@ import eu.antidotedb.antidotepb.AntidotePB;
 import org.apache.commons.cli.*;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.eclipse.jgit.api.Git;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import static adbm.util.FormatUtil.format;
 
 public class Main
 {
@@ -26,9 +29,28 @@ public class Main
 
     public static final String appName = "Antidote Benchmark";
 
-    private static boolean guiMode = true;
+    public static final String ycsbWorkloadsPath = format("{}/YCSB/workloads", getResourcesPath());
 
-    public static boolean getGuiMode()
+    public static final String appSettingsPath = format("{}/Settings/AppSettings", getResourcesPath());
+
+    public static final String logSettingsPath = format("{}/Settings/LogSettings/log4j2.xml", getResourcesPath());
+
+    public static final String defaultLogPath = "Logs";
+
+    public static final String defaultAntidotePath = "Antidote";
+
+    public static final String dockerfilePath = format("{}/Dockerfile", getResourcesPath());
+
+    public static final String imagesPath = format("{}/Images", getResourcesPath());
+
+    public static String getResourcesPath()
+    {
+        return "resources";
+    }
+
+    private static boolean guiMode = false;
+
+    public static boolean isGuiMode()
     {
         return guiMode;
     }
@@ -65,10 +87,16 @@ public class Main
         clientList.remove(name);
     }
 
+
+
     public static void main(String[] args)
     {
         Handler handler = new Handler();
         Thread.setDefaultUncaughtExceptionHandler(handler);
+
+        //Validation that Docker can be used!
+        if (!DockerManager.startDocker(null, null)) return;
+        //Client.main(new String[]{"-db","adbm.antidote.AntidoteYCSBClient", "-P", format("{}/YCSB/workloads/workloada", getResourcesPath()), "-s"});
         if (args != null && args.length > 0) {
             Option gui = new Option("gui", "activate gui mode");
             Option debug = new Option("debug", "print debugging information");
@@ -122,10 +150,12 @@ public class Main
                                         value);
                             }
                         }
+
                         //TODO return error
                     }
                     if (!benchmarkCommits.isEmpty()) {
                         for (String commit : benchmarkCommits) {
+                            //Client.main(new String[]{"-db","adbm.antidote.AntidoteYCSBClient", "-P", "workloads/workloada", "-s"});
                             //TODO start a client
                             //Client.main(new String[0]);
                         }
@@ -141,8 +171,10 @@ public class Main
         //MapDBManager.startMapDB();
         //GitManager.startGit();
         //DockerManager.startDocker();
+        //guiMode = true; //TODO
+        //MapDBManager.startMapDB();
         if (guiMode) {
-            new MainWindow();
+            MainWindow.showMainWindow();
             log.info("Using the Application:" +
                              "\nFirst click on Application Settings and select Folder for the Antidote Repository." +
                              "\nThe Folder must be empty or contain only an existing Antidote Repository (it must be in a clean state)." +
@@ -155,6 +187,11 @@ public class Main
                              "\n\nThe building time for an Image is several minutes and may fail completely because Docker is not in the right state (Before building Images restart Docker to be safe)." +
                              "\n");
         }
+    }
+
+    public static void runBenchmark()
+    {
+
     }
 
     //TODO test

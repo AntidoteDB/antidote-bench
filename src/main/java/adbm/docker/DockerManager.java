@@ -11,7 +11,6 @@ import com.spotify.docker.client.LogStream;
 import com.spotify.docker.client.exceptions.DockerCertificateException;
 import com.spotify.docker.client.exceptions.DockerException;
 import com.spotify.docker.client.messages.*;
-import com.spotify.docker.client.messages.Container;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -21,8 +20,9 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.Paths;
 import java.util.*;
-import java.util.List;
 import java.util.stream.Collectors;
+
+import static adbm.docker.DockerUtil.normalizeName;
 
 public class DockerManager
 {
@@ -41,10 +41,20 @@ public class DockerManager
     //TODO test local build!
     private static DockerClient docker;
 
+    /**
+     * This image is required to build the Antidote Benchmark image.
+     */
     private static final String requiredImage = "erlang:19";
 
+    /**
+     * This is the network that is used for the antidote containers.
+     */
     private static final String antidoteDockerNetworkName = "antidote_ntwk";
 
+    /**
+     * This image is very similar to the normal Antidote image.
+     * It keeps the git repository so that other commits can be checked out.
+     */
     private static final String antidoteDockerImageName = "antidotedb/benchmark";
 
     private static final int standardClientPort = 8087;
@@ -141,23 +151,28 @@ public class DockerManager
      *
      * @return true if the connection to Docker was successfully started otherwise false.
      */
-    public static boolean startDocker()
+    public static boolean startDocker(String uri, String certPath)
     {
-        if (!GitManager.isReady()) return false;
+        // TODO if (!GitManager.isReady()) return false;
         if (isReadyNoText()) {
             log.debug("The DockerManager was already ready and will be restarted!");
         }
         try {
-            docker = DefaultDockerClient.fromEnv().readTimeoutMillis(3600000).build();
+            if (uri == null || certPath == null)
+                docker = DefaultDockerClient.fromEnv().readTimeoutMillis(3600000).build();
+            else return false;
+            //else docker = DefaultDockerClient.builder().uri(uri).dockerCertificates(new DockerCertificates(Paths.get(certPath))).build(); //TODO testing
             log.debug("Checking that image {} is available...", requiredImage);
             if (docker.listImages(DockerClient.ListImagesParam.byName(requiredImage)).isEmpty()) {
                 log.info("Image {} is not available and must be pulled.", requiredImage);
                 //TODO add confirm
-                if (Main.getGuiMode()) JOptionPane.showConfirmDialog(null,
-                                                                "The image " + requiredImage + " is not available in Docker and must be pulled before the " + Main.appName + " application can be used.\nPressing \"Cancel\" this will terminate the application.",
-                                                                "Image need to be pulled", JOptionPane.OK_CANCEL_OPTION,
-                                                                JOptionPane.INFORMATION_MESSAGE);
-                docker.pull(requiredImage, new SimpleProgressHandler("Image"));
+                boolean confirm = true;
+                if (Main.isGuiMode()) confirm = JOptionPane.showConfirmDialog(null,
+                                                                              "The image " + requiredImage + " is not available in Docker and must be pulled before the " + Main.appName + " application can be used.\nPressing \"Cancel\" this will terminate the application.",
+                                                                              "Image need to be pulled", JOptionPane.OK_CANCEL_OPTION,
+                                                                              JOptionPane.INFORMATION_MESSAGE) == JOptionPane.OK_OPTION;
+                if (confirm) docker.pull(requiredImage, new SimpleProgressHandler("Image"));
+                else return false;
             }
             else {
                 log.debug(requiredImage + " is available.");
@@ -182,6 +197,9 @@ public class DockerManager
                                   "\nPlease restart Docker manually!");
                 //JOptionPane.showMessageDialog(null,"");TODO
                 return false;
+            }
+            if (!antidoteBenchmarkImageExists()) {
+                buildAntidoteBenchmarkImage(false);
             }
             return true;
         } catch (DockerException | InterruptedException | DockerCertificateException e) {
@@ -260,12 +278,13 @@ public class DockerManager
         log.debug("Checking if the {} image already exists...", Main.appName);
         List<Image> images;
         try {
-            images = docker.listImages(DockerClient.ListImagesParam.byName(antidoteDockerImageName));
+            images = docker.listImages(DockerClient.ListImagesParam.byName(antidoteDockerImageName), DockerClient.ListImagesParam.allImages());
+            log.debug("Existing Images: ", images);
         } catch (DockerException | InterruptedException e) {
             log.error("An error occurred while checking if an image exists!", e);
             return false;
         }
-        return images.isEmpty();
+        return !images.isEmpty();
     }
 
     public static synchronized boolean buildAntidoteBenchmarkImage(boolean local)
@@ -288,7 +307,7 @@ public class DockerManager
             File folder = new File("Dockerfile");
             String path = folder.getCanonicalPath();
             if (local) {
-                folder = new File(MapDBManager.getAppSetting(MapDBManager.GitRepoLocationSetting)).getParentFile();
+                folder = new File(MapDBManager.getGitRepoLocation()).getParentFile();
                 if (folder != null) path = folder.getCanonicalPath();
             }
             log.info("Building Image {}...", antidoteDockerImageName);
@@ -301,19 +320,6 @@ public class DockerManager
             isBuildingImage = false;
         }
         return false;
-    }
-
-    /**
-     * If the first character of the name is '/' it is removed and then the name is returned.
-     * This character is sometimes added by Docker for unknown reasons.
-     *
-     * @param containerNameFromDocker The name of the container.
-     * @return The name where the first character is removed if it was a '/'.
-     */
-    private static String normalizeName(String containerNameFromDocker)
-    {
-        if (containerNameFromDocker.startsWith("/")) return containerNameFromDocker.substring(1);
-        else return containerNameFromDocker;
     }
 
     public static boolean removeAllContainers()

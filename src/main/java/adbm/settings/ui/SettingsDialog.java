@@ -1,5 +1,7 @@
 package adbm.settings.ui;
 
+import adbm.main.Main;
+import adbm.main.ui.MainWindow;
 import adbm.settings.MapDBManager;
 import com.intellij.uiDesigner.core.GridConstraints;
 import com.intellij.uiDesigner.core.GridLayoutManager;
@@ -11,7 +13,9 @@ import javax.swing.*;
 import java.awt.*;
 import java.io.File;
 
-public class SettingsDialog
+import static adbm.util.FormatUtil.format;
+
+public class SettingsDialog extends JDialog
 {
 
     private static final Logger log = LogManager.getLogger(SettingsDialog.class);
@@ -19,19 +23,24 @@ public class SettingsDialog
     private JTextField textFieldRepositoryLocation;
     private JButton buttonSetRepoLocation;
     private JPanel panel;
-    private JTextField textFieldConfigLocation;
-    private JButton buttonSetConfigLocation;
 
-    public SettingsDialog()
+    private static SettingsDialog settingsDialog;
+
+    public static void showSettingsDialog() {
+        settingsDialog = new SettingsDialog();
+        settingsDialog.setVisible(true);
+    }
+
+    private SettingsDialog()
     {
-        JFrame frame = new JFrame("Settings");
-
-        frame.setContentPane(panel);
-        frame.setDefaultCloseOperation(JFrame.HIDE_ON_CLOSE);
-        frame.pack();
-        frame.setLocationRelativeTo(null);
-        frame.setVisible(true);
-        textFieldRepositoryLocation.setText(MapDBManager.getAppSetting(MapDBManager.GitRepoLocationSetting));
+        super(MainWindow.getMainWindow(), "Settings", ModalityType.APPLICATION_MODAL);
+        setTitle("Settings");
+        setIconImage(new ImageIcon(format("{}/AntidoteIcon.PNG", Main.imagesPath)).getImage());
+        setContentPane(panel);
+        setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
+        pack();
+        setLocationRelativeTo(MainWindow.getMainWindow());
+        textFieldRepositoryLocation.setText(MapDBManager.getGitRepoLocation());
         buttonSetRepoLocation.addActionListener(e -> {
             JFileChooser fileChooser = new JFileChooser();
             fileChooser.setCurrentDirectory(new File(System.getProperty("user.home")));
@@ -39,22 +48,10 @@ public class SettingsDialog
             int result = fileChooser.showOpenDialog(panel);
             if (result == JFileChooser.APPROVE_OPTION) {
                 File selectedFile = fileChooser.getSelectedFile();
-                log.info("Selected file for Repository: " + selectedFile.getAbsolutePath());
-                MapDBManager.setAppSetting(MapDBManager.GitRepoLocationSetting, selectedFile.getAbsolutePath());
-                textFieldRepositoryLocation.setText(MapDBManager.getAppSetting(MapDBManager.GitRepoLocationSetting));
-            }
-        });
-        textFieldConfigLocation.setText(MapDBManager.getAppSetting(MapDBManager.ConfigLocSetting));
-        buttonSetConfigLocation.addActionListener(e -> {
-            JFileChooser fileChooser = new JFileChooser();
-            fileChooser.setCurrentDirectory(new File(System.getProperty("user.home")));
-            fileChooser.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
-            int result = fileChooser.showOpenDialog(panel);
-            if (result == JFileChooser.APPROVE_OPTION) {
-                File selectedFile = fileChooser.getSelectedFile();
-                log.info("Selected file: " + selectedFile.getAbsolutePath());
-                MapDBManager.setAppSetting(MapDBManager.ConfigLocSetting, selectedFile.getAbsolutePath());
-                textFieldRepositoryLocation.setText(MapDBManager.getAppSetting(MapDBManager.ConfigLocSetting));
+                log.info("Selected file for Repository: {}", selectedFile.getAbsolutePath());
+                MapDBManager.setGitRepoLocation(selectedFile.getAbsolutePath());
+                textFieldRepositoryLocation.setText(MapDBManager.getGitRepoLocation());
+                dispose();
             }
         });
     }
@@ -100,19 +97,6 @@ public class SettingsDialog
         panel.add(label2, new GridConstraints(3, 0, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_NONE,
                                               GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null,
                                               null, null, 0, false));
-        textFieldConfigLocation = new JTextField();
-        textFieldConfigLocation.setEditable(false);
-        panel.add(textFieldConfigLocation,
-                  new GridConstraints(4, 0, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_HORIZONTAL,
-                                      GridConstraints.SIZEPOLICY_WANT_GROW, GridConstraints.SIZEPOLICY_FIXED, null,
-                                      new Dimension(150, -1), null, 0, false));
-        buttonSetConfigLocation = new JButton();
-        buttonSetConfigLocation.setEnabled(false);
-        buttonSetConfigLocation.setText("Set Configuration Files Location");
-        panel.add(buttonSetConfigLocation,
-                  new GridConstraints(5, 0, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_HORIZONTAL,
-                                      GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW,
-                                      GridConstraints.SIZEPOLICY_FIXED, null, new Dimension(300, -1), null, 0, false));
         final Spacer spacer1 = new Spacer();
         panel.add(spacer1,
                   new GridConstraints(6, 0, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_VERTICAL, 1,

@@ -1,35 +1,42 @@
 package adbm.git.ui;
 
 import adbm.git.GitManager;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import javax.swing.*;
 import java.awt.*;
-import java.awt.event.WindowEvent;
 
-public class AddBranchDialog
+public class AddBranchDialog extends JDialog
 {
-    private JList listAvailableBranches;
+    private static final Logger log = LogManager.getLogger(AddBranchDialog.class);
+
+    private JList<String> listAvailableBranches;
     private JPanel panel;
     private JButton buttonAddBranch;
-    private JFrame frame;
 
-    public AddBranchDialog()
+    private static AddBranchDialog addBranchDialog;
+
+    public static void showAddBranchDialog() {
+        addBranchDialog = new AddBranchDialog();
+        addBranchDialog.setVisible(true);
+    }
+
+    private AddBranchDialog()
     {
-        frame = new JFrame("Add Branch");
-
-        frame.setContentPane(panel);
-        frame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
-        frame.pack();
-        frame.setLocationRelativeTo(null);
-        frame.setVisible(true);
-        DefaultListModel listAvailableBranchesModel = new DefaultListModel();
+        super(GitWindow.getGitWindow(), "Add Branch", ModalityType.APPLICATION_MODAL);
+        setContentPane(panel);
+        setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
+        pack();
+        setLocationRelativeTo(GitWindow.getGitWindow());
+        DefaultListModel<String> listAvailableBranchesModel = new DefaultListModel<>();
         GitManager.getAllNonLocalRemoteBranches().forEach(listAvailableBranchesModel::addElement);
         listAvailableBranches.setModel(listAvailableBranchesModel);
 
         buttonAddBranch.addActionListener(e -> {
             if (listAvailableBranches.getSelectedValue() != null) {
-                GitManager.checkoutBranch(listAvailableBranches.getSelectedValue().toString());
-                frame.dispatchEvent(new WindowEvent(frame, WindowEvent.WINDOW_CLOSING));
+                GitManager.checkoutBranch(listAvailableBranches.getSelectedValue());
+                this.dispose();
             }
         });
     }

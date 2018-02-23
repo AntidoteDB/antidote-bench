@@ -12,7 +12,6 @@ import org.apache.logging.log4j.Logger;
 import javax.swing.*;
 import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
-
 import java.awt.*;
 import java.beans.PropertyChangeEvent;
 import java.util.List;

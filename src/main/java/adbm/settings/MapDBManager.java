@@ -17,8 +17,6 @@ import java.util.Map;
 public class MapDBManager
 {
     private static final Logger log = LogManager.getLogger(MapDBManager.class);
-    
-    private static String location = "./keyStoreDatabase";
 
     private static DB mapDB;
 
@@ -28,18 +26,57 @@ public class MapDBManager
 
     private static HTreeMap.KeySet<String> benchmarkCommits;
 
+    private static final String GitRepoLocationSetting = "GitRepo";
+
+
+    public static String getGitRepoLocation() {
+        if (isReadyNoText()) {
+            String gitRepo = getAppSetting(GitRepoLocationSetting);
+            if (gitRepo.isEmpty()) {
+                return Main.defaultAntidotePath;
+            }
+            else {
+                return gitRepo;
+            }
+        }
+        else {
+            return Main.defaultAntidotePath;
+        }
+    }
+
+    public static void setGitRepoLocation(String path) {
+        if (isReadyNoText()) {
+            setAppSetting(GitRepoLocationSetting, path);
+        }
+    }
+
+    public static final String ConfigLocSetting = "Config";
+
     private static boolean useSettings() {
-        if (!Main.getGuiMode()) {
+        if (!Main.isGuiMode()) {
             log.warn("Settings can't be used when the application is not in GUI mode!");
             return false;
         }
         return true;
     }
 
+    public static boolean isReady() {
+        if (!useSettings()) return false;
+        if (mapDB != null && keyTypeMapDB != null && appSettings != null) return true;
+        log.error("The settings are not initialized!\nPlease restart the application!");
+        return false;
+    }
+
+    public static boolean isReadyNoText() {
+        if (!useSettings()) return false;
+        if (mapDB != null && keyTypeMapDB != null && appSettings != null) return true;
+        return false;
+    }
+
     public static void startMapDB()
     {
         if (!useSettings()) return;
-        mapDB = DBMaker.fileDB(location).closeOnJvmShutdown().transactionEnable().make();
+        mapDB = DBMaker.fileDB(Main.appSettingsPath).closeOnJvmShutdown().transactionEnable().make();
         keyTypeMapDB = mapDB
                 .hashMap("keyTypeMapDB", Serializer.STRING, Serializer.STRING)
                 .createOrOpen();
@@ -96,12 +133,6 @@ public class MapDBManager
         mapDB.commit();
     }
 
-    public static final String GitRepoLocationSetting = "GitRepo";
-
-    public static final String ConfigLocSetting = "Config";
-
-    public static final String LastBuildImageCommit = "ImageCommit";
-
     public static String getAppSetting(String setting)
     {
         if (!useSettings()) return "";
@@ -121,18 +152,7 @@ public class MapDBManager
         mapDB.commit();
     }
 
-    public static boolean isReady() {
-        if (!useSettings()) return false;
-        if (mapDB != null && keyTypeMapDB != null && appSettings != null) return true;
-        log.error("The settings are not initialized!\nPlease restart the application!");
-        return false;
-    }
 
-    public static boolean isReadyNoText() {
-        if (!useSettings()) return false;
-        if (mapDB != null && keyTypeMapDB != null && appSettings != null) return true;
-        return false;
-    }
 
 
     public static HashSet<String> getBenchmarkCommits() {

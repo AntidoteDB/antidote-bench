@@ -12,7 +12,10 @@ import org.apache.logging.log4j.core.config.plugins.PluginFactory;
 import org.apache.logging.log4j.core.layout.PatternLayout;
 
 import javax.swing.*;
-import javax.swing.text.*;
+import javax.swing.text.BadLocationException;
+import javax.swing.text.Style;
+import javax.swing.text.StyleConstants;
+import javax.swing.text.StyledDocument;
 import java.awt.*;
 import java.io.Serializable;
 import java.util.ArrayList;
@@ -51,13 +54,13 @@ public final class TextPaneAppender extends AbstractAppender
         // append log text to TextArea
         try {
             if (event.getLevel().equals(Level.TRACE)) {
-                appendToPane(message, Color.PINK.darker().darker(), 8);
+                appendToPane(message, Color.GREEN.darker().darker(), 8);
             }
             else if (event.getLevel().equals(Level.DEBUG)) {
                 appendToPane(message, Color.CYAN.darker().darker(), 10);
             }
             else if (event.getLevel().equals(Level.INFO)) {
-                appendToPane(message, Color.GREEN.darker().darker(), 12);
+                appendToPane(message, Color.BLACK, 12);
             }
             else if (event.getLevel().equals(Level.WARN)) {
                 appendToPane(message, Color.ORANGE.darker().darker(), 14);

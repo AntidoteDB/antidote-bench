@@ -33,7 +33,10 @@ cmake-build-debug/
 # IntelliJ
 out/
 target/
-logs/
+Logs/
+Antidote/
+resources/Settings/AppSettings
+resources/Settings/AppSettings.wal.0
 
 # mpeltonen/sbt-idea plugin
 .idea_modules/

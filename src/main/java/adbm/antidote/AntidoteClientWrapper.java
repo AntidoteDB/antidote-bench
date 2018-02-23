@@ -5,18 +5,19 @@ import adbm.antidote.ui.AntidoteModel;
 import adbm.docker.DockerManager;
 import adbm.settings.MapDBManager;
 import com.google.protobuf.ByteString;
-import com.yahoo.ycsb.ByteIterator;
 import eu.antidotedb.antidotepb.AntidotePB;
 import eu.antidotedb.client.*;
 
 import java.net.InetSocketAddress;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
 
 import static adbm.settings.MapDBManager.getTypeOfKey;
 import static eu.antidotedb.client.Key.create;
 
 /**
- * Bridge between Antidote and YCSB
+ * Bridge between Antidote and benchmarking tools
  * Fetch the neccessary information from Antidote
  */
 public class AntidoteClientWrapper extends AntidoteModel {
@@ -32,7 +33,7 @@ public class AntidoteClientWrapper extends AntidoteModel {
     private boolean running;
 
     public boolean isReady() {
-        return true;
+        return running;
     }
 
     /**
@@ -41,7 +42,6 @@ public class AntidoteClientWrapper extends AntidoteModel {
      * @param name
      */
     public AntidoteClientWrapper(String name) {
-        //docker run -i -t -d --name antidote1 -p 8087:8087 --network antidote_ntwk -e SHORT_NAME=true -e NODE_NAME=antidote@antidote1 antidotedb/antidote
         DockerManager.runContainer(name);
         hostPort = DockerManager.getHostPortsFromContainer(name).get(0); //TODO exception
 
@@ -216,7 +216,11 @@ public class AntidoteClientWrapper extends AntidoteModel {
             } else if ((key.getType().equals(AntidotePB.CRDT_type.COUNTER)) || (key.getType().equals(AntidotePB.CRDT_type.FATCOUNTER))) {
 
                 CounterKey counterKey = (CounterKey) key;
-                longObject = Long.parseLong(value.toString());
+                try {
+                    longObject = Long.parseLong(value.toString());
+                } catch (NumberFormatException e) {
+                    longObject = (long) value.toString().length(); //TODO testing
+                }
                 if (operationName.equals("increment")) {
                     update = counterKey.increment(longObject);
                 } else if (operationName.equals("decrement")) {

@@ -1,14 +1,12 @@
 package adbm.docker;
 
-import adbm.git.GitManager;
-import adbm.settings.MapDBManager;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-import java.io.*;
-import java.nio.file.Files;
-import java.nio.file.LinkOption;
-import java.nio.file.StandardCopyOption;
+import java.io.BufferedWriter;
+import java.io.FileOutputStream;
+import java.io.OutputStreamWriter;
+import java.io.Writer;
 
 public class DockerfileBuilder
 {
@@ -81,7 +79,7 @@ public class DockerfileBuilder
                 "ENV NODE_NAME \"antidote@127.0.0.1\"\n" +
                 "ENV SHORT_NAME \"false\"\n" +
                 "ENV ANTIDOTE_REPO \"https://github.com/SyncFree/antidote.git\"\n" +
-                "ENV ANTIDOTE_COMMIT \"master\"\n" +
+                "ENV ANTIDOTE_BRANCH \"master\"\n" +
                 "\n" +
                 "RUN set -xe \\\n" +
                 "  && apt-get update \\\n" +
@@ -90,7 +88,7 @@ public class DockerfileBuilder
                 "  && cd /usr/src \\\n" +
                 "  && git clone $ANTIDOTE_REPO \\\n" +
                 "  && cd antidote \\\n" +
-                "  && git checkout $ANTIDOTE_COMMIT \\\n" +
+                "  && git checkout $ANTIDOTE_BRANCH \\\n" +
                 "  && make rel \\\n" +
                 "  && cp -R _build/default/rel/antidote /opt/ \\\n" +
                 "  && sed -e '$i,{kernel, [{inet_dist_listen_min, 9100}, {inet_dist_listen_max, 9100}]}' /usr/src/antidote/_build/default/rel/antidote/releases/0.0.1/sys.config > /opt/antidote/releases/0.0.1/sys.config \\\n" +
@@ -122,25 +120,27 @@ public class DockerfileBuilder
 
     public static void createDockerfile(boolean local)
     {
-        if (!GitManager.isReady()) return;
-        String gitRepoLocation = MapDBManager.getAppSetting(MapDBManager.GitRepoLocationSetting);
-        File gitRepoFolder = new File(gitRepoLocation);
-        File gitRepoParentFolder = gitRepoFolder.getParentFile();
-        if (gitRepoParentFolder == null) return;
+        //if (!GitManager.isReady()) return;
+        //String gitRepoLocation = MapDBManager.getAppSetting(MapDBManager.GitRepoLocationSetting);
+        //File gitRepoFolder = new File(gitRepoLocation);
+        //File gitRepoParentFolder = gitRepoFolder.getParentFile();
+        //if (gitRepoParentFolder == null) return;
         String dockerfile;
-        if (local) dockerfile = getLocalDockerfile(gitRepoFolder.getName());
-        else dockerfile = getRemoteDockerfile();
+        //if (local) dockerfile = getLocalDockerfile(gitRepoFolder.getName());
+        //else
+            dockerfile = getRemoteDockerfile();
         try (Writer writer = new BufferedWriter(new OutputStreamWriter(
                 new FileOutputStream("Dockerfile/Dockerfile", false), "utf-8")))
         {
             writer.write(dockerfile);
             writer.close();
             log.info("Dockerfile created!");
-            if (!local) return;
+            /*if (!local) return;
             File[] files = new File("Dockerfile").listFiles();
             if (files == null) return;
             for (File file : files) {
-                File dest = new File(gitRepoParentFolder, file.getName());
+                //File dest = new File(gitRepoParentFolder, file.getName());
+                File dest = new File("/", file.getName());
                 Files.copy(
                         file.toPath(),
                         dest.toPath(),
@@ -148,7 +148,7 @@ public class DockerfileBuilder
                         StandardCopyOption.COPY_ATTRIBUTES,
                         LinkOption.NOFOLLOW_LINKS);
             }
-            log.info("Dockerfile deployed!");
+            log.info("Dockerfile deployed!");*/
         } catch (Exception e) {
             e.printStackTrace();
         }

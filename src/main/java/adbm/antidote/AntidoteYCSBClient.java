@@ -23,13 +23,13 @@ public class AntidoteYCSBClient extends DB {
     @Override
     public void init() throws DBException {
         if (!MapDBManager.isReadyNoText()) {
-            MapDBManager.startMapDB();
+            //MapDBManager.startMapDB();
         }
         if (!GitManager.isReadyNoText()) {
-            GitManager.startGit();
+            //GitManager.startGit();
         }
-        if (!DockerManager.isReadyNoText()) {
-            DockerManager.startDocker();
+        if (!DockerManager.isReady()) {
+            DockerManager.startDocker(null, null);
         }
         if (Main.client == null) {
             Main.client = new AntidoteClientWrapper("TestAntidote");
@@ -48,13 +48,14 @@ public class AntidoteYCSBClient extends DB {
     @Override
     public Status read(String table, String key, Set<String> fields, HashMap<String, ByteIterator> result) {
         List<String> field = new ArrayList<>();
+        if (fields == null) return Status.OK;
         for (String name : fields) {
             field.add(name);
         }
 
         List<String> results = Main.client.getKeyValues(field);
         if (result != null) {
-            result = new HashMap<String, ByteIterator>();
+            result = new HashMap<>();
         }
         for (int i = 0; i < field.size(); i++) {
             result.put(field.get(i), new ByteArrayByteIterator(results.get(i).getBytes()));

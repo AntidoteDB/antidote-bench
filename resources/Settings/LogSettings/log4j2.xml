@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Configuration status="debug" monitorInterval="30">
+    <Appenders>
+        <Console name="ConsoleAppender" target="SYSTEM_OUT">
+            <PatternLayout>
+                <pattern>
+                    [%-5level] %d{HH:mm:ss.SSS} [%t] %c{1} - %msg%n
+                </pattern>
+            </PatternLayout>
+        </Console>
+        <RandomAccessFile name="RandomAccessFileAppenderError" fileName="Logs/ErrorLog.log" immediateFlush="false" append="true">
+            <PatternLayout>
+                <pattern>
+                    [%-5level] %d{yyyy-MM-dd HH:mm:ss.SSS} [%t] %c{1} - %msg%n
+                </pattern>
+            </PatternLayout>
+        </RandomAccessFile>
+        <RandomAccessFile name="RandomAccessFileAppenderInfo" fileName="Logs/InfoLog.log" immediateFlush="false" append="true">
+            <PatternLayout>
+                <pattern>
+                    [%-5level] %d{yyyy-MM-dd HH:mm:ss.SSS} [%t] %c{1} - %msg%n
+                </pattern>
+            </PatternLayout>
+        </RandomAccessFile>
+        <RandomAccessFile name="RandomAccessFileAppenderTrace" fileName="Logs/TraceLog.log" immediateFlush="false" append="true">
+            <PatternLayout>
+                <pattern>
+                    [%-5level] %d{yyyy-MM-dd HH:mm:ss.SSS} [%t] %c{1} - %msg%n
+                </pattern>
+            </PatternLayout>
+        </RandomAccessFile>
+        <TextPaneAppender name="VisualAppender">
+            <PatternLayout>
+                <pattern>[%-5level] %d{HH:mm:ss.SSS} [%t] %c{1} - %msg%n</pattern>
+            </PatternLayout>
+        </TextPaneAppender>
+    </Appenders>
+    <Loggers>
+        <Root level="trace" includeLocation="false">
+            <AppenderRef ref="RandomAccessFileAppenderError" level="error"/>
+            <AppenderRef ref="RandomAccessFileAppenderInfo" level="info"/>
+            <AppenderRef ref="RandomAccessFileAppenderTrace"/>
+            <AppenderRef ref="ConsoleAppender" level="trace"/>
+            <AppenderRef ref="VisualAppender" level="trace"/>
+        </Root>
+    </Loggers>
+</Configuration>
