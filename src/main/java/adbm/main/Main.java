@@ -1,11 +1,11 @@
 package adbm.main;
 
-import adbm.antidote.AntidoteClientWrapper;
+import adbm.antidote.IAntidoteClientWrapper;
+import adbm.antidote.wrappers.AntidoteClientWrapper;
 import adbm.docker.DockerManager;
 import adbm.git.GitManager;
 import adbm.main.ui.MainWindow;
 import adbm.settings.MapDBManager;
-import com.yahoo.ycsb.Client;
 import eu.antidotedb.antidotepb.AntidotePB;
 import org.apache.commons.cli.*;
 import org.apache.logging.log4j.LogManager;
@@ -23,9 +23,9 @@ public class Main
 
     private static final Logger log = LogManager.getLogger(Main.class);
 
-    public static final Map<String, AntidoteClientWrapper> clientList = new HashMap<>();
+    public static final Map<String, IAntidoteClientWrapper> clientList = new HashMap<>();
 
-    public static AntidoteClientWrapper client;
+    public static AntidoteClientWrapper benchmarkClient;
 
     public static final String appName = "Antidote Benchmark";
 
@@ -37,7 +37,7 @@ public class Main
 
     public static final String defaultLogPath = "Logs";
 
-    public static final String defaultAntidotePath = "Antidote";
+    public static final String defaultAntidotePath = "AntidoteGitRepo";
 
     public static final String dockerfilePath = format("{}/Dockerfile", getResourcesPath());
 
@@ -57,6 +57,10 @@ public class Main
 
     public static AntidotePB.CRDT_type usedKeyType = AntidotePB.CRDT_type.COUNTER;
 
+    public static String usedOperation;
+
+    public static IAntidoteClientWrapper.TransactionType usedTransactionType = IAntidoteClientWrapper.TransactionType.InteractiveTransaction;
+
     public static final List<String> benchmarkCommits = new ArrayList<>();
 
     public static void closeApp()
@@ -65,7 +69,7 @@ public class Main
         DockerManager.stopAllContainers();
     }
 
-    public static AntidoteClientWrapper startAntidoteClient(String name)
+    public static IAntidoteClientWrapper startAntidoteClient(String name)
     {
         if (clientList.containsKey(name)) return clientList.get(name);
         if (DockerManager.runContainer(name)) {
@@ -95,7 +99,11 @@ public class Main
         Thread.setDefaultUncaughtExceptionHandler(handler);
 
         //Validation that Docker can be used!
-        if (!DockerManager.startDocker(null, null)) return;
+        if (!DockerManager.startDocker(null, null)) System.exit(1);
+        if (!DockerManager.runContainer("TestDockerContainer")) {
+            log.error("Docker is a bad state! Please restart Docker before using this application!");
+            System.exit(1);
+        }
         //Client.main(new String[]{"-db","adbm.antidote.AntidoteYCSBClient", "-P", format("{}/YCSB/workloads/workloada", getResourcesPath()), "-s"});
         if (args != null && args.length > 0) {
             Option gui = new Option("gui", "activate gui mode");
@@ -171,8 +179,8 @@ public class Main
         //MapDBManager.startMapDB();
         //GitManager.startGit();
         //DockerManager.startDocker();
-        //guiMode = true; //TODO
-        //MapDBManager.startMapDB();
+        guiMode = true; //TODO
+        MapDBManager.startMapDB();
         if (guiMode) {
             MainWindow.showMainWindow();
             log.info("Using the Application:" +

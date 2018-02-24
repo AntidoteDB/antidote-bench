@@ -191,7 +191,7 @@ public class DockerManager
             }
             log.info("Docker initialized!");
             Runtime.getRuntime().addShutdownHook(
-                    new Thread(() -> getNamesOfRunningContainers().forEach(DockerManager::stopContainer)));
+                    new Thread(DockerManager::stopAllContainers));
             if (!getNamesOfRunningContainers().isEmpty()) {
                 log.error("The Antidote Benchmark containers cannot be running when the DockerManager starts!" +
                                   "\nPlease restart Docker manually!");
@@ -203,7 +203,7 @@ public class DockerManager
             }
             return true;
         } catch (DockerException | InterruptedException | DockerCertificateException e) {
-            e.printStackTrace();
+            log.error("An error occurred while starting Docker.", e);
         }
         return false;
     }
@@ -341,7 +341,7 @@ public class DockerManager
     public static boolean stopAllContainers()
     {
         if (!isReady()) return false;
-        log.debug("Removing all containers that were created from the image {}!", antidoteDockerImageName);
+        log.debug("Stopping all containers that were created from the image {}!", antidoteDockerImageName);
         try {
             for (Container container : getRunningContainers()) {
                 docker.stopContainer(container.id(), secondsToWaitBeforeKilling);
@@ -390,8 +390,7 @@ public class DockerManager
                 }
                 else {
                     log.debug("Starting the existing container {}", name);
-                    startContainer(name);
-                    return true;
+                    return startContainer(name);
                 }
             }
         }
@@ -426,8 +425,7 @@ public class DockerManager
                 log.error("An error has occurred while running a container!", e);
                 return false;
             }
-            startContainer(name);
-            return true;
+            return startContainer(name);
         }
     }
 

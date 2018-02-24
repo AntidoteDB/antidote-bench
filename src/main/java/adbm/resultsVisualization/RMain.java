@@ -1,4 +1,4 @@
-package adbm.antidote.resultsVisualization;
+package adbm.resultsVisualization;
 
 import com.itextpdf.awt.DefaultFontMapper;
 import com.itextpdf.text.Document;

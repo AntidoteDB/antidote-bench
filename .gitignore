@@ -34,7 +34,7 @@ cmake-build-debug/
 out/
 target/
 Logs/
-Antidote/
+AntidoteGitRepo/
 resources/Settings/AppSettings
 resources/Settings/AppSettings.wal.0
 

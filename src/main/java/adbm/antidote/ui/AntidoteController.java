@@ -19,7 +19,7 @@ public class AntidoteController implements PropertyChangeListener
 
     public static final String AddKey = "AddKey";
     public static final String RemoveKey = "RemoveKey";
-    public static final String ExecuteKeyOperation = "getKeyUpdate";
+    public static final String ExecuteKeyOperation = "getKeyUpdateOp";
 
     public static final String ResetDCConnection = "ResetDCConnection";
 

@@ -1,8 +1,11 @@
 package adbm.antidote;
 
+import adbm.main.Main;
 import adbm.settings.MapDBManager;
 import com.google.common.collect.Maps;
+import com.google.protobuf.ByteString;
 import eu.antidotedb.antidotepb.AntidotePB;
+import eu.antidotedb.client.Key;
 
 import java.util.*;
 
@@ -11,6 +14,8 @@ import java.util.*;
  */
 public class AntidoteUtil {
 
+
+
     public static final EnumMap<AntidotePB.CRDT_type, String> typeGUIMap = createTypeGUIMap();
 
     public static final Map<String, AntidotePB.CRDT_type> guiTypeMap = createGUITypeMap();
@@ -18,6 +23,24 @@ public class AntidoteUtil {
     public static final EnumMap<AntidotePB.CRDT_type, String[]> typeOperationMap = createTypeOperationMap();
 
     public static final EnumMap<AntidotePB.CRDT_type, List<String>> typeKeyMap = createTypeKeyMap();
+
+    public static Key createKeyFromMapDB(String name)
+    {
+        return Key.create(MapDBManager.getTypeOfKey(name), ByteString.copyFromUtf8(name));
+    }
+
+    public static Key createKey(String name)
+    {
+        if (!Main.isGuiMode()) { //TODO maybe performance optimization!
+            return createKey(name, Main.usedKeyType);
+        }
+        return createKeyFromMapDB(name);
+    }
+
+    public static Key createKey(String name, AntidotePB.CRDT_type type)
+    {
+        return Key.create(type, ByteString.copyFromUtf8(name));
+    }
 
     /**
      *
@@ -116,6 +139,12 @@ public class AntidoteUtil {
         map.put(AntidotePB.CRDT_type.ORSET, new String[]{"add", "addAll", "remove", "removeAll", "reset"});
         map.put(AntidotePB.CRDT_type.RWSET, new String[]{"add", "addAll", "remove", "removeAll", "reset"});
         return map;
+    }
+
+    public static final HashSet<String> allOperations = new HashSet<>(Arrays.asList("assign", "increment", "decrement", "reset", "set", "update", "removeKey", "removeKeys", "add", "addAll", "remove", "removeAll"));
+
+    public static boolean isValidOperation(String operation) {
+        return allOperations.contains(operation);
     }
 
     public static final Map<String, AntidotePB.CRDT_type> STRING_CRDT_TYPE_MAP = createStringEnumMap(AntidotePB.CRDT_type.values());

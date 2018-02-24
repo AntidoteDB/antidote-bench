@@ -1,4 +1,4 @@
-package adbm.antidote.resultsVisualization;
+package adbm.resultsVisualization;
 
 import javax.swing.*;
 import java.awt.*;

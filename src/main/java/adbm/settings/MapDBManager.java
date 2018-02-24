@@ -28,7 +28,6 @@ public class MapDBManager
 
     private static final String GitRepoLocationSetting = "GitRepo";
 
-
     public static String getGitRepoLocation() {
         if (isReadyNoText()) {
             String gitRepo = getAppSetting(GitRepoLocationSetting);

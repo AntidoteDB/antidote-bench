@@ -1,7 +1,8 @@
 package adbm.main.ui;
 
-import adbm.antidote.AntidoteClientWrapper;
 import adbm.antidote.ui.AntidoteView;
+import adbm.antidote.wrappers.AntidoteClientWrapper;
+import adbm.antidote.wrappers.AntidoteClientWrapperGui;
 import adbm.docker.DockerManager;
 import adbm.docker.DockerfileBuilder;
 import adbm.git.GitManager;
@@ -109,7 +110,7 @@ public class MainWindow extends JFrame
         });
         buttonStartAntidote.addActionListener(e -> {
             if (DockerManager.isReady())
-                new AntidoteView(new AntidoteClientWrapper("TestAntidote"));
+                new AntidoteView(new AntidoteClientWrapperGui("AntidoteGuiClient"));
             //TODO
         });
         buttonCreateDockerfile.addActionListener(e -> {

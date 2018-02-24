@@ -1,7 +1,9 @@
 package adbm.antidote.ui;
 
-import adbm.antidote.AntidoteClientWrapper;
-import adbm.antidote.Operation;
+import adbm.antidote.operations.Operation;
+import adbm.antidote.operations.UpdateOperation;
+import adbm.antidote.wrappers.AntidoteClientWrapper;
+import adbm.antidote.wrappers.AntidoteClientWrapperGui;
 import adbm.docker.DockerManager;
 import com.intellij.uiDesigner.core.GridConstraints;
 import com.intellij.uiDesigner.core.GridLayoutManager;
@@ -71,7 +73,7 @@ public class AntidoteView
     private DefaultComboBoxModel<String> comboBoxKeyTypeModel = new DefaultComboBoxModel<>();
     private DefaultComboBoxModel<String> comboBoxRunningDCModel = new DefaultComboBoxModel<>();
 
-    private AntidoteClientWrapper activeAntidoteClient;
+    private AntidoteClientWrapperGui activeAntidoteClient;
 
     public boolean isReady()
     {
@@ -84,7 +86,7 @@ public class AntidoteView
         return false;
     }
 
-    public AntidoteView(AntidoteClientWrapper startClient)
+    public AntidoteView(AntidoteClientWrapperGui startClient)
     {
         if (startClient == null) return;
         activeAntidoteClient = startClient;
@@ -118,9 +120,9 @@ public class AntidoteView
 
         executeButton.addActionListener(e -> {
             if (activeAntidoteClient != null) {
-                activeAntidoteClient.getKeyUpdate(new Operation(listViewKeySelection.getSelectedValue(),
-                                                                listViewOperationSelection.getSelectedValue(),
-                                                                textFieldOperationValue.getText()));
+                activeAntidoteClient.updateKey(new UpdateOperation(listViewKeySelection.getSelectedValue(),
+                                                                   listViewOperationSelection.getSelectedValue(),
+                                                                   textFieldOperationValue.getText()));
             }
         });
         listViewOperationSelection.addListSelectionListener(e -> refreshCommandTextFields());
@@ -159,27 +161,27 @@ public class AntidoteView
     private void refreshDCList()
     {
         List<String> runningContainers = DockerManager.getNamesOfRunningContainers();
-        if (!runningContainers.contains(activeAntidoteClient.name)) {
+        if (!runningContainers.contains(activeAntidoteClient.getName())) {
             log.error(
                     "ERROR: The Antidote Client with the name {} is no longer running despite there being a window opened on it!\n",
-                    activeAntidoteClient.name);
+                    activeAntidoteClient.getName());
         }
         comboBoxWindowDCModel.removeAllElements();
         for (String container : runningContainers)
             comboBoxWindowDCModel.addElement(container);
-        comboBoxWindowDCModel.setSelectedItem(activeAntidoteClient.name);
+        comboBoxWindowDCModel.setSelectedItem(activeAntidoteClient.getName());
 
         Object selectedItem = comboBoxRunningDCModel.getSelectedItem();
         if (selectedItem == null) {
             comboBoxRunningDCModel.removeAllElements();
             for (String container : runningContainers)
                 comboBoxRunningDCModel.addElement(container);
-            if (comboBoxRunningDCModel.getIndexOf(activeAntidoteClient.name) == -1) {
+            if (comboBoxRunningDCModel.getIndexOf(activeAntidoteClient.getName()) == -1) {
                 log.error(
                         "ERROR: The Antidote Client with the name {} was not found despite there being a window opened on it!\n",
-                        activeAntidoteClient.name);
+                        activeAntidoteClient.getName());
             }
-            selectedItem = activeAntidoteClient.name;
+            selectedItem = activeAntidoteClient.getName();
             comboBoxRunningDCModel.setSelectedItem(selectedItem);
         }
         else {
@@ -187,12 +189,12 @@ public class AntidoteView
             for (String container : runningContainers)
                 comboBoxRunningDCModel.addElement(container);
             if (comboBoxRunningDCModel.getIndexOf(selectedItem) == -1) {
-                if (comboBoxRunningDCModel.getIndexOf(activeAntidoteClient.name) == -1) {
+                if (comboBoxRunningDCModel.getIndexOf(activeAntidoteClient.getName()) == -1) {
                     log.error(
                             "ERROR: The Antidote Client with the name {} was not found despite there being a window opened on it!\n",
-                            activeAntidoteClient.name);
+                            activeAntidoteClient.getName());
                 }
-                selectedItem = activeAntidoteClient.name;
+                selectedItem = activeAntidoteClient.getName();
             }
             comboBoxRunningDCModel.setSelectedItem(selectedItem);
         }
@@ -237,7 +239,7 @@ public class AntidoteView
         if (listViewKeySelection.getSelectedValue() != null && activeAntidoteClient != null)
             listViewKeyValueModel.clear();
         listViewKeyValueModel
-                .addElement(activeAntidoteClient.getKeyValueNoTx(listViewKeySelection.getSelectedValue()));
+                .addElement(activeAntidoteClient.readKeyValue(listViewKeySelection.getSelectedValue()).toString());
         if (listViewOperationSelection.getModel().getSize() > 0)
             listViewOperationSelection.setSelectedIndex(0);
     }

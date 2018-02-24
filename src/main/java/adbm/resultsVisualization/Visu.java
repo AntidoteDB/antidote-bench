@@ -1,4 +1,4 @@
-package adbm.antidote.resultsVisualization;
+package adbm.resultsVisualization;
 
 import org.jfree.chart.ChartPanel;
 import org.jfree.chart.JFreeChart;
