@@ -1,6 +1,6 @@
-package adbm.util;
+package adbm.util.helpers;
 
-import adbm.main.Main;
+import adbm.util.AdbmConstants;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -8,7 +8,7 @@ import java.io.*;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 
-import static adbm.util.FormatUtil.format;
+import static adbm.util.helpers.FormatUtil.format;
 
 public class FileUtil
 {
@@ -47,7 +47,7 @@ public class FileUtil
         FileWriter fileWriter;
         BufferedWriter bufferedWriter = null;
         try {
-            file = new File(Main.logSettingsPath);
+            file = new File(AdbmConstants.logSettingsPath);
             fileReader = new FileReader(file);
             bufferedReader = new BufferedReader(fileReader);
             while ((line = bufferedReader.readLine()) != null) {

@@ -1,6 +1,6 @@
 package adbm.git.ui;
 
-import adbm.git.GitManager;
+import adbm.main.Main;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -30,12 +30,12 @@ public class AddBranchDialog extends JDialog
         pack();
         setLocationRelativeTo(GitWindow.getGitWindow());
         DefaultListModel<String> listAvailableBranchesModel = new DefaultListModel<>();
-        GitManager.getAllNonLocalRemoteBranches().forEach(listAvailableBranchesModel::addElement);
+        Main.getGitManager().getAllNonLocalRemoteBranches().forEach(listAvailableBranchesModel::addElement);
         listAvailableBranches.setModel(listAvailableBranchesModel);
 
         buttonAddBranch.addActionListener(e -> {
             if (listAvailableBranches.getSelectedValue() != null) {
-                GitManager.checkoutBranch(listAvailableBranches.getSelectedValue());
+                Main.getGitManager().checkoutBranch(listAvailableBranches.getSelectedValue());
                 this.dispose();
             }
         });

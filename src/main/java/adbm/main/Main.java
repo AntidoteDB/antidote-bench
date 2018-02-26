@@ -2,10 +2,18 @@ package adbm.main;
 
 import adbm.antidote.IAntidoteClientWrapper;
 import adbm.antidote.wrappers.AntidoteClientWrapper;
-import adbm.docker.DockerManager;
-import adbm.git.GitManager;
+import adbm.antidote.wrappers.AntidoteClientWrapperGui;
+import adbm.docker.managers.DockerManagerJava;
+import adbm.docker.managers.DockerManagerSpotify;
+import adbm.docker.IDockerManager;
+import adbm.git.managers.GitManager;
+import adbm.git.IGitManager;
 import adbm.main.ui.MainWindow;
-import adbm.settings.MapDBManager;
+import adbm.settings.IAntidoteKeyStoreManager;
+import adbm.settings.ISettingsManager;
+import adbm.settings.managers.MapDBManager;
+import adbm.util.AdbmConstants;
+import com.yahoo.ycsb.Client;
 import eu.antidotedb.antidotepb.AntidotePB;
 import org.apache.commons.cli.*;
 import org.apache.logging.log4j.LogManager;
@@ -16,36 +24,23 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import static adbm.util.FormatUtil.format;
+import static adbm.util.helpers.FormatUtil.format;
 
 public class Main
 {
 
     private static final Logger log = LogManager.getLogger(Main.class);
 
-    public static final Map<String, IAntidoteClientWrapper> clientList = new HashMap<>();
+    private static final Map<String, AntidoteClientWrapperGui> clientList = new HashMap<>();
 
-    public static AntidoteClientWrapper benchmarkClient;
+    public static Map<String, AntidoteClientWrapperGui> getClientList() {
+        return clientList;
+    }
 
-    public static final String appName = "Antidote Benchmark";
+    private static IAntidoteClientWrapper benchmarkClient;
 
-    public static final String ycsbWorkloadsPath = format("{}/YCSB/workloads", getResourcesPath());
-
-    public static final String appSettingsPath = format("{}/Settings/AppSettings", getResourcesPath());
-
-    public static final String logSettingsPath = format("{}/Settings/LogSettings/log4j2.xml", getResourcesPath());
-
-    public static final String defaultLogPath = "Logs";
-
-    public static final String defaultAntidotePath = "AntidoteGitRepo";
-
-    public static final String dockerfilePath = format("{}/Dockerfile", getResourcesPath());
-
-    public static final String imagesPath = format("{}/Images", getResourcesPath());
-
-    public static String getResourcesPath()
-    {
-        return "resources";
+    public static IAntidoteClientWrapper getBenchmarkClient() {
+        return benchmarkClient;
     }
 
     private static boolean guiMode = false;
@@ -55,25 +50,66 @@ public class Main
         return guiMode;
     }
 
-    public static AntidotePB.CRDT_type usedKeyType = AntidotePB.CRDT_type.COUNTER;
+    private static AntidotePB.CRDT_type usedKeyType = AntidotePB.CRDT_type.COUNTER;
 
-    public static String usedOperation;
+    public static AntidotePB.CRDT_type getUsedKeyType() {
+        return usedKeyType;
+    }
 
-    public static IAntidoteClientWrapper.TransactionType usedTransactionType = IAntidoteClientWrapper.TransactionType.InteractiveTransaction;
+    private static String usedOperation;
 
-    public static final List<String> benchmarkCommits = new ArrayList<>();
+    public static String getUsedOperation() {
+        return usedOperation;
+    }
+
+    private static IAntidoteClientWrapper.TransactionType usedTransactionType = IAntidoteClientWrapper.TransactionType.InteractiveTransaction;
+
+    public static IAntidoteClientWrapper.TransactionType getUsedTransactionType() {
+        return usedTransactionType;
+    }
+
+    //TODO think about this
+    private static final List<String> benchmarkCommits = new ArrayList<>();
+
+    public static List<String> getBenchmarkCommits() {
+        return benchmarkCommits;
+    }
+
+    private static IDockerManager dockerManager = DockerManagerSpotify.getInstance();
+
+    public static IDockerManager getDockerManager() {
+        return dockerManager;
+    }
+
+    private static ISettingsManager settingsManager = MapDBManager.getInstance();
+
+    public static ISettingsManager getSettingsManager() {
+        return settingsManager;
+    }
+
+    private static IAntidoteKeyStoreManager keyManager = MapDBManager.getInstance();
+
+    public static IAntidoteKeyStoreManager getKeyManager() {
+        return keyManager;
+    }
+
+    private static IGitManager gitManager = GitManager.getInstance();
+
+    public static IGitManager getGitManager() {
+        return gitManager;
+    }
 
     public static void closeApp()
     {
         //TODO Docker Windows general problems
-        DockerManager.stopAllContainers();
+        dockerManager.stopAllContainers();
     }
 
     public static IAntidoteClientWrapper startAntidoteClient(String name)
     {
         if (clientList.containsKey(name)) return clientList.get(name);
-        if (DockerManager.runContainer(name)) {
-            AntidoteClientWrapper clientWrapper = new AntidoteClientWrapper(name);
+        if (dockerManager.runContainer(name)) {
+            AntidoteClientWrapperGui clientWrapper = new AntidoteClientWrapperGui(name);
             clientList.put(name, clientWrapper);
             return clientWrapper;
         }
@@ -82,12 +118,12 @@ public class Main
 
     public static void stopAntidoteClient(String name)
     {
-        DockerManager.stopContainer(name);
+        dockerManager.stopContainer(name);
     }
 
     public static void removeAntidoteClient(String name)
     {
-        DockerManager.removeContainer(name);
+        dockerManager.removeContainer(name);
         clientList.remove(name);
     }
 
@@ -97,14 +133,34 @@ public class Main
     {
         Handler handler = new Handler();
         Thread.setDefaultUncaughtExceptionHandler(handler);
+        //DockerManagerJava test = new DockerManagerJava();
+        //test.start();
+        //System.exit(0);//TODO!
 
         //Validation that Docker can be used!
-        if (!DockerManager.startDocker(null, null)) System.exit(1);
-        if (!DockerManager.runContainer("TestDockerContainer")) {
+        if (!dockerManager.start()) System.exit(1);
+        if (!dockerManager.runContainer("AntidoteBenchmarkClient")) {
             log.error("Docker is a bad state! Please restart Docker before using this application!");
             System.exit(1);
         }
-        //Client.main(new String[]{"-db","adbm.antidote.AntidoteYCSBClient", "-P", format("{}/YCSB/workloads/workloada", getResourcesPath()), "-s"});
+        String firstCommit = "d087ea62cb694dcc10bb09791a61adc819892fff";
+        String secondCommit = "2e539e227ee7edd7058cb32fc966006ca6c75caf";
+        initializeBenchmarkClient();
+        String[] ycsbArgs = new String[]{"-db","adbm.ycsb.AntidoteYCSBClient", "-P", format("{}/YCSB/Workloads/workloada", AdbmConstants.resourcesPath), "-s"};
+        Client.main(ycsbArgs);
+        log.error("Hello There!");
+        boolean rebuildSuccess = dockerManager.rebuildAntidoteInContainer("AntidoteBenchmarkClient", firstCommit);
+        log.error("General Kenobi!");
+        if (!rebuildSuccess) {
+            System.exit(1);
+        }
+        Client.main(ycsbArgs);
+        rebuildSuccess = dockerManager.rebuildAntidoteInContainer("AntidoteBenchmarkClient", secondCommit);
+        if (!rebuildSuccess) {
+            System.exit(1);
+        }
+        Client.main(ycsbArgs);
+
         if (args != null && args.length > 0) {
             Option gui = new Option("gui", "activate gui mode");
             Option debug = new Option("debug", "print debugging information");
@@ -149,7 +205,7 @@ public class Main
 
                         //TODO parsing
                         for (String value : line.getOptionValues("commits")) {
-                            if (GitManager.isCommitId(value)) {
+                            if (gitManager.isCommitId(value)) {
                                 benchmarkCommits.add(value);
                             }
                             else {
@@ -163,7 +219,7 @@ public class Main
                     }
                     if (!benchmarkCommits.isEmpty()) {
                         for (String commit : benchmarkCommits) {
-                            //Client.main(new String[]{"-db","adbm.antidote.AntidoteYCSBClient", "-P", "workloads/workloada", "-s"});
+                            //Client.main(new String[]{"-db","adbm.antidote.AntidoteYCSBClient", "-P", "Workloads/workloada", "-s"});
                             //TODO start a client
                             //Client.main(new String[0]);
                         }
@@ -180,7 +236,8 @@ public class Main
         //GitManager.startGit();
         //DockerManager.startDocker();
         guiMode = true; //TODO
-        MapDBManager.startMapDB();
+        settingsManager.start();
+        //keyManager.start();//TODO check
         if (guiMode) {
             MainWindow.showMainWindow();
             log.info("Using the Application:" +
@@ -197,9 +254,13 @@ public class Main
         }
     }
 
-    public static void runBenchmark()
+    public static void initializeBenchmarkClient()
     {
-
+        if (benchmarkClient == null)
+        benchmarkClient = new AntidoteClientWrapper("AntidoteBenchmarkClient");
+        if (!benchmarkClient.isReady())
+        benchmarkClient.start();
+        //TODO
     }
 
     //TODO test

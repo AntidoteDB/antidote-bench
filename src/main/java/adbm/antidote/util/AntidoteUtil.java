@@ -1,7 +1,6 @@
-package adbm.antidote;
+package adbm.antidote.util;
 
 import adbm.main.Main;
-import adbm.settings.MapDBManager;
 import com.google.common.collect.Maps;
 import com.google.protobuf.ByteString;
 import eu.antidotedb.antidotepb.AntidotePB;
@@ -26,13 +25,13 @@ public class AntidoteUtil {
 
     public static Key createKeyFromMapDB(String name)
     {
-        return Key.create(MapDBManager.getTypeOfKey(name), ByteString.copyFromUtf8(name));
+        return Key.create(Main.getKeyManager().getTypeOfKey(name), ByteString.copyFromUtf8(name));
     }
 
     public static Key createKey(String name)
     {
         if (!Main.isGuiMode()) { //TODO maybe performance optimization!
-            return createKey(name, Main.usedKeyType);
+            return createKey(name, Main.getUsedKeyType());
         }
         return createKeyFromMapDB(name);
     }
@@ -75,7 +74,7 @@ public class AntidoteUtil {
      * @return
      */
     public static String getDefaultOperation(String keyName) {
-        return typeOperationMap.get(MapDBManager.getTypeOfKey(keyName))[0];
+        return typeOperationMap.get(Main.getKeyManager().getTypeOfKey(keyName))[0];
     }
 
     /**

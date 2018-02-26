@@ -1,8 +1,8 @@
 package adbm.settings.ui;
 
+import adbm.util.AdbmConstants;
 import adbm.main.Main;
 import adbm.main.ui.MainWindow;
-import adbm.settings.MapDBManager;
 import com.intellij.uiDesigner.core.GridConstraints;
 import com.intellij.uiDesigner.core.GridLayoutManager;
 import com.intellij.uiDesigner.core.Spacer;
@@ -13,7 +13,7 @@ import javax.swing.*;
 import java.awt.*;
 import java.io.File;
 
-import static adbm.util.FormatUtil.format;
+import static adbm.util.helpers.FormatUtil.format;
 
 public class SettingsDialog extends JDialog
 {
@@ -24,10 +24,8 @@ public class SettingsDialog extends JDialog
     private JButton buttonSetRepoLocation;
     private JPanel panel;
 
-    private static SettingsDialog settingsDialog;
-
     public static void showSettingsDialog() {
-        settingsDialog = new SettingsDialog();
+        SettingsDialog settingsDialog = new SettingsDialog();
         settingsDialog.setVisible(true);
     }
 
@@ -35,12 +33,12 @@ public class SettingsDialog extends JDialog
     {
         super(MainWindow.getMainWindow(), "Settings", ModalityType.APPLICATION_MODAL);
         setTitle("Settings");
-        setIconImage(new ImageIcon(format("{}/AntidoteIcon.PNG", Main.imagesPath)).getImage());
+        setIconImage(new ImageIcon(format("{}/AntidoteIcon.PNG", AdbmConstants.imagesPath)).getImage());
         setContentPane(panel);
         setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
         pack();
         setLocationRelativeTo(MainWindow.getMainWindow());
-        textFieldRepositoryLocation.setText(MapDBManager.getGitRepoLocation());
+        textFieldRepositoryLocation.setText(Main.getSettingsManager().getGitRepoLocation());
         buttonSetRepoLocation.addActionListener(e -> {
             JFileChooser fileChooser = new JFileChooser();
             fileChooser.setCurrentDirectory(new File(System.getProperty("user.home")));
@@ -49,8 +47,8 @@ public class SettingsDialog extends JDialog
             if (result == JFileChooser.APPROVE_OPTION) {
                 File selectedFile = fileChooser.getSelectedFile();
                 log.info("Selected file for Repository: {}", selectedFile.getAbsolutePath());
-                MapDBManager.setGitRepoLocation(selectedFile.getAbsolutePath());
-                textFieldRepositoryLocation.setText(MapDBManager.getGitRepoLocation());
+                Main.getSettingsManager().setGitRepoLocation(selectedFile.getAbsolutePath());
+                textFieldRepositoryLocation.setText(Main.getSettingsManager().getGitRepoLocation());
                 dispose();
             }
         });

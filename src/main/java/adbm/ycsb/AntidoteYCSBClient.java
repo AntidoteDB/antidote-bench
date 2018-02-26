@@ -4,10 +4,8 @@
 
 package adbm.ycsb;
 
-import adbm.antidote.AntidoteUtil;
+import adbm.antidote.util.AntidoteUtil;
 import adbm.antidote.operations.UpdateOperation;
-import adbm.antidote.wrappers.AntidoteClientWrapper;
-import adbm.docker.DockerManager;
 import adbm.main.Main;
 import com.yahoo.ycsb.*;
 import org.apache.logging.log4j.LogManager;
@@ -29,12 +27,7 @@ public class AntidoteYCSBClient extends DB
     @Override
     public void init() throws DBException
     {
-        if (!DockerManager.isReady()) {
-            DockerManager.startDocker(null, null);
-        }
-        if (Main.benchmarkClient == null) {
-            Main.benchmarkClient = new AntidoteClientWrapper("AntidoteBenchmarkContainer");
-        }
+        Main.initializeBenchmarkClient();
     }
 
     /**
@@ -66,7 +59,7 @@ public class AntidoteYCSBClient extends DB
         }
         // Keep order
         List<String> orderedFields = new ArrayList<>(fields);
-        List<Object> orderedResults = Main.benchmarkClient.readKeyValues(orderedFields);
+        List<Object> orderedResults = Main.getBenchmarkClient().readKeyValues(orderedFields);
         for (int i = 0; i < orderedResults.size(); i++) {
             result.put(orderedFields.get(i), new ByteArrayByteIterator(orderedResults.get(i).toString().getBytes()));
         }//TODO think about the result
@@ -109,9 +102,9 @@ public class AntidoteYCSBClient extends DB
             log.info("Update operation was not performed because the map of values was empty!");
             return Status.OK;
         }
-        Main.benchmarkClient
-                .updateKeys(values.entrySet().stream().map((s) -> new UpdateOperation(s.getKey(), AntidoteUtil
-                .getDefaultOperation(s.getKey()), s.getValue())).collect(Collectors.toList()));
+        Main.getBenchmarkClient()
+            .updateKeys(values.entrySet().stream().map((s) -> new UpdateOperation<>(s.getKey(), AntidoteUtil
+                    .getDefaultOperation(s.getKey()), s.getValue())).collect(Collectors.toList()));
         return Status.OK;
     }
 

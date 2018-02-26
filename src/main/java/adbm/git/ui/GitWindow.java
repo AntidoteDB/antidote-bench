@@ -1,8 +1,7 @@
 package adbm.git.ui;
 
-import adbm.git.GitManager;
+import adbm.main.Main;
 import adbm.main.ui.MainWindow;
-import adbm.settings.MapDBManager;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.eclipse.jgit.revwalk.RevCommit;
@@ -82,7 +81,7 @@ public class GitWindow extends JDialog
                                                                         .equals(textFieldSelectedBranch
                                                                                         .getText()))//TODO not correct
             {
-                GitManager.checkoutBranch(listBranches.getSelectedValue());
+                Main.getGitManager().checkoutBranch(listBranches.getSelectedValue());
                 updateAll();
             }
         });
@@ -91,7 +90,7 @@ public class GitWindow extends JDialog
                                                                       .equals(textFieldSelectedCommit
                                                                                       .getText()))//TODO not correct
             {
-                GitManager.checkoutCommit((listCommits.getSelectedValue()).getName());
+                Main.getGitManager().checkoutCommit((listCommits.getSelectedValue()).getName());
                 updateAll();
             }
         });
@@ -101,17 +100,17 @@ public class GitWindow extends JDialog
         buttonAddToBenchmark.addActionListener(e -> {
             //TODO
             if (listCommits.getSelectedValue() != null) {
-                MapDBManager.addBenchmarkCommit((listCommits.getSelectedValue()).getName());
+                Main.getSettingsManager().addBenchmarkCommit((listCommits.getSelectedValue()).getName());
             }
             updateListBenchmarkCommits();
         });
         buttonRemoveBenchmarkCommit.addActionListener(e -> {
             if (listBenchmarkCommits.getSelectedValue() != null)//TODO not correct
-                MapDBManager.removeBenchmarkCommit((listBenchmarkCommits.getSelectedValue()).getName());
+                Main.getSettingsManager().removeBenchmarkCommit((listBenchmarkCommits.getSelectedValue()).getName());
             updateListBenchmarkCommits();
         });
         resetBenchmarkListButton.addActionListener(e -> {
-            MapDBManager.resetBenchmarkCommits();
+            Main.getSettingsManager().resetBenchmarkCommits();
             updateListBenchmarkCommits();
         });
     }
@@ -127,18 +126,18 @@ public class GitWindow extends JDialog
 
     private void updateTextFieldSelectedBranch()
     {
-        textFieldSelectedBranch.setText(GitManager.getCurrentBranch());
+        textFieldSelectedBranch.setText(Main.getGitManager().getCurrentBranch());
     }
 
     private void updateTextFieldSelectedCommit()
     {
-        textFieldSelectedCommit.setText(GitManager.getCurrentCommit().getName());
+        textFieldSelectedCommit.setText(Main.getGitManager().getCurrentCommit().getName());
     }
 
 
     private void updateListBranches()
     {
-        List<String> list = GitManager.getAllLocalBranches();
+        List<String> list = Main.getGitManager().getAllLocalBranches();
         boolean equal = true;
         if (listBranchesModel.getSize() != list.size()) {
             equal = false;
@@ -165,7 +164,7 @@ public class GitWindow extends JDialog
         } catch (NumberFormatException e) {
             log.error("An error occurred while parsing a number!", e);
         }
-        List<RevCommit> list = GitManager.getCommitsForCurrentHead(number);
+        List<RevCommit> list = Main.getGitManager().getCommitsForCurrentHead(number);
         boolean equal = true;
         if (listCommitsModel.getSize() != list.size()) {
             equal = false;
@@ -187,8 +186,8 @@ public class GitWindow extends JDialog
     private void updateListBenchmarkCommits()
     {
         List<RevCommit> list = new ArrayList<>();
-        MapDBManager.getBenchmarkCommits().forEach(commitId -> {
-            RevCommit commit = GitManager.getCommitFromID(commitId);
+        Main.getSettingsManager().getBenchmarkCommits().forEach(commitId -> {
+            RevCommit commit = Main.getGitManager().getCommitFromID(commitId);
             if (commit != null) list.add(commit);
         });
         list.sort((o1, o2) -> {

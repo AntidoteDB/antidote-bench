@@ -1,8 +1,9 @@
-package adbm.git;
+package adbm.git.managers;
 
+import adbm.git.IGitManager;
+import adbm.util.AdbmConstants;
 import adbm.main.Main;
 import adbm.main.ui.MainWindow;
-import adbm.settings.MapDBManager;
 import adbm.settings.ui.SettingsDialog;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -26,48 +27,64 @@ import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
 
-import static adbm.util.FileUtil.getAbsolutePath;
-import static adbm.util.FormatUtil.format;
+import static adbm.util.helpers.FileUtil.getAbsolutePath;
+import static adbm.util.helpers.FormatUtil.format;
 
 /**
  * The GitManager requires the MapDBManager to be ready.
  */
-public class GitManager
+public class GitManager implements IGitManager
 {
 
     private static final Logger log = LogManager.getLogger(GitManager.class);
-    private static Git git;
 
-    private static final String gitUrl = "https://github.com/SyncFree/antidote.git";
+    private Git git;
 
-    private static final int numberOfAttempts = 3;
+    private static GitManager instance = new GitManager();
 
-    public static boolean startGit()
+    public static GitManager getInstance() {
+        return instance;
+    }
+
+    private GitManager() {
+
+    }
+
+    public boolean start()
     {
-        if (!startGit(numberOfAttempts)) {
+        if (!startGit(AdbmConstants.numberOfAttemptsToStartGit)) {
             log.error("The Git Manager could not be started!");
             return false;
         }
         return true;
     }
 
-    private static boolean startGit(int attempts)
+    public boolean stop() {
+        return true; //TODO
+    }
+
+    public boolean isReady()
+    {
+        return git != null;
+    }
+
+    private boolean startGit(int attempts)
     {
         if (attempts <= 0) {
             return false;
         }
         attempts--;
         if (!Main.isGuiMode()) return false;
-        String repoLocation = MapDBManager.getGitRepoLocation();
-        if (repoLocation.equals(Main.defaultAntidotePath) && Files
-                .notExists(Paths.get(getAbsolutePath(Main.defaultAntidotePath))))
+        String repoLocation = Main.getSettingsManager().getGitRepoLocation();
+        if (repoLocation.equals(AdbmConstants.defaultAntidotePath) && Files
+                .notExists(Paths.get(getAbsolutePath(AdbmConstants.defaultAntidotePath))))
         {
             //TODO remember decision
             int res = JOptionPane.showConfirmDialog(MainWindow.getMainWindow(),
                                                     format("Do you want to use the default path for the Antidote repository?\n\n" +
                                                                    "This will pull the Antidote repository if it doesn't exist in that directory.\n\n" +
                                                                    "Default Path: {}",
-                                                           getAbsolutePath(Main.defaultAntidotePath)));
+                                                           getAbsolutePath(AdbmConstants.defaultAntidotePath)));
             if (res != JOptionPane.YES_OPTION) {
                 log.info("No location for the git repository was selected!");
                 //int res = JOptionPane.showConfirmDialog(MainWindow.getMainWindow(), "Do you want to use the default location");
@@ -76,7 +93,7 @@ public class GitManager
                 return startGit(attempts);
             }
             else {
-                boolean success = new File(Main.defaultAntidotePath).mkdirs();
+                boolean success = new File(AdbmConstants.defaultAntidotePath).mkdirs();
                 if (!success) {
                     log.error("Folder creation has failed!");//TODO
                 }
@@ -99,14 +116,14 @@ public class GitManager
             try {
                 if (git.status().call().isClean()) {
                     String url = git.getRepository().getConfig().getString("remote", "origin", "url");
-                    if (url.equals(gitUrl)) {
+                    if (url.equals(AdbmConstants.gitUrl)) {
                         log.info("Git connection was successfully established!");
                         log.trace("Git Fetch: {}", git.fetch().call().getMessages());
                         return true;
                     }
                     else {
                         log.info(
-                                "The location for the git repository contains a another repository that is not equal to " + gitUrl + "!");
+                                "The location for the git repository contains a another repository that is not equal to " + AdbmConstants.gitUrl + "!");
                         log.info(
                                 "Please select another location in the settings or remove that git repository first!");
                         git = null;
@@ -127,14 +144,14 @@ public class GitManager
         else {
             log.info("There is currently no git repository at the selected location!");
             log.info(
-                    "The git repository " + gitUrl + " will be cloned to the selected location if there are no files in that directory.");
+                    "The git repository " + AdbmConstants.gitUrl + " will be cloned to the selected location if there are no files in that directory.");
 
             if (contents.length == 0) {
                 log.info(
-                        "Cloning the git repository " + gitUrl + " to the location " + repoLocation + "!");
+                        "Cloning the git repository " + AdbmConstants.gitUrl + " to the location " + repoLocation + "!");
                 try {
                     git = Git.cloneRepository()
-                             .setURI(gitUrl)
+                             .setURI(AdbmConstants.gitUrl)
                              .setDirectory(new File(repoLocation))
                              .setProgressMonitor(new TextProgressMonitor(new PrintWriter(System.out)))
                              .call();
@@ -156,9 +173,9 @@ public class GitManager
         return false;
     }
 
-    public static void checkoutBranch(String branchName)
+    public boolean checkoutBranch(String branchName)
     {
-        if (!isReady()) return;
+        if (!isReady()) return false;
         try {
 
             if (getAllLocalBranches().contains(branchName)) {
@@ -166,6 +183,7 @@ public class GitManager
                         setName(branchName).
                            call();
                 log.info("Checkout of local Branch " + branchName + " was successful!");
+                return true;
             }
             else if (getAllNonLocalRemoteBranches().contains(branchName)) {
                 log.info(
@@ -177,6 +195,7 @@ public class GitManager
                            setStartPoint("origin/" + branchName).
                            call();
                 log.info("Local branch " + branchName + " was created and successfully checked out!");
+                return true;
             }
             else {
                 log.info("Branch " + branchName + " could not be checked out!");
@@ -184,20 +203,23 @@ public class GitManager
         } catch (GitAPIException e) {
             log.error("An error occurred while checking out a branch!", e);
         }
+        return false;
     }
 
-    public static void checkoutCommit(String commit)
+    public boolean checkoutCommit(String commit)
     {
-        if (!isReady()) return;
+        if (!isReady()) return false;
         try {
             log.info("Checking out commit " + commit + " and detaching HEAD!");
             git.checkout().setName(commit).call();
+            return true;
         } catch (GitAPIException e) {
             log.error("An error occurred while checking out a commit!", e);
         }
+        return false;
     }
 
-    public static String getCurrentBranch()
+    public String getCurrentBranch()
     {
         if (!isReady()) return "";
         try {
@@ -210,7 +232,7 @@ public class GitManager
         return "";
     }
 
-    public static RevCommit getCurrentCommit()
+    public RevCommit getCurrentCommit()
     {
         if (!isReady()) return null;
         try {
@@ -223,7 +245,7 @@ public class GitManager
         return null;
     }
 
-    public static List<String> getAllLocalBranches()
+    public List<String> getAllLocalBranches()
     {
         List<String> list = new ArrayList<>();
         if (!isReady()) return list;
@@ -236,7 +258,7 @@ public class GitManager
         return list;
     }
 
-    public static List<String> getAllNonLocalRemoteBranches()
+    public List<String> getAllNonLocalRemoteBranches()
     {
         List<String> list = new ArrayList<>();
         if (!isReady()) return list;
@@ -254,7 +276,7 @@ public class GitManager
         return list;
     }
 
-    public static List<RevCommit> getCommitsForCurrentHead(int number)
+    public List<RevCommit> getCommitsForCurrentHead(int number)
     {
         List<RevCommit> list = new ArrayList<>();
         if (!isReady()) return list;
@@ -268,7 +290,7 @@ public class GitManager
         return list;
     }
 
-    public static RevCommit getCommitFromID(String id)
+    public RevCommit getCommitFromID(String id)
     {
         ObjectId commitId = ObjectId.fromString(id);
         RevWalk revWalk = new RevWalk(git.getRepository());
@@ -283,21 +305,9 @@ public class GitManager
         return null;
     }
 
-    public static boolean isReady()
-    {
-        if (git != null) return true;
-        log.info("The connection to Git is not ready!");
-        log.info("Please start Git connection again!");
-        return false;
-    }
 
-    public static boolean isReadyNoText()
-    {
-        if (git != null) return true;
-        return false;
-    }
 
-    public static boolean isCommitId(String value)
+    public boolean isCommitId(String value)
     {
         return getCommitFromID(value) != null;
     }

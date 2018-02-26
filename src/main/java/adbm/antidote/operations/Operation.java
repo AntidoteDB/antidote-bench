@@ -1,8 +1,8 @@
 package adbm.antidote.operations;
 
-import adbm.antidote.AntidoteUtil;
+import adbm.antidote.util.AntidoteUtil;
 
-import static adbm.util.FormatUtil.format;
+import static adbm.util.helpers.FormatUtil.format;
 
 public class Operation<T>
 {

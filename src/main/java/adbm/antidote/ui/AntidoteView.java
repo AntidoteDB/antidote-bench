@@ -1,10 +1,8 @@
 package adbm.antidote.ui;
 
-import adbm.antidote.operations.Operation;
 import adbm.antidote.operations.UpdateOperation;
-import adbm.antidote.wrappers.AntidoteClientWrapper;
 import adbm.antidote.wrappers.AntidoteClientWrapperGui;
-import adbm.docker.DockerManager;
+import adbm.main.Main;
 import com.intellij.uiDesigner.core.GridConstraints;
 import com.intellij.uiDesigner.core.GridLayoutManager;
 import com.intellij.uiDesigner.core.Spacer;
@@ -18,7 +16,7 @@ import java.awt.*;
 import java.beans.PropertyChangeEvent;
 import java.util.List;
 
-import static adbm.antidote.AntidoteUtil.*;
+import static adbm.antidote.util.AntidoteUtil.*;
 
 public class AntidoteView
 {
@@ -160,7 +158,7 @@ public class AntidoteView
 
     private void refreshDCList()
     {
-        List<String> runningContainers = DockerManager.getNamesOfRunningContainers();
+        List<String> runningContainers = Main.getDockerManager().getNamesOfRunningContainers();
         if (!runningContainers.contains(activeAntidoteClient.getName())) {
             log.error(
                     "ERROR: The Antidote Client with the name {} is no longer running despite there being a window opened on it!\n",
@@ -198,7 +196,7 @@ public class AntidoteView
             }
             comboBoxRunningDCModel.setSelectedItem(selectedItem);
         }
-        List<String> allContainers = DockerManager.getNamesOfAllContainers();
+        List<String> allContainers = Main.getDockerManager().getNamesOfAllContainers();
         listViewAllDCsModel.clear();
         for (String container : allContainers) {
             if (runningContainers.contains(container)) {

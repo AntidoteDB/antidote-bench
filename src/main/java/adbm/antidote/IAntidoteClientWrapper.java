@@ -2,12 +2,13 @@ package adbm.antidote;
 
 import adbm.antidote.operations.Operation;
 import adbm.antidote.operations.UpdateOperation;
+import adbm.util.IStartStop;
 import eu.antidotedb.client.AntidoteClient;
 import eu.antidotedb.client.Bucket;
 
 import java.util.List;
 
-public interface IAntidoteClientWrapper
+public interface IAntidoteClientWrapper extends IStartStop
 {
 
     /**

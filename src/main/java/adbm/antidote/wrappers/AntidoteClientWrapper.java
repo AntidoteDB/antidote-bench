@@ -1,11 +1,11 @@
 package adbm.antidote.wrappers;
 
-import adbm.antidote.AntidoteUtil;
+import adbm.antidote.util.AntidoteUtil;
 import adbm.antidote.IAntidoteClientWrapper;
 import adbm.antidote.operations.Operation;
 import adbm.antidote.operations.UpdateOperation;
-import adbm.docker.DockerManager;
 import adbm.main.Main;
+import adbm.util.AdbmConstants;
 import eu.antidotedb.client.*;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -13,6 +13,9 @@ import org.apache.logging.log4j.Logger;
 import java.net.InetSocketAddress;
 import java.util.ArrayList;
 import java.util.List;
+
+import static adbm.util.helpers.GeneralUtil.anyEquals;
+import static adbm.util.helpers.GeneralUtil.isNullOrEmpty;
 
 /**
  * Bridge between Antidote and benchmarking tools
@@ -33,22 +36,22 @@ public class AntidoteClientWrapper implements IAntidoteClientWrapper
     /**
      * The AntidoteClient that is used to create transactions.
      */
-    private final AntidoteClient antidoteClient;
+    private AntidoteClient antidoteClient;
 
     /**
      * The bucket that is used for performing database operations.
      */
-    private final Bucket bucket;
+    private Bucket bucket;
 
     /**
      * The name of this wrapper which is also the name of the corresponding container.
      */
-    private final String name;
+    private final String name; //TODO check if final
 
     /**
      * The host port which is important when connecting Antidote containers with each other (replication)
      */
-    private final int hostPort;
+    private int hostPort;
 
     /**
      * Constructor of the AntidoteClientWrapper.
@@ -61,14 +64,47 @@ public class AntidoteClientWrapper implements IAntidoteClientWrapper
      */
     public AntidoteClientWrapper(String name)
     {
-        DockerManager.runContainer(name);
-        hostPort = DockerManager.getHostPortsFromContainer(name).get(0);
-
-        antidoteClient = new AntidoteClient(new InetSocketAddress("localhost", hostPort));
-
-        bucket = Bucket.bucket(name + "bucket");
-
+        if (isNullOrEmpty(name)) {
+            name = "BAD_NAME";
+        }
         this.name = name;
+    }
+
+    public boolean start() {
+        return start(null, 0);
+    }
+
+    public boolean start(String address, int port) {
+        boolean success = Main.getDockerManager().runContainer(name);
+        if (!success) return false;
+        if (port <= 0) {
+            hostPort = Main.getDockerManager().getHostPortsFromContainer(name).get(0);
+            if (hostPort <= 0) return false;
+        }
+        if (isNullOrEmpty(address)) {
+            address = AdbmConstants.antidoteHost;
+        }
+        try {
+            antidoteClient = new AntidoteClient(new InetSocketAddress(address, hostPort));
+            bucket = Bucket.bucket(name + "bucket");
+            return true;
+        }
+        catch (Exception e) {
+            log.error("An error occurred while creating a Antidote Client!", e);
+        }
+        return false;
+    }
+
+    public boolean stop() {
+        boolean success = Main.getDockerManager().stopContainer(name);
+        antidoteClient = null;
+        bucket = null;
+        hostPort = 0;
+        return success;
+    }
+
+    public boolean isReady() {
+        return hostPort <= 0 && antidoteClient != null && bucket != null;
     }
 
     @Override
@@ -98,7 +134,7 @@ public class AntidoteClientWrapper implements IAntidoteClientWrapper
     @Override
     public Object readKeyValue(String keyName)
     {
-        return readKeyValue(keyName, Main.usedTransactionType);
+        return readKeyValue(keyName, Main.getUsedTransactionType());
     }
 
     @Override
@@ -122,7 +158,7 @@ public class AntidoteClientWrapper implements IAntidoteClientWrapper
     @Override
     public List<Object> readKeyValues(Iterable<String> keyNames)
     {
-        return readKeyValues(keyNames, Main.usedTransactionType);
+        return readKeyValues(keyNames, Main.getUsedTransactionType());
     }
 
     @Override
@@ -156,7 +192,7 @@ public class AntidoteClientWrapper implements IAntidoteClientWrapper
     @Override
     public void updateKey(UpdateOperation operation)
     {
-        updateKey(operation, Main.usedTransactionType);
+        updateKey(operation, Main.getUsedTransactionType());
     }
 
     @Override
@@ -184,7 +220,7 @@ public class AntidoteClientWrapper implements IAntidoteClientWrapper
     @Override
     public void updateKeys(Iterable<UpdateOperation> operations)
     {
-        updateKeys(operations, Main.usedTransactionType);
+        updateKeys(operations, Main.getUsedTransactionType());
     }
 
     @Override
@@ -217,7 +253,7 @@ public class AntidoteClientWrapper implements IAntidoteClientWrapper
     @Override
     public List<Object> performKeyOperations(Iterable<Operation> operations)
     {
-        return performKeyOperations(operations, Main.usedTransactionType);
+        return performKeyOperations(operations, Main.getUsedTransactionType());
     }
 
     @Override

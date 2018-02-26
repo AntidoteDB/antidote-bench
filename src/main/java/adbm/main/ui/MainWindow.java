@@ -1,14 +1,11 @@
 package adbm.main.ui;
 
 import adbm.antidote.ui.AntidoteView;
-import adbm.antidote.wrappers.AntidoteClientWrapper;
 import adbm.antidote.wrappers.AntidoteClientWrapperGui;
-import adbm.docker.DockerManager;
-import adbm.docker.DockerfileBuilder;
-import adbm.git.GitManager;
+import adbm.docker.util.DockerfileBuilder;
 import adbm.git.ui.GitWindow;
+import adbm.util.AdbmConstants;
 import adbm.main.Main;
-import adbm.settings.MapDBManager;
 import adbm.settings.ui.SettingsDialog;
 import adbm.util.TextPaneAppender;
 import com.intellij.uiDesigner.core.GridConstraints;
@@ -24,7 +21,7 @@ import java.awt.event.WindowEvent;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
-import static adbm.util.FormatUtil.format;
+import static adbm.util.helpers.FormatUtil.format;
 
 public class MainWindow extends JFrame
 {
@@ -66,8 +63,8 @@ public class MainWindow extends JFrame
     private MainWindow()
     {
         super();
-        setTitle(Main.appName);
-        setIconImage(new ImageIcon(format("{}/AntidoteIcon.PNG", Main.imagesPath)).getImage());
+        setTitle(AdbmConstants.appName);
+        setIconImage(new ImageIcon(format("{}/AntidoteIcon.PNG", AdbmConstants.imagesPath)).getImage());
         setContentPane(panel);
         setDefaultCloseOperation(WindowConstants.DO_NOTHING_ON_CLOSE);
         pack();
@@ -77,11 +74,11 @@ public class MainWindow extends JFrame
             public void windowClosing(WindowEvent e)
             {
                 int i = JOptionPane
-                        .showConfirmDialog(null, format("Do you want to close the {} application?", Main.appName),
+                        .showConfirmDialog(null, format("Do you want to close the {} application?", AdbmConstants.appName),
                                            "Confirmation", JOptionPane.YES_NO_OPTION);
                 if (i == JOptionPane.YES_OPTION) {
                     log.info("The application will be closed now.");
-                    DockerManager.stopAllContainers();
+                    Main.getDockerManager().stopAllContainers();
                     System.exit(0);
                 }
                 else {
@@ -91,34 +88,34 @@ public class MainWindow extends JFrame
         });
         TextPaneAppender.addTextPane(textPaneConsole);
         buttonSettings.addActionListener(e -> {
-            if (MapDBManager.isReady())
+            if (Main.getSettingsManager().isReady())
                 SettingsDialog.showSettingsDialog();
         });
         buttonStartGit.addActionListener(e -> {
-            if (!GitManager.isReadyNoText())
-                executorService.execute(GitManager::startGit);
+            if (!Main.getGitManager().isReady())
+                executorService.execute(Main.getGitManager()::start);
             else log.info("Git is already started!");
         });
         buttonStartDocker.addActionListener(e -> {
-            if (!DockerManager.isReadyNoText())
-                executorService.execute(() -> DockerManager.startDocker(null, null));
+            if (!Main.getDockerManager().isReady())
+                executorService.execute(() -> Main.getDockerManager().start());
             else log.info("Docker is already started!");
         });
         buttonShowGitSettings.addActionListener(e -> {
-            if (GitManager.isReady())
+            if (Main.getGitManager().isReady())
                 GitWindow.showGitWindow();
         });
         buttonStartAntidote.addActionListener(e -> {
-            if (DockerManager.isReady())
+            if (Main.getDockerManager().isReady())
                 new AntidoteView(new AntidoteClientWrapperGui("AntidoteGuiClient"));
             //TODO
         });
         buttonCreateDockerfile.addActionListener(e -> {
-            if (GitManager.isReady())
+            if (Main.getGitManager().isReady())
                 DockerfileBuilder.createDockerfile(false);
         });
         buttonBuildBenchmarkImages.addActionListener(e -> {
-            if (DockerManager.isReady()) {
+            if (Main.getDockerManager().isReady()) {
                 int confirm = JOptionPane.showConfirmDialog(
                         mainWindow,
                         "Are you sure you want to build the Image of the Antidote Benchmark?\n" +
@@ -126,7 +123,7 @@ public class MainWindow extends JFrame
                         "Confirmation",
                         JOptionPane.YES_NO_OPTION);
                 if (confirm != JOptionPane.YES_OPTION) return;
-                if (DockerManager.antidoteBenchmarkImageExists()) {
+                if (Main.getDockerManager().antidoteBenchmarkImageExists()) {
                     confirm = JOptionPane.showConfirmDialog(
                             mainWindow,
                             "A previously built Image of the Antidote Benchmark exists.\n" +
@@ -137,14 +134,14 @@ public class MainWindow extends JFrame
                     if (confirm != JOptionPane.YES_OPTION) return;
                 }
                 executorService.execute(() -> {
-                    DockerManager.buildAntidoteBenchmarkImage(false);
+                    Main.getDockerManager().buildAntidoteBenchmarkImage(false);
                 });
                 buttonBuildBenchmarkImages.setEnabled(false);
                 Executors.newSingleThreadExecutor().execute(() -> {
                     StopWatch watch = new StopWatch();
                     watch.start();
                     //TODO race condition
-                    while (DockerManager.isBuildingImage()) {
+                    while (Main.getDockerManager().isBuildingImage()) {
                         log.info("Image is building... Elapsed time: {}s", watch.getTime() / 1000);
                         try {
                             Thread.sleep(10000);

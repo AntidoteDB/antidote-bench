@@ -11,9 +11,10 @@ import org.apache.logging.log4j.Logger;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.function.Predicate;
-import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
+
+import static adbm.util.helpers.GeneralUtil.anyNullOrPredicate;
+import static adbm.util.helpers.GeneralUtil.isNullOrEmpty;
 
 public class AntidoteClientWrapperChecks implements IAntidoteClientWrapper
 {
@@ -22,9 +23,6 @@ public class AntidoteClientWrapperChecks implements IAntidoteClientWrapper
     private AntidoteClientWrapper wrapper;
 
     public AntidoteClientWrapperChecks(String name) {
-        if (isNullOrEmpty(name)) {
-            name = "BAD_NAME";
-        }
         wrapper = new AntidoteClientWrapper(name);
     }
 
@@ -32,12 +30,28 @@ public class AntidoteClientWrapperChecks implements IAntidoteClientWrapper
         this.wrapper = wrapper;
     }
 
-    private boolean isNullOrEmpty(String string) {
-        return string == null || string.trim().isEmpty();
+    @Override
+    public boolean start()
+    {
+        return wrapper.start();
     }
 
-    private <T> boolean anyNullOrPredicate(Stream<T> objects, Predicate<T> predicate) {
-        return objects.anyMatch(object -> object == null || predicate.test(object));
+    @Override
+    public boolean start(String address, int port)
+    {
+        return wrapper.start(address, port);
+    }
+
+    @Override
+    public boolean stop()
+    {
+        return wrapper.stop();
+    }
+
+    @Override
+    public boolean isReady()
+    {
+        return wrapper.isReady() && Main.getDockerManager().isContainerRunning(getName()); //TODO checks
     }
 
     @Override
@@ -67,7 +81,7 @@ public class AntidoteClientWrapperChecks implements IAntidoteClientWrapper
     @Override
     public Object readKeyValue(String keyName)
     {
-        return readKeyValue(keyName, Main.usedTransactionType);
+        return readKeyValue(keyName, Main.getUsedTransactionType());
     }
 
     @Override
@@ -83,7 +97,7 @@ public class AntidoteClientWrapperChecks implements IAntidoteClientWrapper
     @Override
     public List<Object> readKeyValues(Iterable<String> keyNames)
     {
-        return readKeyValues(keyNames, Main.usedTransactionType);
+        return readKeyValues(keyNames, Main.getUsedTransactionType());
     }
 
     @Override
@@ -104,7 +118,7 @@ public class AntidoteClientWrapperChecks implements IAntidoteClientWrapper
     @Override
     public void updateKey(UpdateOperation operation)
     {
-        updateKey(operation, Main.usedTransactionType);
+        updateKey(operation, Main.getUsedTransactionType());
     }
 
     @Override
@@ -120,7 +134,7 @@ public class AntidoteClientWrapperChecks implements IAntidoteClientWrapper
     @Override
     public void updateKeys(Iterable<UpdateOperation> operations)
     {
-        updateKeys(operations, Main.usedTransactionType);
+        updateKeys(operations, Main.getUsedTransactionType());
     }
 
     @Override
@@ -141,7 +155,7 @@ public class AntidoteClientWrapperChecks implements IAntidoteClientWrapper
     @Override
     public List<Object> performKeyOperations(Iterable<Operation> operations)
     {
-        return performKeyOperations(operations, Main.usedTransactionType);
+        return performKeyOperations(operations, Main.getUsedTransactionType());
     }
 
     @Override

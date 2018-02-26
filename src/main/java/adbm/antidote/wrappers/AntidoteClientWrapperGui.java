@@ -5,7 +5,7 @@ import adbm.antidote.operations.Operation;
 import adbm.antidote.operations.UpdateOperation;
 import adbm.antidote.ui.AntidoteController;
 import adbm.antidote.ui.AntidoteModel;
-import adbm.settings.MapDBManager;
+import adbm.main.Main;
 import eu.antidotedb.antidotepb.AntidotePB;
 import eu.antidotedb.client.AntidoteClient;
 import eu.antidotedb.client.Bucket;
@@ -15,72 +15,61 @@ import java.util.List;
 public class AntidoteClientWrapperGui extends AntidoteModel implements IAntidoteClientWrapper
 {
 
-
     private AntidoteClientWrapperChecks wrapper;
 
-    private boolean running;
-
-    public boolean isReady() {
-        return running;
-    }
-
-    /**
-     * Constructor of the class
-     *
-     * @param name
-     */
     public AntidoteClientWrapperGui(String name)
     {
         wrapper = new AntidoteClientWrapperChecks(name);
-        running = true;
     }
 
-    /**
-     * Constructor of the class
-     *
-     */
     public AntidoteClientWrapperGui(AntidoteClientWrapperChecks wrapper)
     {
         this.wrapper = wrapper;
-        running = true;
     }
 
-    /**
-     *
-     */
-    public void stop() {
-        if (running) {
-            this.firePropertyChange(AntidoteController.DCListChanged, "", "");
-            running = false;
-        }
+    public boolean start()
+    {
+        boolean success = wrapper.start();
+        this.firePropertyChange(AntidoteController.DCListChanged, "", "");
+        return success;
     }
 
-    /**
-     *
-     */
-    public void start() {
-        if (!running) {
-            this.firePropertyChange(AntidoteController.DCListChanged, "", "");
-            running = false;
-        }
+    public boolean start(String address, int port)
+    {
+        boolean success = wrapper.start(address, port);
+        this.firePropertyChange(AntidoteController.DCListChanged, "", "");
+        return success;
     }
+
+    public boolean stop()
+    {
+        boolean success = wrapper.stop();
+        this.firePropertyChange(AntidoteController.DCListChanged, "", "");
+        return success;
+    }
+
+    public boolean isReady()
+    {
+        return wrapper.isReady();
+    }
+
+    // TODO implement isReadyInfo()
 
     public void AddKey(String name, AntidotePB.CRDT_type type)
     {
-        if (running) {
-            MapDBManager.addKey(name, type);
+        if (isReady()) {
+            Main.getKeyManager().addKey(name, type);
             this.firePropertyChange(AntidoteController.KeyListChanged, "", "");
         }
     }
 
     public void RemoveKey(String name)
     {
-        if (running) {
-            MapDBManager.removeKey(name);
+        if (isReady()) {
+            Main.getKeyManager().removeKey(name);
             this.firePropertyChange(AntidoteController.KeyListChanged, "", "");
         }
     }
-
 
     @Override
     public AntidoteClient getAntidoteClient()

@@ -7,16 +7,10 @@
       <sourceFolder url="file://$MODULE_DIR$/src/main/java" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/src/main/resources" type="java-resource" />
       <sourceFolder url="file://$MODULE_DIR$/resources" type="java-resource" />
-      <sourceFolder url="file://$MODULE_DIR$/resources/Dockerfile" type="java-resource" />
-      <sourceFolder url="file://$MODULE_DIR$/resources/Images" type="java-resource" />
-      <sourceFolder url="file://$MODULE_DIR$/resources/Settings" type="java-resource" />
-      <sourceFolder url="file://$MODULE_DIR$/resources/YCSB" type="java-resource" />
-      <sourceFolder url="file://$MODULE_DIR$/resources/Settings/LogSettings" type="java-resource" />
       <excludeFolder url="file://$MODULE_DIR$/target" />
     </content>
     <orderEntry type="inheritedJdk" />
     <orderEntry type="sourceFolder" forTests="false" />
-    <orderEntry type="library" name="Maven: com.yahoo.ycsb:core:0.12.0" level="project" />
     <orderEntry type="library" name="Maven: com.spotify:docker-client:8.11.1" level="project" />
     <orderEntry type="library" name="Maven: org.slf4j:slf4j-api:1.7.22" level="project" />
     <orderEntry type="library" name="Maven: com.google.guava:guava:20.0" level="project" />
@@ -46,7 +40,6 @@
     <orderEntry type="library" name="Maven: commons-io:commons-io:2.5" level="project" />
     <orderEntry type="library" name="Maven: org.apache.httpcomponents:httpclient:4.5" level="project" />
     <orderEntry type="library" name="Maven: commons-logging:commons-logging:1.2" level="project" />
-    <orderEntry type="library" name="Maven: commons-codec:commons-codec:1.9" level="project" />
     <orderEntry type="library" name="Maven: org.apache.httpcomponents:httpcore:4.4.5" level="project" />
     <orderEntry type="library" name="Maven: com.github.jnr:jnr-unixsocket:0.18" level="project" />
     <orderEntry type="library" name="Maven: com.github.jnr:jnr-ffi:2.1.4" level="project" />
@@ -64,6 +57,25 @@
     <orderEntry type="library" name="Maven: commons-lang:commons-lang:2.6" level="project" />
     <orderEntry type="library" name="Maven: org.bouncycastle:bcpkix-jdk15on:1.59" level="project" />
     <orderEntry type="library" name="Maven: org.bouncycastle:bcprov-jdk15on:1.59" level="project" />
+    <orderEntry type="library" name="Maven: com.github.docker-java:docker-java:3.0.14" level="project" />
+    <orderEntry type="library" name="Maven: com.kohlschutter.junixsocket:junixsocket-common:2.0.4" level="project" />
+    <orderEntry type="library" name="Maven: log4j:log4j:1.2.17" level="project" />
+    <orderEntry type="library" name="Maven: com.kohlschutter.junixsocket:junixsocket-native-common:2.0.4" level="project" />
+    <orderEntry type="library" name="Maven: org.scijava:native-lib-loader:2.0.2" level="project" />
+    <orderEntry type="library" name="Maven: commons-codec:commons-codec:1.10" level="project" />
+    <orderEntry type="library" name="Maven: org.slf4j:jcl-over-slf4j:1.7.21" level="project" />
+    <orderEntry type="library" name="Maven: io.netty:netty-codec-http:4.1.11.Final" level="project" />
+    <orderEntry type="library" name="Maven: io.netty:netty-codec:4.1.11.Final" level="project" />
+    <orderEntry type="library" name="Maven: io.netty:netty-handler:4.1.11.Final" level="project" />
+    <orderEntry type="library" name="Maven: io.netty:netty-buffer:4.1.11.Final" level="project" />
+    <orderEntry type="library" name="Maven: io.netty:netty-transport:4.1.11.Final" level="project" />
+    <orderEntry type="library" name="Maven: io.netty:netty-resolver:4.1.11.Final" level="project" />
+    <orderEntry type="library" name="Maven: io.netty:netty-handler-proxy:4.1.11.Final" level="project" />
+    <orderEntry type="library" name="Maven: io.netty:netty-codec-socks:4.1.11.Final" level="project" />
+    <orderEntry type="library" name="Maven: io.netty:netty-transport-native-epoll:linux-x86_64:4.1.11.Final" level="project" />
+    <orderEntry type="library" name="Maven: io.netty:netty-common:4.1.11.Final" level="project" />
+    <orderEntry type="library" name="Maven: io.netty:netty-transport-native-unix-common:4.1.11.Final" level="project" />
+    <orderEntry type="library" name="Maven: io.netty:netty-transport-native-kqueue:osx-x86_64:4.1.11.Final" level="project" />
     <orderEntry type="library" name="Maven: org.mapdb:mapdb:3.0.5" level="project" />
     <orderEntry type="library" name="Maven: org.jetbrains.kotlin:kotlin-stdlib:1.0.7" level="project" />
     <orderEntry type="library" name="Maven: org.jetbrains.kotlin:kotlin-runtime:1.0.7" level="project" />
