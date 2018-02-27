@@ -123,6 +123,26 @@ public class Main {
     }
 
 
+    private static boolean useTransactions = true;
+
+    public static void setUseTransactions(boolean bool) {
+        useTransactions = bool;
+    }
+
+    public static boolean getUseTransactions() {
+        return useTransactions;
+    }
+
+    private static String usedWorkload = "workloadTest";
+
+    public static String getUsedWorkLoad() {
+        return usedWorkload;
+    }
+
+    public static void setUsedWorkload(String workload) {
+        usedWorkload = workload;
+    }
+
     public static void benchmarkTest() {
         if (!dockerManager.isReady()) {
             if (!dockerManager.start()) System.exit(1);
@@ -133,14 +153,12 @@ public class Main {
         }
         initializeBenchmarkClient();
         String usedDB = "adbm.ycsb.AntidoteYCSBClient";
-        String usedWorkload = "workloadTest";
         Integer numberOfThreads = 1;
-        boolean useTransactions = true;
         boolean showStatus = true;
         String transactionArg = useTransactions ? "-t" : "";
         String statusArg = showStatus ? "-s" : "";
         String[] ycsbArgs = new String[]{"-threads", numberOfThreads.toString(), transactionArg, "-db", usedDB, "-P", format(
-                "{}/YCSB/Workloads/{}", AdbmConstants.resourcesPath, usedWorkload), statusArg};
+                "{}/{}", AdbmConstants.ycsbWorkloadsPath, usedWorkload), statusArg};
         Client.main(ycsbArgs);
     }
 

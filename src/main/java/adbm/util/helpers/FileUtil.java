@@ -7,12 +7,27 @@ import org.apache.logging.log4j.Logger;
 import java.io.*;
 import java.nio.file.Paths;
 import java.util.ArrayList;
+import java.util.List;
 
 import static adbm.util.helpers.FormatUtil.format;
 
 public class FileUtil
 {
     private static final Logger log = LogManager.getLogger(FileUtil.class);
+
+    public static List<String> getAllFileNamesInFolder(String path)
+    {
+        List<String> fileNames = new ArrayList<>();
+        File folder = new File(path);
+        File[] listOfFiles = folder.listFiles();
+        if (listOfFiles == null) return fileNames;
+        for (File listOfFile : listOfFiles) {
+            if (listOfFile.isFile()) {
+                fileNames.add(listOfFile.getName());
+            }
+        }
+        return fileNames;
+    }
 
     /**
      * Works with folders that don't exist yet.

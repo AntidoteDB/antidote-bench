@@ -8,6 +8,7 @@ import adbm.main.Main;
 import adbm.settings.ui.SettingsDialog;
 import adbm.util.AdbmConstants;
 import adbm.util.TextPaneAppender;
+import adbm.util.helpers.FileUtil;
 import com.intellij.uiDesigner.core.GridConstraints;
 import com.intellij.uiDesigner.core.GridLayoutManager;
 import org.apache.commons.lang.time.StopWatch;
@@ -20,6 +21,7 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
+import java.io.IOException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
@@ -40,8 +42,12 @@ public class MainWindow extends JFrame
     private JButton buttonCreateDockerfile;
     private JButton buttonBuildBenchmarkImages;
     private JButton buttonRunBenchmark;
+    private JButton buttonOpenWorkload;
+    private JComboBox<String> comboBoxWorkload;
+    private JCheckBox checkBoxUseTransactions;
     private ExecutorService executorService = Executors.newSingleThreadExecutor();
 
+    private DefaultComboBoxModel<String> comboBoxWorkloadModel = new DefaultComboBoxModel<>();
     private static MainWindow mainWindow;
 
     private static void checkMainWindow()
@@ -72,6 +78,7 @@ public class MainWindow extends JFrame
         setDefaultCloseOperation(WindowConstants.DO_NOTHING_ON_CLOSE);
         pack();
         setLocationRelativeTo(null);
+
         addWindowListener(new WindowAdapter()
         {
             public void windowClosing(WindowEvent e)
@@ -89,6 +96,8 @@ public class MainWindow extends JFrame
                 }
             }
         });
+        comboBoxWorkload.setModel(comboBoxWorkloadModel);
+        updateWorkloads();
         TextPaneAppender.addTextPane(textPaneConsole);
         buttonSettings.addActionListener(e -> {
             if (Main.getSettingsManager().isReady())
@@ -158,6 +167,33 @@ public class MainWindow extends JFrame
         buttonRunBenchmark.addActionListener(e -> {
             Main.benchmarkTest();
         });
+        checkBoxUseTransactions.addActionListener(e -> {
+            Main.setUseTransactions(checkBoxUseTransactions.isSelected());
+        });
+        comboBoxWorkload.addActionListener(e -> {
+            String selectedItem = comboBoxWorkloadModel.getSelectedItem().toString();
+            if (selectedItem != null && !Main.getUsedWorkLoad().equals(selectedItem)) {
+                Main.setUsedWorkload(selectedItem);
+                updateWorkloads();
+            }
+        });
+        buttonOpenWorkload.addActionListener(e -> {
+            ProcessBuilder pb = new ProcessBuilder("Notepad.exe", format("{}/{}", AdbmConstants.ycsbWorkloadsPath, Main.getUsedWorkLoad()));
+            try {
+                pb.start();
+            } catch (IOException e1) {
+                log.error("An error occurred while opening the workload with Notepad.exe!", e1);
+            }
+        });
+    }
+
+
+
+    private void updateWorkloads() {
+        comboBoxWorkloadModel.removeAllElements();
+        for (String fileName : FileUtil.getAllFileNamesInFolder(AdbmConstants.ycsbWorkloadsPath))
+            comboBoxWorkloadModel.addElement(fileName);
+        comboBoxWorkloadModel.setSelectedItem(Main.getUsedWorkLoad());
     }
 
     {
