@@ -1,10 +1,10 @@
 package adbm.git.managers;
 
 import adbm.git.IGitManager;
-import adbm.util.AdbmConstants;
 import adbm.main.Main;
 import adbm.main.ui.MainWindow;
 import adbm.settings.ui.SettingsDialog;
+import adbm.util.AdbmConstants;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.eclipse.jgit.api.CreateBranchCommand;

@@ -17,17 +17,16 @@
 
 package com.yahoo.ycsb;
 
-import static java.util.concurrent.TimeUnit.MICROSECONDS;
-
 import java.util.HashMap;
 import java.util.Random;
 import java.util.Set;
 import java.util.Vector;
-import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.LockSupport;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
+
+import static java.util.concurrent.TimeUnit.MICROSECONDS;
 
 /**
  * Basic DB that just prints out the requested operations, instead of doing them against a database.

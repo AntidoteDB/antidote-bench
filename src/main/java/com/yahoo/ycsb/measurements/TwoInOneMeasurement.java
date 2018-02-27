@@ -19,7 +19,6 @@ package com.yahoo.ycsb.measurements;
 
 import com.yahoo.ycsb.Status;
 import com.yahoo.ycsb.measurements.exporter.MeasurementsExporter;
-
 import org.HdrHistogram.Recorder;
 
 import java.io.IOException;

@@ -17,14 +17,11 @@
 
 package com.yahoo.ycsb.measurements;
 
+import com.yahoo.ycsb.measurements.exporter.MeasurementsExporter;
+
 import java.io.IOException;
 import java.text.DecimalFormat;
 import java.util.Properties;
-
-import java.util.Map;
-import java.util.concurrent.atomic.AtomicInteger;
-
-import com.yahoo.ycsb.measurements.exporter.MeasurementsExporter;
 
 
 /**

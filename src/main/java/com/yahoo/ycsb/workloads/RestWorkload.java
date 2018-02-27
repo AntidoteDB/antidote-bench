@@ -17,23 +17,18 @@
 
 package com.yahoo.ycsb.workloads;
 
+import com.yahoo.ycsb.ByteIterator;
+import com.yahoo.ycsb.DB;
+import com.yahoo.ycsb.RandomByteIterator;
+import com.yahoo.ycsb.WorkloadException;
+import com.yahoo.ycsb.generator.*;
+
 import java.io.BufferedReader;
 import java.io.FileReader;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Properties;
-
-import com.yahoo.ycsb.ByteIterator;
-import com.yahoo.ycsb.DB;
-import com.yahoo.ycsb.RandomByteIterator;
-import com.yahoo.ycsb.WorkloadException;
-import com.yahoo.ycsb.generator.DiscreteGenerator;
-import com.yahoo.ycsb.generator.ExponentialGenerator;
-import com.yahoo.ycsb.generator.HotspotIntegerGenerator;
-import com.yahoo.ycsb.generator.NumberGenerator;
-import com.yahoo.ycsb.generator.UniformIntegerGenerator;
-import com.yahoo.ycsb.generator.ZipfianGenerator;
 
 /**
  * Typical RESTFul services benchmarking scenario. Represents a set of client

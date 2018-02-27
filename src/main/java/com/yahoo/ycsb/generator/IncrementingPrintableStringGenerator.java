@@ -16,11 +16,7 @@
  */
 package com.yahoo.ycsb.generator;
 
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
-import java.util.NoSuchElementException;
-import java.util.Set;
+import java.util.*;
 
 /**
  * A generator that produces strings of {@link #length} using a set of code points

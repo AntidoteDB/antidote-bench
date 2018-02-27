@@ -17,20 +17,19 @@
 
 package com.yahoo.ycsb.measurements;
 
-import java.io.File;
+import com.yahoo.ycsb.measurements.exporter.MeasurementsExporter;
+import org.HdrHistogram.Histogram;
+import org.HdrHistogram.HistogramLogWriter;
+import org.HdrHistogram.Recorder;
+
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.PrintStream;
 import java.text.DecimalFormat;
-import java.util.*;
-import java.util.concurrent.atomic.AtomicInteger;
-
-import org.HdrHistogram.Histogram;
-import org.HdrHistogram.HistogramLogWriter;
-import org.HdrHistogram.Recorder;
-
-import com.yahoo.ycsb.measurements.exporter.MeasurementsExporter;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Properties;
 
 /**
  * Take measurements and maintain a HdrHistogram of a given metric, such as READ

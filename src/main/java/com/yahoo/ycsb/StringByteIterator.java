@@ -17,8 +17,8 @@
 
 package com.yahoo.ycsb;
 
-import java.util.Map;
 import java.util.HashMap;
+import java.util.Map;
 
 public class StringByteIterator extends ByteIterator {
 	String str;

@@ -17,20 +17,13 @@
 
 package com.yahoo.ycsb;
 
-import java.util.Properties;
+import com.yahoo.ycsb.workloads.CoreWorkload;
+
+import java.io.BufferedReader;
 import java.io.FileInputStream;
 import java.io.IOException;
-import java.util.Enumeration;
-import java.io.BufferedReader;
 import java.io.InputStreamReader;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Set;
-import java.util.HashSet;
-import java.util.Vector;
-
-import com.yahoo.ycsb.Client;
-import com.yahoo.ycsb.workloads.*;
+import java.util.*;
 
 /**
  * A simple command line client to a database, using the appropriate com.yahoo.ycsb.DB implementation.

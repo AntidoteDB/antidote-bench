@@ -17,17 +17,11 @@
 
 package com.yahoo.ycsb;
 
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Properties;
-import java.util.Set;
-import java.util.Vector;
-
-import org.apache.htrace.core.Tracer;
-import org.apache.htrace.core.TraceScope;
-
 import com.yahoo.ycsb.measurements.Measurements;
+import org.apache.htrace.core.TraceScope;
+import org.apache.htrace.core.Tracer;
+
+import java.util.*;
 
 /**
  * Wrapper around a "real" DB that measures latencies and counts return codes.

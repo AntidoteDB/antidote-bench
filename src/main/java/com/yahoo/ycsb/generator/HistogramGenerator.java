@@ -15,12 +15,13 @@
  * LICENSE file.
  */
 package com.yahoo.ycsb.generator;
+
+import com.yahoo.ycsb.Utils;
+
 import java.io.BufferedReader;
 import java.io.FileReader;
 import java.io.IOException;
 import java.util.ArrayList;
-import com.yahoo.ycsb.Utils;
-import com.yahoo.ycsb.generator.NumberGenerator;
 
 /**
  * Generate integers according to a histogram distribution.  The histogram

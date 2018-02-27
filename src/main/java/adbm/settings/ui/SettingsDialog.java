@@ -1,8 +1,8 @@
 package adbm.settings.ui;
 
-import adbm.util.AdbmConstants;
 import adbm.main.Main;
 import adbm.main.ui.MainWindow;
+import adbm.util.AdbmConstants;
 import com.intellij.uiDesigner.core.GridConstraints;
 import com.intellij.uiDesigner.core.GridLayoutManager;
 import com.intellij.uiDesigner.core.Spacer;

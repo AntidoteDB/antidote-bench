@@ -1,10 +1,10 @@
 package adbm.settings.managers;
 
 import adbm.antidote.util.AntidoteUtil;
-import adbm.util.AdbmConstants;
 import adbm.main.Main;
 import adbm.settings.IAntidoteKeyStoreManager;
 import adbm.settings.ISettingsManager;
+import adbm.util.AdbmConstants;
 import eu.antidotedb.antidotepb.AntidotePB;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;

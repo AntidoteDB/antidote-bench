@@ -17,11 +17,12 @@
 
 package com.yahoo.ycsb.generator;
 
+import com.yahoo.ycsb.Utils;
+
 import java.util.ArrayList;
 import java.util.Collection;
-import static java.util.Objects.requireNonNull;
 
-import com.yahoo.ycsb.Utils;
+import static java.util.Objects.requireNonNull;
 
 /**
  * Generates a distribution by choosing from a discrete set of values.

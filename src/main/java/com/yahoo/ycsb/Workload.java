@@ -17,8 +17,8 @@
 
 package com.yahoo.ycsb;
 
-import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.Properties;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 
 /**

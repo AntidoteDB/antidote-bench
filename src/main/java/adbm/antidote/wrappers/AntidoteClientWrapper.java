@@ -1,9 +1,9 @@
 package adbm.antidote.wrappers;
 
-import adbm.antidote.util.AntidoteUtil;
 import adbm.antidote.IAntidoteClientWrapper;
 import adbm.antidote.operations.Operation;
 import adbm.antidote.operations.UpdateOperation;
+import adbm.antidote.util.AntidoteUtil;
 import adbm.main.Main;
 import adbm.util.AdbmConstants;
 import eu.antidotedb.client.*;
@@ -14,7 +14,6 @@ import java.net.InetSocketAddress;
 import java.util.ArrayList;
 import java.util.List;
 
-import static adbm.util.helpers.GeneralUtil.anyEquals;
 import static adbm.util.helpers.GeneralUtil.isNullOrEmpty;
 
 /**

@@ -17,15 +17,16 @@
 
 package com.yahoo.ycsb.measurements;
 
+import com.yahoo.ycsb.measurements.exporter.MeasurementsExporter;
+
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.PrintStream;
-import java.util.Properties;
-import java.util.LinkedList;
 import java.util.Collections;
 import java.util.Comparator;
-import com.yahoo.ycsb.measurements.exporter.MeasurementsExporter;
+import java.util.LinkedList;
+import java.util.Properties;
 
 /**
  * Record a series of measurements as raw data points without down sampling,

@@ -4,9 +4,9 @@ import adbm.antidote.ui.AntidoteView;
 import adbm.antidote.wrappers.AntidoteClientWrapperGui;
 import adbm.docker.util.DockerfileBuilder;
 import adbm.git.ui.GitWindow;
-import adbm.util.AdbmConstants;
 import adbm.main.Main;
 import adbm.settings.ui.SettingsDialog;
+import adbm.util.AdbmConstants;
 import adbm.util.TextPaneAppender;
 import com.intellij.uiDesigner.core.GridConstraints;
 import com.intellij.uiDesigner.core.GridLayoutManager;
@@ -16,6 +16,8 @@ import org.apache.logging.log4j.Logger;
 
 import javax.swing.*;
 import java.awt.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.util.concurrent.ExecutorService;
@@ -37,6 +39,7 @@ public class MainWindow extends JFrame
     private JButton buttonStartAntidote;
     private JButton buttonCreateDockerfile;
     private JButton buttonBuildBenchmarkImages;
+    private JButton buttonRunBenchmark;
     private ExecutorService executorService = Executors.newSingleThreadExecutor();
 
     private static MainWindow mainWindow;
@@ -151,6 +154,9 @@ public class MainWindow extends JFrame
                     }
                 });
             }
+        });
+        buttonRunBenchmark.addActionListener(e -> {
+            Main.benchmarkTest();
         });
     }
 

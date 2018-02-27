@@ -16,9 +16,9 @@
  */
 package com.yahoo.ycsb.generator;
 
-import java.util.Random;
-
 import com.yahoo.ycsb.Utils;
+
+import java.util.Random;
 
 /**
  * Generate integers resembling a hotspot distribution where x% of operations

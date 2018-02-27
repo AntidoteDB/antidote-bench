@@ -18,34 +18,25 @@
 package com.yahoo.ycsb;
 
 
+import com.yahoo.ycsb.measurements.Measurements;
+import com.yahoo.ycsb.measurements.exporter.LogExporter;
+import com.yahoo.ycsb.measurements.exporter.MeasurementsExporter;
+import org.apache.htrace.core.HTraceConfiguration;
+import org.apache.htrace.core.TraceScope;
+import org.apache.htrace.core.Tracer;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
 import java.io.FileInputStream;
-import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.text.DecimalFormat;
 import java.text.SimpleDateFormat;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.Enumeration;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.Map.Entry;
-import java.util.Properties;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.LockSupport;
-
-import adbm.main.Main;
-import org.apache.htrace.core.Tracer;
-import org.apache.htrace.core.TraceScope;
-import org.apache.htrace.core.HTraceConfiguration;
-
-import com.yahoo.ycsb.measurements.Measurements;
-import com.yahoo.ycsb.measurements.exporter.MeasurementsExporter;
-import com.yahoo.ycsb.measurements.exporter.TextMeasurementsExporter;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 
 /**
  * A thread to periodically show the status of the experiment, to reassure you that progress is being made.
@@ -205,14 +196,15 @@ class StatusThread extends Thread
 
         msg.append(Measurements.getMeasurements().getSummary());
 
-        System.err.println(msg);
-        System.out.println(msg);
+        log.info(msg);
 
         if (_standardstatus) {
-            System.out.println(msg);
+            //System.out.println(msg);
         }
         return totalops;
     }
+
+    private static final Logger log = LogManager.getLogger(StatusThread.class);
 
     /**
      * Waits for all of the client to finish or the deadline to expire.
@@ -623,7 +615,6 @@ public class Client
                                    "        \"threadcount\" property using -p");
         System.out.println("  -target n: attempt to do n operations per second (default: unlimited) - can also\n" +
                                    "       be specified as the \"target\" property using -p");
-        System.out.println("  -load:  run the loading phase of the workload");
         System.out.println("  -t:  run the transactions phase of the workload (default)");
         System.out.println("  -db dbname: specify the name of the DB to use (default: com.yahoo.ycsb.BasicDB) - \n" +
                                    "        can also be specified as the \"db\" property using -p");
@@ -668,26 +659,27 @@ public class Client
         MeasurementsExporter exporter = null;
         try {
             // if no destination file is provided the results will be written to stdout
-            OutputStream out;
+            OutputStream out = null;
             String exportFile = props.getProperty(EXPORT_FILE_PROPERTY);
             if (exportFile == null) {
-                out = System.out;
+                //out = System.out;
             }
             else {
-                out = new FileOutputStream(exportFile);
+                //out = new FileOutputStream(exportFile);
             }
 
             // if no exporter is provided the default text one will be used
             String exporterStr = props
                     .getProperty(EXPORTER_PROPERTY, "com.yahoo.ycsb.measurements.exporter.TextMeasurementsExporter");
             try {
-                exporter = (MeasurementsExporter) Class.forName(exporterStr).getConstructor(OutputStream.class)
-                                                       .newInstance(out);
+                //exporter = (MeasurementsExporter) Class.forName(exporterStr).getConstructor(OutputStream.class)
+                                                       //.newInstance(out);
+                exporter = new LogExporter();
             } catch (Exception e) {
                 System.err.println("Could not find exporter " + exporterStr
                                            + ", will use default text reporter.");
                 e.printStackTrace();
-                exporter = new TextMeasurementsExporter(out);
+                exporter = new LogExporter();//new TextMeasurementsExporter(out);
             }
 
             exporter.write("OVERALL", "RunTime(ms)", runtime);
@@ -929,7 +921,7 @@ public class Client
                 } catch (InterruptedException e) {
                     return;
                 }
-                System.err.println(" (might take a few minutes for large data sets)");
+                log.info(" (might take a few minutes for large data sets)");
             }
         };
 
@@ -950,12 +942,11 @@ public class Client
             System.err.println("Unable to retrieve client version.");
         }
 
-        System.err.print("Command line:");
+        log.info("Command line:");
         for (int i = 0; i < args.length; i++) {
-            System.err.print(" " + args[i]);
+            log.info(" " + args[i]);
         }
-        System.err.println();
-        System.err.println("Loading workload...");
+        log.info("Loading workload...");
 
         Workload workload = null;
 
@@ -985,7 +976,7 @@ public class Client
         }
         //run the workload
 
-        System.err.println("Starting test.");
+        log.info("Starting test.");
         final CountDownLatch completeLatch = new CountDownLatch(threadcount);
         final List<ClientThread> clients = new ArrayList<ClientThread>(threadcount);
 
@@ -1112,7 +1103,7 @@ public class Client
 
         try {
             try (final TraceScope span = tracer.newScope(CLIENT_EXPORT_MEASUREMENTS_SPAN)) {
-                //exportMeasurements(props, opsDone, en - st);
+                exportMeasurements(props, opsDone, en - st);
                 //TODO export
             }
         } catch (Exception e) {
@@ -1120,6 +1111,7 @@ public class Client
             e.printStackTrace();
             System.exit(-1);
         }
+        log.info("YCSB Benchmark complete.");
         //TODO
     }
     private static final Logger log = LogManager.getLogger(Client.class);

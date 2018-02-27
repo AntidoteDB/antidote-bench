@@ -1,10 +1,10 @@
 package adbm.docker.managers;
 
+import adbm.docker.IDockerManager;
 import adbm.docker.util.DockerUtil;
 import adbm.docker.util.DockerfileBuilder;
-import adbm.docker.IDockerManager;
-import adbm.util.AdbmConstants;
 import adbm.main.Main;
+import adbm.util.AdbmConstants;
 import adbm.util.SimpleProgressHandler;
 import com.google.common.collect.ImmutableMap;
 import com.spotify.docker.client.DefaultDockerClient;
@@ -297,6 +297,7 @@ public class DockerManagerSpotify implements IDockerManager
                 log.debug(stream.readFully());
             }
             log.info("Container was rebuild and is now restarted!");
+            //return true;
             return stopContainer(containerName) && startContainer(containerName);
             //Thread.sleep(500);
             //waitUntilContainerIsReady(containerName);

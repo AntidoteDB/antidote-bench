@@ -4,8 +4,9 @@
 
 package adbm.ycsb;
 
-import adbm.antidote.util.AntidoteUtil;
+import adbm.antidote.IAntidoteClientWrapper;
 import adbm.antidote.operations.UpdateOperation;
+import adbm.antidote.util.AntidoteUtil;
 import adbm.main.Main;
 import com.yahoo.ycsb.*;
 import org.apache.logging.log4j.LogManager;
@@ -43,6 +44,10 @@ public class AntidoteYCSBClient extends DB
     public Status read(String table, String key, Set<String> fields, HashMap<String, ByteIterator> result)
     {
         if (fields == null) {
+            if (key != null) {
+                Main.getBenchmarkClient().readKeyValue(key, IAntidoteClientWrapper.TransactionType.NoTransaction);
+                return Status.OK;
+            }
             log.warn("Read operation was not performed because the set of fields to read was null!");
             return Status.BAD_REQUEST;
         }

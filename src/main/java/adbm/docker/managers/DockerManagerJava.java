@@ -1,7 +1,6 @@
 package adbm.docker.managers;
 
 import adbm.docker.IDockerManager;
-
 import com.github.dockerjava.api.DockerClient;
 import com.github.dockerjava.core.DockerClientBuilder;
 import org.apache.logging.log4j.LogManager;
