@@ -15,7 +15,12 @@ public class DockerfileBuilder
 {
 
     private static final Logger log = LogManager.getLogger(DockerfileBuilder.class);
-    
+
+    /**
+     *
+     * @param repoDirName
+     * @return
+     */
     private static String getLocalDockerfile(String repoDirName)
     {
         if (repoDirName == null) repoDirName = "antidote";
@@ -121,6 +126,10 @@ public class DockerfileBuilder
                 "CMD [\"/opt/antidote/start_and_attach.sh\"]";
     }
 
+    /**
+     *
+     * @param local
+     */
     public static void createDockerfile(boolean local)
     {
         //if (!GitManager.isReady()) return;

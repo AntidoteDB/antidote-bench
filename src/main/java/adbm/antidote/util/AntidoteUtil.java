@@ -23,11 +23,21 @@ public class AntidoteUtil {
 
     public static final EnumMap<AntidotePB.CRDT_type, List<String>> typeKeyMap = createTypeKeyMap();
 
+    /**
+     *
+     * @param name
+     * @return
+     */
     public static Key createKeyFromMapDB(String name)
     {
         return Key.create(Main.getKeyManager().getTypeOfKey(name), ByteString.copyFromUtf8(name));
     }
 
+    /**
+     *
+     * @param name
+     * @return
+     */
     public static Key createKey(String name)
     {
         if (!Main.isGuiMode()) { //TODO maybe performance optimization!
@@ -36,6 +46,12 @@ public class AntidoteUtil {
         return createKeyFromMapDB(name);
     }
 
+    /**
+     *
+     * @param name
+     * @param type
+     * @return
+     */
     public static Key createKey(String name, AntidotePB.CRDT_type type)
     {
         return Key.create(type, ByteString.copyFromUtf8(name));

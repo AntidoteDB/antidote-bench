@@ -25,8 +25,7 @@ import java.util.stream.Collectors;
 
 import static adbm.util.helpers.FormatUtil.format;
 
-public class DockerManagerSpotify implements IDockerManager
-{
+public class DockerManagerSpotify implements IDockerManager {
 
     private static final Logger log = LogManager.getLogger(DockerManagerSpotify.class);
 
@@ -63,30 +62,32 @@ public class DockerManagerSpotify implements IDockerManager
 
     /**
      * Returns the instance of this class.
+     *
      * @return the instance of this class.
      */
-    public static synchronized DockerManagerSpotify getInstance()
-    {
+    public static synchronized DockerManagerSpotify getInstance() {
         return instance;
     }
 
     /**
      * Private constructor to prevent creation of other instances.
      */
-    private DockerManagerSpotify()
-    {
+    private DockerManagerSpotify() {
 
     }
 
     @Override
-    public boolean start()
-    {
+    public boolean start() {
         return start(null);
     }
 
+    /**
+     * @param uri
+     * @param args The string arguments e.g. a path to a file.
+     * @return
+     */
     @Override
-    public boolean start(String uri, String... args)
-    {
+    public boolean start(String uri, String... args) {
         String certPath = null;
         if (args.length > 0) {
             certPath = args[1];
@@ -106,14 +107,13 @@ public class DockerManagerSpotify implements IDockerManager
                 //TODO add confirm
                 boolean confirm = true;
                 if (Main.isGuiMode()) confirm = JOptionPane.showConfirmDialog(null,
-                                                                              "The image " + AdbmConstants.requiredImage + " is not available in Docker and must be pulled before the " + AdbmConstants.appName + " application can be used.\nPressing \"Cancel\" this will terminate the application.",
-                                                                              "Image need to be pulled",
-                                                                              JOptionPane.OK_CANCEL_OPTION,
-                                                                              JOptionPane.INFORMATION_MESSAGE) == JOptionPane.OK_OPTION;
+                        "The image " + AdbmConstants.requiredImage + " is not available in Docker and must be pulled before the " + AdbmConstants.appName + " application can be used.\nPressing \"Cancel\" this will terminate the application.",
+                        "Image need to be pulled",
+                        JOptionPane.OK_CANCEL_OPTION,
+                        JOptionPane.INFORMATION_MESSAGE) == JOptionPane.OK_OPTION;
                 if (confirm) docker.pull(AdbmConstants.requiredImage, new SimpleProgressHandler("Image"));
                 else return false;
-            }
-            else {
+            } else {
                 log.debug(AdbmConstants.requiredImage + " is available.");
             }
             log.debug("Checking that Network {} exists...", AdbmConstants.antidoteDockerNetworkName);
@@ -133,12 +133,12 @@ public class DockerManagerSpotify implements IDockerManager
                     new Thread(() -> Main.closeApp()));
             if (!getNamesOfRunningContainers().isEmpty() && Main.stopContainers) {
                 log.error("The Antidote Benchmark containers cannot be running when the DockerManager starts!" +
-                                  "\nPlease restart Docker manually!");
+                        "\nPlease restart Docker manually!");
                 //JOptionPane.showMessageDialog(null,"");TODO
                 return false;
             }
             if (!antidoteBenchmarkImageExists()) {
-               buildAntidoteBenchmarkImage(false);
+                buildAntidoteBenchmarkImage(false);
             }
             return true;
         } catch (DockerException | InterruptedException | DockerCertificateException e) {
@@ -148,8 +148,7 @@ public class DockerManagerSpotify implements IDockerManager
     }
 
     @Override
-    public boolean stop()
-    {
+    public boolean stop() {
         if (isBuildingImage) {
             //TODO maybe wait or completely fail
             return false;
@@ -161,14 +160,12 @@ public class DockerManagerSpotify implements IDockerManager
     }
 
     @Override
-    public boolean isReady()
-    {
+    public boolean isReady() {
         return docker != null && !isBuildingImage;
     }
 
     @Override
-    public boolean isReadyInfo()
-    {
+    public boolean isReadyInfo() {
         if (docker != null && !isBuildingImage) return true;
         if (isBuildingImage)
             log.info("Docker cannot be used because an image is building currently!");
@@ -178,20 +175,18 @@ public class DockerManagerSpotify implements IDockerManager
     }
 
     @Override
-    public boolean isBuildingImage()
-    {
+    public boolean isBuildingImage() {
         return isBuildingImage;
     }
 
     @Override
-    public boolean antidoteBenchmarkImageExists()
-    {
+    public boolean antidoteBenchmarkImageExists() {
         if (!isReady()) return false;
         log.debug("Checking if the {} image already exists...", AdbmConstants.appName);
         List<Image> images;
         try {
             images = docker.listImages(DockerClient.ListImagesParam.byName(AdbmConstants.antidoteDockerImageName),
-                                       DockerClient.ListImagesParam.allImages());
+                    DockerClient.ListImagesParam.allImages());
             log.debug("Existing Images: ", images);
         } catch (DockerException | InterruptedException e) {
             log.error("An error occurred while checking if an image exists!", e);
@@ -200,9 +195,12 @@ public class DockerManagerSpotify implements IDockerManager
         return !images.isEmpty();
     }
 
+    /**
+     * @param local If true the image is built by copying a local Antidote git repository otherwise the git repository is pulled remotely.
+     * @return
+     */
     @Override
-    public synchronized boolean buildAntidoteBenchmarkImage(boolean local)
-    {
+    public synchronized boolean buildAntidoteBenchmarkImage(boolean local) {
         if (!isReady()) return false;
         try {
             isBuildingImage = true;
@@ -211,8 +209,7 @@ public class DockerManagerSpotify implements IDockerManager
                     .listImages(DockerClient.ListImagesParam.byName(AdbmConstants.antidoteDockerImageName));
             if (images.isEmpty()) {
                 log.debug("Image {} does not exist and will be built.", AdbmConstants.antidoteDockerImageName);
-            }
-            else {
+            } else {
                 log.debug("Image {} already exists and will be rebuilt.", AdbmConstants.antidoteDockerImageName);
                 removeAllContainers();
             }
@@ -236,15 +233,22 @@ public class DockerManagerSpotify implements IDockerManager
         return false;
     }
 
+    /**
+     * @param containerName The name of the container.
+     * @return
+     */
     @Override
-    public String getCommitOfContainer(String containerName)
-    {
+    public String getCommitOfContainer(String containerName) {
         return ""; //TODO
     }
 
+    /**
+     * @param containerName
+     * @param commit
+     * @return
+     */
     @Override
-    public boolean rebuildAntidoteInContainer(String containerName, String commit)
-    {
+    public boolean rebuildAntidoteInContainer(String containerName, String commit) {
         //TODO checks and logs correctly
         String containerId = getContainerId(containerName, true);
         if (containerId.isEmpty()) {
@@ -307,24 +311,26 @@ public class DockerManagerSpotify implements IDockerManager
         }
     }
 
+    /**
+     * @param containerName The name of the container.
+     * @return
+     */
     @Override
-    public boolean runContainer(String containerName)
-    {
+    public boolean runContainer(String containerName) {
         if (!isReady()) return false;
         boolean containerExists = getAllContainersAlsoNonRelevant().stream()
-                                                                   .anyMatch(container -> container
-                                                                           .names() != null && (Objects
-                                                                           .requireNonNull(container.names())
-                                                                           .contains(containerName) || Objects
-                                                                           .requireNonNull(container.names())
-                                                                           .contains("/" + containerName)));
+                .anyMatch(container -> container
+                        .names() != null && (Objects
+                        .requireNonNull(container.names())
+                        .contains(containerName) || Objects
+                        .requireNonNull(container.names())
+                        .contains("/" + containerName)));
         if (containerExists) {
             String containerId = getContainerId(containerName, true);
             if (!containerId.isEmpty()) {
                 log.debug("The container {} is already running!", containerName);
                 return true;
-            }
-            else {
+            } else {
                 containerId = getContainerId(containerName, false);
                 if (containerId.isEmpty()) {
                     log.error(
@@ -332,21 +338,19 @@ public class DockerManagerSpotify implements IDockerManager
                             containerName,
                             AdbmConstants.appName);
                     return false;
-                }
-                else {
+                } else {
                     log.debug("Starting the existing container {}", containerName);
                     return startContainer(containerName);
                 }
             }
-        }
-        else {
+        } else {
             List<Integer> portList = getUsedHostPorts();
             Optional<Integer> hostPortOptional = AdbmConstants.hostPortList.stream().filter(port -> !portList.contains(port))
-                                                             .findFirst();
+                    .findFirst();
             if (!hostPortOptional.isPresent()) {
                 log.error("Port list contains all ports from the host port list!\n" +
-                                  "No new containers can be started!\n" +
-                                  "You have to extend the list of allowed host ports to run more containers!");
+                        "No new containers can be started!\n" +
+                        "You have to extend the list of allowed host ports to run more containers!");
                 return false;
             }
             int hostPort = hostPortOptional.get();
@@ -355,15 +359,15 @@ public class DockerManagerSpotify implements IDockerManager
             hostPorts.add(PortBinding.of("0.0.0.0", hostPort));
             portBindings.put(Integer.toString(AdbmConstants.standardClientPort), hostPorts);
             final HostConfig hostConfig = HostConfig.builder().portBindings(portBindings)
-                                                    .networkMode(AdbmConstants.antidoteDockerNetworkName).build();
+                    .networkMode(AdbmConstants.antidoteDockerNetworkName).build();
             log.debug("Creating a new container {}...", containerName);
             ContainerConfig containerConfig = ContainerConfig.builder()
-                                                             .image(AdbmConstants.antidoteDockerImageName)
-                                                             .hostConfig(hostConfig)
-                                                             .exposedPorts(Integer.toString(AdbmConstants.standardClientPort))
-                                                             .env("SHORT_NAME=true", "NODE_NAME=antidote@" + containerName)
-                                                             .tty(true)
-                                                             .build();
+                    .image(AdbmConstants.antidoteDockerImageName)
+                    .hostConfig(hostConfig)
+                    .exposedPorts(Integer.toString(AdbmConstants.standardClientPort))
+                    .env("SHORT_NAME=true", "NODE_NAME=antidote@" + containerName)
+                    .tty(true)
+                    .build();
             try {
                 docker.createContainer(containerConfig, containerName);
             } catch (DockerException | InterruptedException e) {
@@ -374,16 +378,19 @@ public class DockerManagerSpotify implements IDockerManager
         }
     }
 
+    /**
+     * @param containerName The name of the container.
+     * @return
+     */
     @Override
-    public boolean startContainer(String containerName)
-    {
+    public boolean startContainer(String containerName) {
         if (!isReady()) return false;
         log.info("Starting the container {}...", containerName);
         String containerId = getContainerId(containerName, false);
         try {
             docker.startContainer(containerId);
             log.info("State of the started container (id: {}): {}", containerId,
-                     docker.inspectContainer(containerId).state());
+                    docker.inspectContainer(containerId).state());
         } catch (DockerException | InterruptedException e) {
             log.error("An error has occurred while starting a container!", e);
             return false;
@@ -393,9 +400,12 @@ public class DockerManagerSpotify implements IDockerManager
         return true;
     }
 
+    /**
+     * @param containerName The name of the container.
+     * @return
+     */
     @Override
-    public boolean stopContainer(String containerName)
-    {
+    public boolean stopContainer(String containerName) {
         if (!isReady()) return false;
         log.info("Stopping the container {}...", containerName);
         String containerId = getContainerId(containerName, true);
@@ -409,9 +419,12 @@ public class DockerManagerSpotify implements IDockerManager
         return true;
     }
 
+    /**
+     * @param containerName The name of the container.
+     * @return
+     */
     @Override
-    public boolean removeContainer(String containerName)
-    {
+    public boolean removeContainer(String containerName) {
         if (!isReady()) return false;
         log.debug("Removing the container {}...", containerName);
         String containerId = getContainerId(containerName, false);
@@ -427,8 +440,7 @@ public class DockerManagerSpotify implements IDockerManager
     }
 
     @Override
-    public boolean stopAllContainers()
-    {
+    public boolean stopAllContainers() {
         if (!isReady()) return false;
         log.debug("Stopping all containers that were created from the image {}!", AdbmConstants.antidoteDockerImageName);
         try {
@@ -443,8 +455,7 @@ public class DockerManagerSpotify implements IDockerManager
     }
 
     @Override
-    public boolean removeAllContainers()
-    {
+    public boolean removeAllContainers() {
         if (!isReady()) return false;
         log.debug("Removing all containers that were created from the image {}!", AdbmConstants.antidoteDockerImageName);
         try {
@@ -465,8 +476,7 @@ public class DockerManagerSpotify implements IDockerManager
     }
 
     @Override
-    public boolean isAntidoteReady(String containerName)
-    {
+    public boolean isAntidoteReady(String containerName) {
         return false;//TODO
     }
 
@@ -476,8 +486,7 @@ public class DockerManagerSpotify implements IDockerManager
     }
 
     @Override
-    public List<String> getNamesOfRunningContainers()
-    {
+    public List<String> getNamesOfRunningContainers() {
         if (!isReady()) return new ArrayList<>();
         log.debug("Getting running containers...");
         Set<String> containerSet = new HashSet<>();
@@ -491,8 +500,7 @@ public class DockerManagerSpotify implements IDockerManager
     }
 
     @Override
-    public List<String> getNamesOfNotRunningContainers()
-    {
+    public List<String> getNamesOfNotRunningContainers() {
         if (!isReady()) return new ArrayList<>();
         log.debug("Getting exited and created containers...");
         Set<String> containerSet = new HashSet<>();
@@ -508,8 +516,7 @@ public class DockerManagerSpotify implements IDockerManager
     }
 
     @Override
-    public List<String> getNamesOfAllContainers()
-    {
+    public List<String> getNamesOfAllContainers() {
         if (!isReady()) return new ArrayList<>();
         log.debug("Getting all containers...");
         Set<String> containerSet = new HashSet<>();
@@ -522,9 +529,12 @@ public class DockerManagerSpotify implements IDockerManager
         return new ArrayList<>(containerSet);
     }
 
+    /**
+     * @param containerName The name of the container.
+     * @return
+     */
     @Override
-    public List<Integer> getHostPortsFromContainer(String containerName)
-    {
+    public List<Integer> getHostPortsFromContainer(String containerName) {
         if (!isReady()) return new ArrayList<>();
         String containerId = getContainerId(containerName, false);
         if (containerId.isEmpty()) {
@@ -564,31 +574,28 @@ public class DockerManagerSpotify implements IDockerManager
         return new ArrayList<>();
     }
 
-    private List<Container> getRunningContainers()
-    {
+    private List<Container> getRunningContainers() {
         try {
             return docker.listContainers(DockerClient.ListContainersParam.filter("ancestor", AdbmConstants.antidoteDockerImageName),
-                                         DockerClient.ListContainersParam.allContainers(),
-                                         DockerClient.ListContainersParam.withStatusRunning());
+                    DockerClient.ListContainersParam.allContainers(),
+                    DockerClient.ListContainersParam.withStatusRunning());
         } catch (DockerException | InterruptedException e) {
             log.error("An error has occurred while getting all running containers (internal)!", e);
             return new ArrayList<>();
         }
     }
 
-    private List<Container> getAllContainers()
-    {
+    private List<Container> getAllContainers() {
         try {
             return docker.listContainers(DockerClient.ListContainersParam.filter("ancestor", AdbmConstants.antidoteDockerImageName),
-                                         DockerClient.ListContainersParam.allContainers());
+                    DockerClient.ListContainersParam.allContainers());
         } catch (DockerException | InterruptedException e) {
             log.error("An error has occurred while getting all containers (internal)!", e);
             return new ArrayList<>();
         }
     }
 
-    private List<Container> getAllContainersAlsoNonRelevant()
-    {
+    private List<Container> getAllContainersAlsoNonRelevant() {
         try {
             return docker.listContainers(DockerClient.ListContainersParam.allContainers());
         } catch (DockerException | InterruptedException e) {
@@ -599,8 +606,10 @@ public class DockerManagerSpotify implements IDockerManager
         }
     }
 
-    private void waitUntilContainerIsReady(String name)
-    {
+    /**
+     * @param name
+     */
+    private void waitUntilContainerIsReady(String name) {
         try {
             //TODO more efficient and rework
             String containerId = getContainerId(name, true);
@@ -610,8 +619,7 @@ public class DockerManagerSpotify implements IDockerManager
             Thread.sleep(500);
             String logs;
             try (LogStream stream = docker
-                    .logs(containerId, DockerClient.LogsParam.stdout(), DockerClient.LogsParam.stderr()))
-            {
+                    .logs(containerId, DockerClient.LogsParam.stdout(), DockerClient.LogsParam.stderr())) {
                 logs = stream.readFully();
             }
             //log.trace("\n{}", logs);
@@ -620,8 +628,7 @@ public class DockerManagerSpotify implements IDockerManager
                 Thread.sleep(500);
                 log.debug("The Antidote database is still not fully started!");
                 try (LogStream stream = docker
-                        .logs(containerId, DockerClient.LogsParam.stdout(), DockerClient.LogsParam.stderr()))
-                {
+                        .logs(containerId, DockerClient.LogsParam.stdout(), DockerClient.LogsParam.stderr())) {
                     logs = stream.readFully();
                 }
                 start = logs.lastIndexOf("NODE_NAME");
@@ -637,8 +644,7 @@ public class DockerManagerSpotify implements IDockerManager
      *
      * @return The list of used host ports.
      */
-    private List<Integer> getUsedHostPorts()
-    {
+    private List<Integer> getUsedHostPorts() {
         List<Integer> portList = new ArrayList<>();
         if (!isReady()) return portList;
         for (Container container : getAllContainers()) {
@@ -651,22 +657,20 @@ public class DockerManagerSpotify implements IDockerManager
         return portList;
     }
 
-    private String getContainerId(String name, boolean mustBeRunning)
-    {
+    private String getContainerId(String name, boolean mustBeRunning) {
         try {
             List<Container> adbmContainersWithName;
             if (mustBeRunning) {
                 adbmContainersWithName = docker.listContainers(DockerClient.ListContainersParam.filter("name", name),
-                                                               DockerClient.ListContainersParam
-                                                                       .filter("ancestor", AdbmConstants.antidoteDockerImageName),
-                                                               DockerClient.ListContainersParam.allContainers(),
-                                                               DockerClient.ListContainersParam.withStatusRunning());
-            }
-            else {
+                        DockerClient.ListContainersParam
+                                .filter("ancestor", AdbmConstants.antidoteDockerImageName),
+                        DockerClient.ListContainersParam.allContainers(),
+                        DockerClient.ListContainersParam.withStatusRunning());
+            } else {
                 adbmContainersWithName = docker.listContainers(DockerClient.ListContainersParam.filter("name", name),
-                                                               DockerClient.ListContainersParam
-                                                                       .filter("ancestor", AdbmConstants.antidoteDockerImageName),
-                                                               DockerClient.ListContainersParam.allContainers());
+                        DockerClient.ListContainersParam
+                                .filter("ancestor", AdbmConstants.antidoteDockerImageName),
+                        DockerClient.ListContainersParam.allContainers());
             }
             if (adbmContainersWithName.isEmpty()) {
                 log.error(
@@ -678,8 +682,8 @@ public class DockerManagerSpotify implements IDockerManager
                 log.warn("Multiple Antidote Benchmark containers have the same name!");
                 log.info("The id of the first container will be returned!");
                 log.debug("List of containers (id) with the name {}: {}", name,
-                          adbmContainersWithName.stream().map(Container::id).collect(
-                                  Collectors.toList()));
+                        adbmContainersWithName.stream().map(Container::id).collect(
+                                Collectors.toList()));
             }
             return adbmContainersWithName.get(0).id();
         } catch (DockerException | InterruptedException e) {

@@ -72,6 +72,12 @@ public class MapDBManager implements ISettingsManager, IAntidoteKeyStoreManager
         return appSettings.getOrDefault(setting, "");
     }
 
+    /**
+     *
+     * @param setting
+     * @param value
+     * @return
+     */
     @Override
     public boolean setAppSetting(String setting, String value)
     {
@@ -105,6 +111,10 @@ public class MapDBManager implements ISettingsManager, IAntidoteKeyStoreManager
         }
     }
 
+    /**
+     *
+     * @param path
+     */
     @Override
     public void setGitRepoLocation(String path)
     {
@@ -119,6 +129,11 @@ public class MapDBManager implements ISettingsManager, IAntidoteKeyStoreManager
         return new HashSet<>(benchmarkCommits);
     }
 
+    /**
+     *
+     * @param commitHash
+     * @return
+     */
     //TODO decide on length
     @Override
     public boolean addBenchmarkCommit(String commitHash)
@@ -128,6 +143,11 @@ public class MapDBManager implements ISettingsManager, IAntidoteKeyStoreManager
         return true;
     }
 
+    /**
+     *
+     * @param commitHash
+     * @return
+     */
     @Override
     public boolean removeBenchmarkCommit(String commitHash)
     {
@@ -154,6 +174,11 @@ public class MapDBManager implements ISettingsManager, IAntidoteKeyStoreManager
         return res;
     }
 
+    /**
+     *
+     * @param name
+     * @return
+     */
     @Override
     public AntidotePB.CRDT_type getTypeOfKey(String name)
     {
@@ -162,6 +187,12 @@ public class MapDBManager implements ISettingsManager, IAntidoteKeyStoreManager
         return AntidotePB.CRDT_type.valueOf(keyTypeMapDB.get(name));
     }
 
+    /**
+     *
+     * @param name
+     * @param type
+     * @return
+     */
     @Override
     public boolean addKey(String name, AntidotePB.CRDT_type type)
     {
@@ -171,6 +202,11 @@ public class MapDBManager implements ISettingsManager, IAntidoteKeyStoreManager
         return true;
     }
 
+    /**
+     *
+     * @param name
+     * @return
+     */
     @Override
     public boolean removeKey(String name)
     {

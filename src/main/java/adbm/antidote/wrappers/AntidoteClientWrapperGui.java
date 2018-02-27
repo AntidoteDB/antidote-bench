@@ -34,6 +34,12 @@ public class AntidoteClientWrapperGui extends AntidoteModel implements IAntidote
         return success;
     }
 
+    /**
+     *
+     * @param address The address.
+     * @param port The port.
+     * @return
+     */
     public boolean start(String address, int port)
     {
         boolean success = wrapper.start(address, port);
@@ -55,6 +61,11 @@ public class AntidoteClientWrapperGui extends AntidoteModel implements IAntidote
 
     // TODO implement isReadyInfo()
 
+    /**
+     *
+     * @param name
+     * @param type
+     */
     public void AddKey(String name, AntidotePB.CRDT_type type)
     {
         if (isReady()) {
@@ -63,6 +74,10 @@ public class AntidoteClientWrapperGui extends AntidoteModel implements IAntidote
         }
     }
 
+    /**
+     *
+     * @param name
+     */
     public void RemoveKey(String name)
     {
         if (isReady()) {
@@ -95,60 +110,111 @@ public class AntidoteClientWrapperGui extends AntidoteModel implements IAntidote
         return wrapper.getHostPort();
     }
 
+    /**
+     *
+     * @param keyName The name of the key.
+     * @return
+     */
     @Override
     public Object readKeyValue(String keyName)
     {
         return wrapper.readKeyValue(keyName);
     }
 
+    /**
+     *
+     * @param keyName The name of the key.
+     * @param txType The transaction type.
+     * @return
+     */
     @Override
     public Object readKeyValue(String keyName, TransactionType txType)
     {
         return wrapper.readKeyValue(keyName, txType);
     }
 
+    /**
+     *
+     * @param keyNames An iterable of key names.
+     * @return
+     */
     @Override
     public List<Object> readKeyValues(Iterable<String> keyNames)
     {
         return wrapper.readKeyValues(keyNames);
     }
 
+    /**
+     *
+     * @param keyNames An iterable of key names.
+     * @param txType The transaction type.
+     * @return
+     */
     @Override
     public List<Object> readKeyValues(Iterable<String> keyNames, TransactionType txType)
     {
         return wrapper.readKeyValues(keyNames, txType);
     }
 
+    /**
+     *
+     * @param operation The update operation that is performed.
+     */
     @Override
     public void updateKey(UpdateOperation operation)
     {
         wrapper.updateKey(operation);
     }
 
+    /**
+     *
+     * @param operation The update operation that is performed.
+     * @param txType The transaction type.
+     */
     @Override
     public void updateKey(UpdateOperation operation, TransactionType txType)
     {
         wrapper.updateKey(operation, txType);
     }
 
+    /**
+     *
+     * @param operations An iterable of update operations that are performed.
+     */
     @Override
     public void updateKeys(Iterable<UpdateOperation> operations)
     {
         wrapper.updateKeys(operations);
     }
 
+    /**
+     *
+     * @param operations An iterable of update operations that are performed.
+     * @param txType The transaction type.
+     */
     @Override
     public void updateKeys(Iterable<UpdateOperation> operations, TransactionType txType)
     {
         wrapper.updateKeys(operations, txType);
     }
 
+    /**
+     *
+     * @param operations An iterable of operations that are performed.
+     * @return
+     */
     @Override
     public List<Object> performKeyOperations(Iterable<Operation> operations)
     {
         return wrapper.performKeyOperations(operations);
     }
 
+    /**
+     *
+     * @param operations An iterable of operations that are performed.
+     * @param txType The transaction type.
+     * @return
+     */
     @Override
     public List<Object> performKeyOperations(Iterable<Operation> operations,
                                              TransactionType txType)
