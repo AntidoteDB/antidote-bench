@@ -1,20 +1,28 @@
-# R/W - 50/50 Test
+# R/W - 20/80 Test
 
 # Output file can be moved to desried file path
-exportfile=transaction.dat
+exportfile=transaction1.csv
 
 
 recordcount=100000
+
 workload=com.yahoo.ycsb.workloads.CoreWorkload
+
 # should reads read all fields (true) or just one(false)
 readallfields=false
 
-readproportion=0.5
-updateproportion=0.5
+readproportion=0.4
+updateproportion=0.6
 
 # what distribution should be used to select the records to operate
-requestdistribution=latest
-# zipfan, uniform(default)
+requestdistribution=uniform
+# zipfan,latest 
 
 # Maximum execution time in seconds
 maxexecutiontime=10
+
+# Latency
+measurementtype=timeseries
+
+# Granularity for time series (in milliseconds)
+timeseries.granularity=500
