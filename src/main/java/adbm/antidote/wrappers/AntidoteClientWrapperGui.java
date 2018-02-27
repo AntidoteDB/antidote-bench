@@ -17,9 +17,9 @@ public class AntidoteClientWrapperGui extends AntidoteModel implements IAntidote
 
     private AntidoteClientWrapperChecks wrapper;
 
-    public AntidoteClientWrapperGui(String name)
+    public AntidoteClientWrapperGui(String name, String containerName)
     {
-        wrapper = new AntidoteClientWrapperChecks(name);
+        wrapper = new AntidoteClientWrapperChecks(name, containerName);
     }
 
     public AntidoteClientWrapperGui(AntidoteClientWrapperChecks wrapper)
@@ -102,6 +102,12 @@ public class AntidoteClientWrapperGui extends AntidoteModel implements IAntidote
     public String getName()
     {
         return wrapper.getName();
+    }
+
+    @Override
+    public String getContainerName()
+    {
+        return wrapper.getContainerName();
     }
 
     @Override

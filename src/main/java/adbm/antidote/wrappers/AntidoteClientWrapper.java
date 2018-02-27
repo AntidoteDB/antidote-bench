@@ -46,6 +46,8 @@ public class AntidoteClientWrapper implements IAntidoteClientWrapper {
      */
     private final String name; //TODO check if final
 
+    private String containerName;
+
     /**
      * The host port which is important when connecting Antidote containers with each other (replication)
      */
@@ -60,11 +62,16 @@ public class AntidoteClientWrapper implements IAntidoteClientWrapper {
      *
      * @param name The name of the container where the AntidoteClient will be running.
      */
-    public AntidoteClientWrapper(String name) {
+    public AntidoteClientWrapper(String name, String containerName)
+    {
         if (isNullOrEmpty(name)) {
             name = "BAD_NAME";
         }
         this.name = name;
+        if (isNullOrEmpty(containerName)) {
+            containerName = AdbmConstants.benchmarkContainerName;
+        }
+        this.containerName = containerName;
     }
 
     public boolean start() {
@@ -77,10 +84,12 @@ public class AntidoteClientWrapper implements IAntidoteClientWrapper {
      * @return
      */
     public boolean start(String address, int port) {
-        boolean success = Main.getDockerManager().runContainer(name);
+        if (isReady()) return true;
+        log.trace("Starting Antidote Client {} connection to Container {}...", name, containerName);
+        boolean success = Main.getDockerManager().runContainer(containerName);
         if (!success) return false;
         if (port <= 0) {
-            hostPort = Main.getDockerManager().getHostPortsFromContainer(name).get(0);
+            hostPort = Main.getDockerManager().getHostPortsFromContainer(containerName).get(0);
             if (hostPort <= 0) return false;
         }
         if (isNullOrEmpty(address)) {
@@ -97,11 +106,11 @@ public class AntidoteClientWrapper implements IAntidoteClientWrapper {
     }
 
     public boolean stop() {
-        boolean success = Main.getDockerManager().stopContainer(name);
+        //boolean success = Main.getDockerManager().stopContainer(name);
         antidoteClient = null;
         bucket = null;
         hostPort = 0;
-        return success;
+        return true;
     }
 
     public boolean isReady() {
@@ -124,7 +133,14 @@ public class AntidoteClientWrapper implements IAntidoteClientWrapper {
     }
 
     @Override
-    public int getHostPort() {
+    public String getContainerName()
+    {
+        return containerName;
+    }
+
+    @Override
+    public int getHostPort()
+    {
         return hostPort;
     }
 

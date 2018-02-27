@@ -22,8 +22,8 @@ public class AntidoteClientWrapperChecks implements IAntidoteClientWrapper
 
     private AntidoteClientWrapper wrapper;
 
-    public AntidoteClientWrapperChecks(String name) {
-        wrapper = new AntidoteClientWrapper(name);
+    public AntidoteClientWrapperChecks(String name, String containerName) {
+        wrapper = new AntidoteClientWrapper(name,containerName);
     }
 
     public AntidoteClientWrapperChecks(AntidoteClientWrapper wrapper) {
@@ -70,6 +70,12 @@ public class AntidoteClientWrapperChecks implements IAntidoteClientWrapper
     public String getName()
     {
         return wrapper.getName();
+    }
+
+    @Override
+    public String getContainerName()
+    {
+        return wrapper.getContainerName();
     }
 
     @Override

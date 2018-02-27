@@ -482,7 +482,8 @@ public class DockerManagerSpotify implements IDockerManager {
 
     @Override
     public boolean isContainerRunning(String containerName) {
-        return false;//TODO
+
+        return getContainerId(containerName, true).equals("");
     }
 
     @Override

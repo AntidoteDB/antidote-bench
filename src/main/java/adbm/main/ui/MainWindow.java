@@ -16,6 +16,9 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import javax.swing.*;
+import javax.swing.event.ChangeEvent;
+import javax.swing.event.ChangeListener;
+import javax.swing.text.DefaultFormatter;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -45,6 +48,8 @@ public class MainWindow extends JFrame
     private JButton buttonOpenWorkload;
     private JComboBox<String> comboBoxWorkload;
     private JCheckBox checkBoxUseTransactions;
+    private JSpinner spinnerThreadCount;
+    private JSpinner spinnerTarget;
     private ExecutorService executorService = Executors.newSingleThreadExecutor();
 
     private DefaultComboBoxModel<String> comboBoxWorkloadModel = new DefaultComboBoxModel<>();
@@ -96,6 +101,36 @@ public class MainWindow extends JFrame
                 }
             }
         });
+        spinnerThreadCount.setValue(Main.getNumberOfThreads());
+        JComponent comp = spinnerThreadCount.getEditor();
+        JFormattedTextField field = (JFormattedTextField) comp.getComponent(0);
+        DefaultFormatter formatter = (DefaultFormatter) field.getFormatter();
+        formatter.setCommitsOnValidEdit(true);
+        spinnerThreadCount.addChangeListener(e -> {
+            int numberOfThreads = 0;
+            try {
+                numberOfThreads = Integer.parseInt(spinnerThreadCount.getValue().toString());
+            } catch (NumberFormatException e1) {
+                log.error("Thread Count is not a Number!", e1);
+            }
+            Main.setNumberOfThreads(numberOfThreads);
+            spinnerThreadCount.setValue(Main.getNumberOfThreads());
+        });
+        spinnerTarget.setValue(Main.getNumberOfThreads());
+        comp = spinnerTarget.getEditor();
+        field = (JFormattedTextField) comp.getComponent(0);
+        formatter = (DefaultFormatter) field.getFormatter();
+        formatter.setCommitsOnValidEdit(true);
+        spinnerTarget.addChangeListener(e -> {
+            int numberOfThreads = 0;
+            try {
+                numberOfThreads = Integer.parseInt(spinnerTarget.getValue().toString());
+            } catch (NumberFormatException e1) {
+                log.error("Thread Count is not a Number!", e1);
+            }
+            Main.setNumberOfThreads(numberOfThreads);
+            spinnerTarget.setValue(Main.getNumberOfThreads());
+        });
         comboBoxWorkload.setModel(comboBoxWorkloadModel);
         updateWorkloads();
         TextPaneAppender.addTextPane(textPaneConsole);
@@ -119,7 +154,7 @@ public class MainWindow extends JFrame
         });
         buttonStartAntidote.addActionListener(e -> {
             if (Main.getDockerManager().isReady())
-                new AntidoteView(new AntidoteClientWrapperGui("AntidoteGuiClient"));
+                new AntidoteView(new AntidoteClientWrapperGui("AntidoteGuiClient", AdbmConstants.benchmarkContainerName)); //TODO change this!
             //TODO
         });
         buttonCreateDockerfile.addActionListener(e -> {

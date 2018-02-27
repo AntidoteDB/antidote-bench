@@ -19,6 +19,8 @@ public class AdbmConstants
      */
     public static final String appName = "Antidote Benchmark";
 
+    public static final String benchmarkContainerName = "AntidoteBenchmarkContainer";
+
     /**
      * This is the path to the resources folder where all resource except some properties are stored.
      */
