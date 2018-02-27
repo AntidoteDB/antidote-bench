@@ -138,7 +138,7 @@ public class DockerManagerSpotify implements IDockerManager
                 return false;
             }
             if (!antidoteBenchmarkImageExists()) {
-                buildAntidoteBenchmarkImage(false);
+               buildAntidoteBenchmarkImage(false);
             }
             return true;
         } catch (DockerException | InterruptedException | DockerCertificateException e) {
@@ -218,7 +218,7 @@ public class DockerManagerSpotify implements IDockerManager
             }
             if (local) Main.getGitManager().checkoutBranch("master");
             DockerfileBuilder.createDockerfile(local);
-            File folder = new File("Dockerfile");
+            File folder = new File(AdbmConstants.dockerfilePath);
             String path = folder.getCanonicalPath();
             if (local) {
                 folder = new File(Main.getSettingsManager().getGitRepoLocation()).getParentFile();

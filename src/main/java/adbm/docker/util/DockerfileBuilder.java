@@ -1,5 +1,6 @@
 package adbm.docker.util;
 
+import adbm.util.AdbmConstants;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -7,6 +8,8 @@ import java.io.BufferedWriter;
 import java.io.FileOutputStream;
 import java.io.OutputStreamWriter;
 import java.io.Writer;
+
+import static adbm.util.helpers.FormatUtil.format;
 
 public class DockerfileBuilder
 {
@@ -130,7 +133,7 @@ public class DockerfileBuilder
         //else
             dockerfile = getRemoteDockerfile();
         try (Writer writer = new BufferedWriter(new OutputStreamWriter(
-                new FileOutputStream("Dockerfile/Dockerfile", false), "utf-8")))
+                new FileOutputStream(format("{}/Dockerfile", AdbmConstants.dockerfilePath), false), "utf-8")))
         {
             writer.write(dockerfile);
             writer.close();
