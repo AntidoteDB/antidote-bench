@@ -31,7 +31,7 @@
         </RandomAccessFile>
         <TextPaneAppender name="VisualAppender">
             <PatternLayout>
-                <pattern>[%-5level] %d{HH:mm:ss.SSS} [%t] %c{1} - %msg%n</pattern>
+                <pattern>%msg%n</pattern>
             </PatternLayout>
         </TextPaneAppender>
     </Appenders>

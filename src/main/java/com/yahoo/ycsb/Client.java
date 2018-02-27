@@ -28,6 +28,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import java.io.FileInputStream;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.text.DecimalFormat;
@@ -665,16 +666,16 @@ public class Client
                 //out = System.out;
             }
             else {
-                //out = new FileOutputStream(exportFile);
+                out = new FileOutputStream(exportFile);
             }
 
             // if no exporter is provided the default text one will be used
             String exporterStr = props
                     .getProperty(EXPORTER_PROPERTY, "com.yahoo.ycsb.measurements.exporter.TextMeasurementsExporter");
             try {
-                //exporter = (MeasurementsExporter) Class.forName(exporterStr).getConstructor(OutputStream.class)
-                                                       //.newInstance(out);
-                exporter = new LogExporter();
+                exporter = (MeasurementsExporter) Class.forName(exporterStr).getConstructor(OutputStream.class)
+                                                       .newInstance(out);
+                //exporter = new LogExporter();
             } catch (Exception e) {
                 System.err.println("Could not find exporter " + exporterStr
                                            + ", will use default text reporter.");

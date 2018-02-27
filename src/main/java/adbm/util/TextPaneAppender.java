@@ -54,22 +54,22 @@ public final class TextPaneAppender extends AbstractAppender
         // append log text to TextArea
         try {
             if (event.getLevel().equals(Level.TRACE)) {
-                appendToPane(message, Color.GREEN.darker().darker(), 8);
+                appendToPane(message, Color.GREEN.darker().darker(), 10);
             }
             else if (event.getLevel().equals(Level.DEBUG)) {
-                appendToPane(message, Color.CYAN.darker().darker(), 10);
+                appendToPane(message, Color.CYAN.darker().darker(), 12);
             }
             else if (event.getLevel().equals(Level.INFO)) {
-                appendToPane(message, Color.BLACK, 12);
+                appendToPane(message, Color.BLACK, 14);
             }
             else if (event.getLevel().equals(Level.WARN)) {
-                appendToPane(message, Color.ORANGE.darker().darker(), 14);
+                appendToPane(message, Color.ORANGE.darker().darker(), 16);
             }
             else if (event.getLevel().equals(Level.ERROR)) {
-                appendToPane(message, Color.RED.darker().darker(), 16);
+                appendToPane(message, Color.RED.darker().darker(), 18);
             }
             else if (event.getLevel().equals(Level.FATAL)) {
-                appendToPane(message, Color.RED, 18);
+                appendToPane(message, Color.RED, 20);
             }
         } catch (Exception ex) {
             // Do not log exceptions that were caused by logging.

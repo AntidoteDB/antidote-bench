@@ -1,0 +1,20 @@
+# R/W - 50/50
+
+# Output file can be moved to desried file path
+exportfile=transaction.dat
+
+
+recordcount=100000
+workload=com.yahoo.ycsb.workloads.CoreWorkload
+# should reads read all fields (true) or just one(false)
+readallfields=false
+
+readproportion=0.5
+updateproportion=0.5
+
+# what distribution should be used to select the records to operate
+requestdistribution=latest
+# zipfan, uniform(default)
+
+# Maximum execution time in seconds
+maxexecutiontime=10

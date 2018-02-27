@@ -81,7 +81,7 @@ public class MainWindow extends JFrame
                                            "Confirmation", JOptionPane.YES_NO_OPTION);
                 if (i == JOptionPane.YES_OPTION) {
                     log.info("The application will be closed now.");
-                    Main.getDockerManager().stopAllContainers();
+                    Main.closeApp();
                     System.exit(0);
                 }
                 else {

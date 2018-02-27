@@ -130,8 +130,8 @@ public class DockerManagerSpotify implements IDockerManager
             }
             log.info("Docker initialized!");
             Runtime.getRuntime().addShutdownHook(
-                    new Thread(this::stopAllContainers));
-            if (!getNamesOfRunningContainers().isEmpty()) {
+                    new Thread(() -> Main.closeApp()));
+            if (!getNamesOfRunningContainers().isEmpty() && Main.stopContainers) {
                 log.error("The Antidote Benchmark containers cannot be running when the DockerManager starts!" +
                                   "\nPlease restart Docker manually!");
                 //JOptionPane.showMessageDialog(null,"");TODO
