@@ -114,12 +114,6 @@ public final class TextPaneAppender extends AbstractAppender
         TextPaneAppender.textPaneList.add(textPane);
     }
 
-    /**
-     * 
-     * @param msg
-     * @param c
-     * @param fontSize
-     */
     private void appendToPane(String msg, Color c, int fontSize)
     {
         SwingUtilities.invokeLater(() -> {

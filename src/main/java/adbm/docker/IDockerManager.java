@@ -92,14 +92,38 @@ public interface IDockerManager extends IStartStop
      */
     boolean removeContainer(String containerName);
 
+    /**
+     *
+     * @return
+     */
     boolean stopAllContainers();
 
+    /**
+     *
+     * @return
+     */
     boolean removeAllContainers();
 
+    /**
+     *
+     * @param containerName1
+     * @param containerName2
+     * @return
+     */
     boolean connectContainers(String containerName1, String containerName2);
 
+    /**
+     *
+     * @param containerName
+     * @return
+     */
     boolean isAntidoteReady(String containerName);
 
+    /**
+     *
+     * @param containerName
+     * @return
+     */
     boolean isContainerRunning(String containerName);
 
     /**

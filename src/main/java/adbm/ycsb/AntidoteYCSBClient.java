@@ -48,6 +48,7 @@ public class AntidoteYCSBClient extends DB
     @Override
     public void cleanup() throws DBException {
         antidoteClient.stop();
+        antidoteClient = null;
     }
 
     /**

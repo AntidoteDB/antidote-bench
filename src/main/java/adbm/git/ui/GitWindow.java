@@ -187,7 +187,7 @@ public class GitWindow extends JDialog
     {
         List<RevCommit> list = new ArrayList<>();
         Main.getSettingsManager().getBenchmarkCommits().forEach(commitId -> {
-            RevCommit commit = Main.getGitManager().getCommitFromID(commitId);
+            RevCommit commit = Main.getGitManager().getCommitFromId(commitId);
             if (commit != null) list.add(commit);
         });
         list.sort((o1, o2) -> {
@@ -415,15 +415,6 @@ public class GitWindow extends JDialog
 
     private class ListCellRendererCommits extends DefaultListCellRenderer
     {
-        /**
-         *
-         * @param list
-         * @param value
-         * @param index
-         * @param isSelected
-         * @param cellHasFocus
-         * @return
-         */
         @Override
         public Component getListCellRendererComponent(
                 JList list, Object value, int index,

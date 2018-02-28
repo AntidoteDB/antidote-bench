@@ -5,25 +5,69 @@ import org.eclipse.jgit.revwalk.RevCommit;
 
 import java.util.List;
 
+/**
+ *
+ */
 public interface IGitManager extends IStartStop
 {
 
+    /**
+     *
+     * @param branchName
+     * @return
+     */
     boolean checkoutBranch(String branchName);
 
-    boolean checkoutCommit(String commit);
+    /**
+     *
+     * @param commitId
+     * @return
+     */
+    boolean checkoutCommit(String commitId);
 
+    /**
+     *
+     * @return
+     */
     String getCurrentBranch();
 
+    /**
+     *
+     * @return
+     */
     RevCommit getCurrentCommit();
 
+    /**
+     *
+     * @return
+     */
     List<String> getAllLocalBranches();
 
+    /**
+     *
+     * @return
+     */
     List<String> getAllNonLocalRemoteBranches();
 
-    List<RevCommit> getCommitsForCurrentHead(int number);
+    /**
+     *
+     * @param numberOfCommits
+     * @return
+     */
+    List<RevCommit> getCommitsForCurrentHead(int numberOfCommits);
 
-    RevCommit getCommitFromID(String id);
+    /**
+     *
+     * @param commitId
+     * @return
+     */
+    RevCommit getCommitFromId(String commitId);
 
-    boolean isCommitId(String value);
+    /**
+     *
+     * @param commitId
+     * @return
+     */
+    boolean isCommitId(String commitId);
 
 }

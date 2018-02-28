@@ -13,9 +13,7 @@ import org.mapdb.DBMaker;
 import org.mapdb.HTreeMap;
 import org.mapdb.Serializer;
 
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Map;
+import java.util.*;
 
 public class MapDBManager implements ISettingsManager, IAntidoteKeyStoreManager
 {
@@ -31,17 +29,20 @@ public class MapDBManager implements ISettingsManager, IAntidoteKeyStoreManager
 
     private static MapDBManager instance = new MapDBManager();
 
-    public static synchronized MapDBManager getInstance() {
+    public static synchronized MapDBManager getInstance()
+    {
         return instance;
     }
 
-    private MapDBManager() {
+    private MapDBManager()
+    {
 
     }
 
     @Override
     public boolean start()
     {
+        log.trace("Starting MapDBManager!");
         mapDB = DBMaker.fileDB(AdbmConstants.appSettingsPath).closeOnJvmShutdown().transactionEnable().make();
         keyTypeMapDB = mapDB
                 .hashMap("keyTypeMapDB", Serializer.STRING, Serializer.STRING)
@@ -50,38 +51,49 @@ public class MapDBManager implements ISettingsManager, IAntidoteKeyStoreManager
                 .hashMap("appSettings", Serializer.STRING, Serializer.STRING)
                 .createOrOpen();
         benchmarkCommits = mapDB.hashSet("benchmarkCommits", Serializer.STRING).createOrOpen();
-        populateTypeKeyMap();
+        getKeyTypeKeyNamesMap();
         return true;
     }
 
     @Override
     public boolean stop()
     {
-        return true; //TODO
+        log.trace("Stopping MapDBManager!");
+        if (keyTypeMapDB != null && !keyTypeMapDB.isClosed())
+            keyTypeMapDB.close();
+        if (appSettings != null && !appSettings.isClosed())
+            appSettings.close();
+        //TODO benchmark commits
+        if (mapDB != null && !mapDB.isClosed()) {
+            mapDB.close();
+        }
+        mapDB = null;
+        keyTypeMapDB = null;
+        appSettings = null;
+        benchmarkCommits = null;
+        return true;
     }
 
     @Override
     public boolean isReady()
     {
-        return mapDB != null && keyTypeMapDB != null && appSettings != null && benchmarkCommits != null;
+        boolean isReady = mapDB != null && keyTypeMapDB != null && appSettings != null && benchmarkCommits != null;
+        if (!isReady) log.trace("MapDBManager was not ready!");
+        return isReady;
     }
 
     @Override
-    public String getAppSetting(String setting)
+    public String getAppSetting(String settingName)
     {
-        return appSettings.getOrDefault(setting, "");
+        if (!isReady()) return "";
+        return appSettings.getOrDefault(settingName, "");
     }
 
-    /**
-     *
-     * @param setting
-     * @param value
-     * @return
-     */
     @Override
-    public boolean setAppSetting(String setting, String value)
+    public boolean setAppSetting(String settingName, String value)
     {
-        appSettings.put(setting, value);
+        if (!isReady()) return false;
+        appSettings.put(settingName, value);
         mapDB.commit();
         return true;
     }
@@ -89,6 +101,7 @@ public class MapDBManager implements ISettingsManager, IAntidoteKeyStoreManager
     @Override
     public boolean resetAppSettings()
     {
+        if (!isReady()) return false;
         appSettings.clear();
         mapDB.commit();
         return true;
@@ -97,61 +110,43 @@ public class MapDBManager implements ISettingsManager, IAntidoteKeyStoreManager
     @Override
     public String getGitRepoLocation()
     {
-        if (isReady()) {
-            String gitRepo = getAppSetting(GitRepoLocationSetting);
-            if (gitRepo.isEmpty()) {
-                return AdbmConstants.defaultAntidotePath;
-            }
-            else {
-                return gitRepo;
-            }
+        if (!isReady()) return AdbmConstants.defaultAntidotePath;
+        String gitRepo = getAppSetting(GitRepoLocationSetting);
+        if (gitRepo.isEmpty()) {
+            return AdbmConstants.defaultAntidotePath;
         }
         else {
-            return AdbmConstants.defaultAntidotePath;
+            return gitRepo;
         }
     }
 
-    /**
-     *
-     * @param path
-     */
     @Override
-    public void setGitRepoLocation(String path)
+    public boolean setGitRepoLocation(String path)
     {
-        if (isReady()) {
-            setAppSetting(GitRepoLocationSetting, path);
-        }
+        return setAppSetting(GitRepoLocationSetting, path);
     }
 
     @Override
     public HashSet<String> getBenchmarkCommits()
     {
+        if (!isReady()) return new HashSet<>();
         return new HashSet<>(benchmarkCommits);
     }
 
-    /**
-     *
-     * @param commitHash
-     * @return
-     */
-    //TODO decide on length
     @Override
-    public boolean addBenchmarkCommit(String commitHash)
+    public boolean addBenchmarkCommit(String commitId)
     {
-        benchmarkCommits.add(commitHash);
+        if (!isReady()) return false;
+        benchmarkCommits.add(commitId);
         mapDB.commit();
         return true;
     }
 
-    /**
-     *
-     * @param commitHash
-     * @return
-     */
     @Override
-    public boolean removeBenchmarkCommit(String commitHash)
+    public boolean removeBenchmarkCommit(String commitId)
     {
-        benchmarkCommits.remove(commitHash);
+        if (!isReady()) return false;
+        benchmarkCommits.remove(commitId);
         mapDB.commit();
         return true;
     }
@@ -159,76 +154,77 @@ public class MapDBManager implements ISettingsManager, IAntidoteKeyStoreManager
     @Override
     public boolean resetBenchmarkCommits()
     {
+        if (!isReady()) return false;
         benchmarkCommits.clear();
         mapDB.commit();
         return true;
     }
 
     @Override
-    public Map<String, AntidotePB.CRDT_type> getAllKeys()
+    public Map<String, AntidotePB.CRDT_type> getMapKeyNameKeyType()
     {
-        Map<String, AntidotePB.CRDT_type> res = new HashMap<>();
+        Map<String, AntidotePB.CRDT_type> map = new HashMap<>();
+        if (!isReady()) return map;
         for (Map.Entry<String, String> entry : keyTypeMapDB.getEntries()) {
-            res.put(entry.getKey(), AntidotePB.CRDT_type.valueOf(entry.getValue()));
+            map.put(entry.getKey(), AntidotePB.CRDT_type.valueOf(entry.getValue()));
         }
-        return res;
+        return map;
     }
 
-    /**
-     *
-     * @param name
-     * @return
-     */
     @Override
-    public AntidotePB.CRDT_type getTypeOfKey(String name)
+    public AntidotePB.CRDT_type getTypeOfKey(String keyName)
     {
         if (!isReady()) return Main.getUsedKeyType();
-        if (!keyTypeMapDB.containsKey(name)) return Main.getUsedKeyType();
-        return AntidotePB.CRDT_type.valueOf(keyTypeMapDB.get(name));
+        if (!keyTypeMapDB.containsKey(keyName)) return Main.getUsedKeyType();
+        return AntidotePB.CRDT_type.valueOf(keyTypeMapDB.get(keyName));
     }
 
-    /**
-     *
-     * @param name
-     * @param type
-     * @return
-     */
     @Override
-    public boolean addKey(String name, AntidotePB.CRDT_type type)
+    public boolean addKey(String keyName, AntidotePB.CRDT_type keyType)
     {
-        keyTypeMapDB.put(name, type.name());
-        AntidoteUtil.addKey(name, type);
-        mapDB.commit();
-        return true;
-    }
-
-    /**
-     *
-     * @param name
-     * @return
-     */
-    @Override
-    public boolean removeKey(String name)
-    {
-        AntidotePB.CRDT_type type = AntidotePB.CRDT_type.valueOf(keyTypeMapDB.get(name));
-        keyTypeMapDB.remove(name);
-        AntidoteUtil.removeKey(name, type);
+        if (!isReady()) return false;
+        keyTypeMapDB.put(keyName, keyType.name());
+        AntidoteUtil.addKey(keyName, keyType);
         mapDB.commit();
         return true;
     }
 
     @Override
-    public boolean populateTypeKeyMap()
+    public boolean removeKey(String keyName)
     {
-        for (Map.Entry<String, String> entry : keyTypeMapDB.getEntries()) {
-            AntidoteUtil.addKey(entry.getKey(), AntidotePB.CRDT_type.valueOf(entry.getValue()));
+        if (!isReady()) return false;
+        AntidotePB.CRDT_type type = AntidotePB.CRDT_type.valueOf(keyTypeMapDB.get(keyName));
+        keyTypeMapDB.remove(keyName);
+        AntidoteUtil.removeKey(keyName, type);
+        mapDB.commit();
+        return true;
+    }
+
+    @Override
+    public Map<AntidotePB.CRDT_type, List<String>> getKeyTypeKeyNamesMap()
+    {
+        Map<AntidotePB.CRDT_type, List<String>> map = new HashMap<>();
+        if (!isReady()) return map;
+        for (AntidotePB.CRDT_type type : AntidotePB.CRDT_type.values()) {
+            map.put(type, new ArrayList<>());
         }
-        return true;
+        for (Map.Entry<String, String> entry : keyTypeMapDB.getEntries()) {
+            String keyName = entry.getKey();
+            String keyType = entry.getValue().toUpperCase();
+            if (AntidoteUtil.STRING_CRDT_TYPE_MAP.containsKey(keyType)) {
+                map.get(AntidoteUtil.STRING_CRDT_TYPE_MAP.get(keyType)).add(keyName);
+            }
+            else {
+                log.warn("The key {} did not have a valid CRDT type! CRDT type: {}", keyName, keyType);
+            }
+        }
+        return map;
     }
 
     @Override
     public boolean resetKeyTypeSettings()
     {
+        if (!isReady()) return false;
         keyTypeMapDB.clear();
         mapDB.commit();
         return true;

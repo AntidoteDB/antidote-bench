@@ -3,19 +3,51 @@ package adbm.settings;
 import adbm.util.IStartStop;
 import eu.antidotedb.antidotepb.AntidotePB;
 
+import java.util.List;
 import java.util.Map;
 
+/**
+ *
+ */
 public interface IAntidoteKeyStoreManager extends IStartStop
 {
-    Map<String, AntidotePB.CRDT_type> getAllKeys();
+    /**
+     *
+     * @return
+     */
+    Map<String, AntidotePB.CRDT_type> getMapKeyNameKeyType();
 
-    AntidotePB.CRDT_type getTypeOfKey(String name);
+    /**
+     *
+     * @param keyName
+     * @return
+     */
+    AntidotePB.CRDT_type getTypeOfKey(String keyName);
 
-    boolean addKey(String name, AntidotePB.CRDT_type type);
+    /**
+     *
+     * @param keyName
+     * @param keyType
+     * @return
+     */
+    boolean addKey(String keyName, AntidotePB.CRDT_type keyType);
 
-    boolean removeKey(String name);
+    /**
+     *
+     * @param keyName
+     * @return
+     */
+    boolean removeKey(String keyName);
 
-    boolean populateTypeKeyMap();
+    /**
+     *
+     * @return
+     */
+    Map<AntidotePB.CRDT_type, List<String>> getKeyTypeKeyNamesMap();
 
+    /**
+     *
+     * @return
+     */
     boolean resetKeyTypeSettings();
 }

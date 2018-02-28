@@ -101,7 +101,7 @@ public class MainWindow extends JFrame
                 }
             }
         });
-        spinnerThreadCount.setValue(Main.getNumberOfThreads());
+        spinnerThreadCount.setValue(Main.getBenchmarkConfig().getNumberOfThreads());
         JComponent comp = spinnerThreadCount.getEditor();
         JFormattedTextField field = (JFormattedTextField) comp.getComponent(0);
         DefaultFormatter formatter = (DefaultFormatter) field.getFormatter();
@@ -113,10 +113,10 @@ public class MainWindow extends JFrame
             } catch (NumberFormatException e1) {
                 log.error("Thread Count is not a Number!", e1);
             }
-            Main.setNumberOfThreads(numberOfThreads);
-            spinnerThreadCount.setValue(Main.getNumberOfThreads());
+            Main.getBenchmarkConfig().setNumberOfThreads(numberOfThreads);
+            spinnerThreadCount.setValue(Main.getBenchmarkConfig().getNumberOfThreads());
         });
-        spinnerTarget.setValue(Main.getNumberOfThreads());
+        spinnerTarget.setValue(Main.getBenchmarkConfig().getNumberOfThreads());
         comp = spinnerTarget.getEditor();
         field = (JFormattedTextField) comp.getComponent(0);
         formatter = (DefaultFormatter) field.getFormatter();
@@ -128,8 +128,8 @@ public class MainWindow extends JFrame
             } catch (NumberFormatException e1) {
                 log.error("Thread Count is not a Number!", e1);
             }
-            Main.setNumberOfThreads(numberOfThreads);
-            spinnerTarget.setValue(Main.getNumberOfThreads());
+            Main.getBenchmarkConfig().setNumberOfThreads(numberOfThreads);
+            spinnerTarget.setValue(Main.getBenchmarkConfig().getNumberOfThreads());
         });
         comboBoxWorkload.setModel(comboBoxWorkloadModel);
         updateWorkloads();
@@ -200,20 +200,20 @@ public class MainWindow extends JFrame
             }
         });
         buttonRunBenchmark.addActionListener(e -> {
-            Main.benchmarkTest();
+            Main.getBenchmarkConfig().runBenchmark();
         });
         checkBoxUseTransactions.addActionListener(e -> {
-            Main.setUseTransactions(checkBoxUseTransactions.isSelected());
+            Main.getBenchmarkConfig().setUseTransactions(checkBoxUseTransactions.isSelected());
         });
         comboBoxWorkload.addActionListener(e -> {
             String selectedItem = comboBoxWorkloadModel.getSelectedItem().toString();
-            if (selectedItem != null && !Main.getUsedWorkLoad().equals(selectedItem)) {
-                Main.setUsedWorkload(selectedItem);
+            if (selectedItem != null && !Main.getBenchmarkConfig().getUsedWorkLoad().equals(selectedItem)) {
+                Main.getBenchmarkConfig().setUsedWorkload(selectedItem);
                 updateWorkloads();
             }
         });
         buttonOpenWorkload.addActionListener(e -> {
-            ProcessBuilder pb = new ProcessBuilder("Notepad.exe", format("{}/{}", AdbmConstants.ycsbWorkloadsPath, Main.getUsedWorkLoad()));
+            ProcessBuilder pb = new ProcessBuilder("Notepad.exe", format("{}/{}", AdbmConstants.ycsbWorkloadsPath, Main.getBenchmarkConfig().getUsedWorkLoad()));
             try {
                 pb.start();
             } catch (IOException e1) {
@@ -228,7 +228,7 @@ public class MainWindow extends JFrame
         comboBoxWorkloadModel.removeAllElements();
         for (String fileName : FileUtil.getAllFileNamesInFolder(AdbmConstants.ycsbWorkloadsPath))
             comboBoxWorkloadModel.addElement(fileName);
-        comboBoxWorkloadModel.setSelectedItem(Main.getUsedWorkLoad());
+        comboBoxWorkloadModel.setSelectedItem(Main.getBenchmarkConfig().getUsedWorkLoad());
     }
 
     {

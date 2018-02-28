@@ -10,6 +10,7 @@ import eu.antidotedb.client.*;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
+import javax.annotation.Nullable;
 import java.net.InetSocketAddress;
 import java.util.ArrayList;
 import java.util.List;
@@ -25,7 +26,8 @@ import static adbm.util.helpers.GeneralUtil.isNullOrEmpty;
  * Of course you need to be sure that the input parameters are always valid otherwise there will be unhandled exceptions.
  * If you can't be sure the input parameter will always be valid then use the AntidoteClientWrapperChecks class.
  */
-public class AntidoteClientWrapper implements IAntidoteClientWrapper {
+public class AntidoteClientWrapper implements IAntidoteClientWrapper
+{
 
     //TODO currently only one AntidoteClientWrapper is allowed per container because they share the same name
 
@@ -74,18 +76,17 @@ public class AntidoteClientWrapper implements IAntidoteClientWrapper {
         this.containerName = containerName;
     }
 
-    public boolean start() {
+    @Override
+    public boolean start()
+    {
         return start(null, 0);
     }
 
-    /**
-     * @param address The address.
-     * @param port    The port.
-     * @return
-     */
-    public boolean start(String address, int port) {
+    @Override
+    public boolean start(String address, int port)
+    {
         if (isReady()) return true;
-        log.trace("Starting Antidote Client {} connection to Container {}...", name, containerName);
+        log.trace("Starting Antidote Client {} with connection to Container {}", name, containerName);
         boolean success = Main.getDockerManager().runContainer(containerName);
         if (!success) return false;
         if (port <= 0) {
@@ -100,35 +101,42 @@ public class AntidoteClientWrapper implements IAntidoteClientWrapper {
             bucket = Bucket.bucket(name + "bucket");
             return true;
         } catch (Exception e) {
-            log.error("An error occurred while creating a Antidote Client!", e);
+            log.error("An error occurred while creating an Antidote Client!", e);
         }
         return false;
     }
 
-    public boolean stop() {
-        //boolean success = Main.getDockerManager().stopContainer(name);
+    @Override
+    public boolean stop()
+    {
+        log.trace("Stopping Antidote Client {} with connection to Container {}", name, containerName);
         antidoteClient = null;
         bucket = null;
         hostPort = 0;
         return true;
     }
 
-    public boolean isReady() {
+    @Override
+    public boolean isReady()
+    {
         return hostPort <= 0 && antidoteClient != null && bucket != null;
     }
 
     @Override
-    public AntidoteClient getAntidoteClient() {
+    public AntidoteClient getAntidoteClient()
+    {
         return antidoteClient;
     }
 
     @Override
-    public Bucket getBucket() {
+    public Bucket getBucket()
+    {
         return bucket;
     }
 
     @Override
-    public String getName() {
+    public String getName()
+    {
         return name;
     }
 
@@ -144,24 +152,15 @@ public class AntidoteClientWrapper implements IAntidoteClientWrapper {
         return hostPort;
     }
 
-    /**
-     *
-     * @param keyName The name of the key.
-     * @return
-     */
     @Override
-    public Object readKeyValue(String keyName) {
+    public Object readKeyValue(String keyName)
+    {
         return readKeyValue(keyName, Main.getUsedTransactionType());
     }
 
-    /**
-     *
-     * @param keyName The name of the key.
-     * @param txType The transaction type.
-     * @return
-     */
     @Override
-    public Object readKeyValue(String keyName, TransactionType txType) {
+    public Object readKeyValue(String keyName, TransactionType txType)
+    {
         switch (txType) {
             case NoTransaction:
                 return bucket.read(antidoteClient.noTransaction(), AntidoteUtil.createKey(keyName));
@@ -177,24 +176,15 @@ public class AntidoteClientWrapper implements IAntidoteClientWrapper {
         }
     }
 
-    /**
-     *
-     * @param keyNames An iterable of key names.
-     * @return
-     */
     @Override
-    public List<Object> readKeyValues(Iterable<String> keyNames) {
+    public List<Object> readKeyValues(Iterable<String> keyNames)
+    {
         return readKeyValues(keyNames, Main.getUsedTransactionType());
     }
 
-    /**
-     *
-     * @param keyNames An iterable of key names.
-     * @param txType The transaction type.
-     * @return
-     */
     @Override
-    public List<Object> readKeyValues(Iterable<String> keyNames, TransactionType txType) {
+    public List<Object> readKeyValues(Iterable<String> keyNames, TransactionType txType)
+    {
         List<Object> results = new ArrayList<>();
         BatchRead batchRead = antidoteClient.newBatchRead();
         List<BatchReadResult> batchReadResults = new ArrayList<>();
@@ -220,61 +210,52 @@ public class AntidoteClientWrapper implements IAntidoteClientWrapper {
         return results;
     }
 
-    /**
-     *
-     * @param operation The update operation that is performed.
-     */
     @Override
-    public void updateKey(UpdateOperation operation) {
+    public void updateKey(UpdateOperation operation)
+    {
         updateKey(operation, Main.getUsedTransactionType());
     }
 
-    /**
-     *
-     * @param operation The update operation that is performed.
-     * @param txType The transaction type.
-     */
     @Override
-    public void updateKey(UpdateOperation operation, TransactionType txType) {
-        switch (txType) {
-            case NoTransaction:
-                bucket.update(antidoteClient.noTransaction(), getKeyUpdateOp(operation));
-                break;
-            case StaticTransaction:
-                AntidoteStaticTransaction tx = antidoteClient.createStaticTransaction();
-                bucket.update(tx, getKeyUpdateOp(operation));
-                tx.commitTransaction();
-                break;
-            case InteractiveTransaction:
-            default:
-                try (InteractiveTransaction txi = antidoteClient.startTransaction()) {
-                    bucket.update(txi, getKeyUpdateOp(operation));
-                    txi.commitTransaction();
-                }
-                break;
+    public void updateKey(UpdateOperation operation, TransactionType txType)
+    {
+        UpdateOp updateOp = getKeyUpdateOp(operation);
+        if (updateOp != null) {
+            switch (txType) {
+                case NoTransaction:
+                    bucket.update(antidoteClient.noTransaction(), updateOp);
+                    break;
+                case StaticTransaction:
+
+                    AntidoteStaticTransaction tx = antidoteClient.createStaticTransaction();
+                    bucket.update(tx, updateOp);
+                    tx.commitTransaction();
+                    break;
+                case InteractiveTransaction:
+                default:
+                    try (InteractiveTransaction txi = antidoteClient.startTransaction()) {
+                        bucket.update(txi, updateOp);
+                        txi.commitTransaction();
+                    }
+                    break;
+            }
         }
     }
 
-    /**
-     *
-     * @param operations An iterable of update operations that are performed.
-     */
     @Override
-    public void updateKeys(Iterable<UpdateOperation> operations) {
+    public void updateKeys(Iterable<UpdateOperation> operations)
+    {
         updateKeys(operations, Main.getUsedTransactionType());
     }
 
-    /**
-     *
-     * @param operations An iterable of update operations that are performed.
-     * @param txType The transaction type.
-     */
     @Override
-    public void updateKeys(Iterable<UpdateOperation> operations, TransactionType txType) {
+    public void updateKeys(Iterable<UpdateOperation> operations, TransactionType txType)
+    {
         List<UpdateOp> updates = new ArrayList<>();
 
         for (UpdateOperation operation : operations) {
-            updates.add(getKeyUpdateOp(operation));
+            UpdateOp updateOp = getKeyUpdateOp(operation);
+            if (updateOp != null) updates.add(updateOp);
         }
         switch (txType) {
             case NoTransaction:
@@ -295,33 +276,26 @@ public class AntidoteClientWrapper implements IAntidoteClientWrapper {
         }
     }
 
-    /**
-     *
-     * @param operations An iterable of operations that are performed.
-     * @return
-     */
     @Override
-    public List<Object> performKeyOperations(Iterable<Operation> operations) {
+    public List<Object> performKeyOperations(Iterable<Operation> operations)
+    {
         return performKeyOperations(operations, Main.getUsedTransactionType());
     }
 
-    /**
-     *
-     * @param operations An iterable of operations that are performed.
-     * @param txType The transaction type.
-     * @return
-     */
     @Override
     public List<Object> performKeyOperations(Iterable<Operation> operations,
-                                             TransactionType txType) {
+                                             TransactionType txType)
+    {
         List<Object> returnList = new ArrayList<>();
         switch (txType) {
             case NoTransaction:
                 for (Operation op : operations) {
                     if (op.read) {
                         returnList.add(bucket.read(antidoteClient.noTransaction(), AntidoteUtil.createKey(op.keyName)));
-                    } else {
-                        bucket.update(antidoteClient.noTransaction(), getKeyUpdateOp((UpdateOperation) op));
+                    }
+                    else {
+                        UpdateOp updateOp = getKeyUpdateOp((UpdateOperation) op);
+                        if (updateOp != null) bucket.update(antidoteClient.noTransaction(), updateOp);
                     }
                 }
                 break;
@@ -332,8 +306,10 @@ public class AntidoteClientWrapper implements IAntidoteClientWrapper {
                     for (Operation op : operations) {
                         if (op.read) {
                             returnList.add(bucket.read(tx, AntidoteUtil.createKey(op.keyName)));
-                        } else {
-                            bucket.update(tx, getKeyUpdateOp((UpdateOperation) op));
+                        }
+                        else {
+                            UpdateOp updateOp = getKeyUpdateOp((UpdateOperation) op);
+                            if (updateOp != null) bucket.update(tx, updateOp);
                         }
                     }
                     tx.commitTransaction();
@@ -350,7 +326,9 @@ public class AntidoteClientWrapper implements IAntidoteClientWrapper {
      * @param operation The operation.
      * @return The UpdateOp.
      */
-    private UpdateOp getKeyUpdateOp(UpdateOperation operation) {
+    @Nullable
+    private UpdateOp getKeyUpdateOp(UpdateOperation operation)
+    {
         String name = operation.keyName;
         String operationName = operation.operationName;
         Object value = operation.value;
@@ -471,24 +449,31 @@ public class AntidoteClientWrapper implements IAntidoteClientWrapper {
     }
 
     /**
+     * Logs an error that the key update operation is not available.
+     * e.g. if the operation RemoveKey is called on a counter.
+     * Useful for debugging.
      *
-     * @param key
-     * @param operation
-     * @return
+     * @param key       The key where the operation is called.
+     * @param operation The operation that is called.
+     * @return Calls returnFailure which always returns null.
      */
-    private UpdateOp operationDoesNotExist(Key key, UpdateOperation operation) {
+    private UpdateOp operationDoesNotExist(Key key, UpdateOperation operation)
+    {
         log.error("The key type {} does not have the operation {}!", AntidoteUtil.typeGUIMap.get(key.getType()),
-                operation.operationName);
+                  operation.operationName);
         return returnFailure(key, operation);
     }
 
     /**
+     * Logs an error the Operation on a Key failed.
+     * Useful for debugging.
      *
-     * @param key
-     * @param operation
-     * @return
+     * @param key       The key where the update operation failed.
+     * @param operation The update operation that failed.
+     * @return null.
      */
-    private UpdateOp returnFailure(Key key, UpdateOperation operation) {
+    private UpdateOp returnFailure(Key key, UpdateOperation operation)
+    {
         log.error("Operation on Key failed!\nKey: {}{}", key, operation);
         return null;
     }

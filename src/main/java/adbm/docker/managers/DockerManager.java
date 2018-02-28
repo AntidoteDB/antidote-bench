@@ -25,9 +25,9 @@ import java.util.stream.Collectors;
 
 import static adbm.util.helpers.FormatUtil.format;
 
-public class DockerManagerSpotify implements IDockerManager {
+public class DockerManager implements IDockerManager {
 
-    private static final Logger log = LogManager.getLogger(DockerManagerSpotify.class);
+    private static final Logger log = LogManager.getLogger(DockerManager.class);
 
     //TODO test container name is action
     //TODO check safety and if multi threading works
@@ -58,21 +58,21 @@ public class DockerManagerSpotify implements IDockerManager {
      * The instance of the class.
      * There can only be a single instance of this class.
      */
-    private static DockerManagerSpotify instance = new DockerManagerSpotify();
+    private static DockerManager instance = new DockerManager();
 
     /**
      * Returns the instance of this class.
      *
      * @return the instance of this class.
      */
-    public static synchronized DockerManagerSpotify getInstance() {
+    public static synchronized DockerManager getInstance() {
         return instance;
     }
 
     /**
      * Private constructor to prevent creation of other instances.
      */
-    private DockerManagerSpotify() {
+    private DockerManager() {
 
     }
 
@@ -81,20 +81,15 @@ public class DockerManagerSpotify implements IDockerManager {
         return start(null);
     }
 
-    /**
-     * @param uri
-     * @param args The string arguments e.g. a path to a file.
-     * @return
-     */
     @Override
     public boolean start(String uri, String... args) {
+        log.trace("Starting DockerManager!");
+        if (isReady()) {
+            log.debug("The DockerManager was already ready and will be restarted!");
+        }
         String certPath = null;
         if (args.length > 0) {
             certPath = args[1];
-        }
-        // TODO if (!GitManager.isReady()) return false;
-        if (isReady()) {
-            log.debug("The DockerManager was already ready and will be restarted!");
         }
         try {
             if (uri == null || certPath == null)
@@ -130,7 +125,7 @@ public class DockerManagerSpotify implements IDockerManager {
             }
             log.info("Docker initialized!");
             Runtime.getRuntime().addShutdownHook(
-                    new Thread(() -> Main.closeApp()));
+                    new Thread(Main::closeApp));
             if (!getNamesOfRunningContainers().isEmpty() && Main.stopContainers) {
                 log.error("The Antidote Benchmark containers cannot be running when the DockerManager starts!" +
                         "\nPlease restart Docker manually!");
@@ -149,19 +144,23 @@ public class DockerManagerSpotify implements IDockerManager {
 
     @Override
     public boolean stop() {
+        log.trace("Stopping DockerManager!");
         if (isBuildingImage) {
             //TODO maybe wait or completely fail
-            return false;
         }
-        if (!isReady()) return true;// TODO maybe log that docker is not ready
-        docker.close();
+        if (docker != null)
+        {
+            docker.close();
+        }
         docker = null;
         return true;
     }
 
     @Override
     public boolean isReady() {
-        return docker != null && !isBuildingImage;
+        boolean isReady = docker != null && !isBuildingImage;
+        if (!isReady) log.trace("DockerManager was not ready!");
+        return isReady;
     }
 
     @Override
@@ -195,10 +194,6 @@ public class DockerManagerSpotify implements IDockerManager {
         return !images.isEmpty();
     }
 
-    /**
-     * @param local If true the image is built by copying a local Antidote git repository otherwise the git repository is pulled remotely.
-     * @return
-     */
     @Override
     public synchronized boolean buildAntidoteBenchmarkImage(boolean local) {
         if (!isReady()) return false;
@@ -233,23 +228,16 @@ public class DockerManagerSpotify implements IDockerManager {
         return false;
     }
 
-    /**
-     * @param containerName The name of the container.
-     * @return
-     */
     @Override
     public String getCommitOfContainer(String containerName) {
+        if (!isReady()) return "";
         return ""; //TODO
     }
 
-    /**
-     * @param containerName
-     * @param commit
-     * @return
-     */
     @Override
     public boolean rebuildAntidoteInContainer(String containerName, String commit) {
         //TODO checks and logs correctly
+        if (!isReady()) return false;
         String containerId = getContainerId(containerName, true);
         if (containerId.isEmpty()) {
             log.warn("The container with the name {} could not be rebuild because no id was found!");
@@ -311,10 +299,6 @@ public class DockerManagerSpotify implements IDockerManager {
         }
     }
 
-    /**
-     * @param containerName The name of the container.
-     * @return
-     */
     @Override
     public boolean runContainer(String containerName) {
         if (!isReady()) return false;
@@ -378,10 +362,6 @@ public class DockerManagerSpotify implements IDockerManager {
         }
     }
 
-    /**
-     * @param containerName The name of the container.
-     * @return
-     */
     @Override
     public boolean startContainer(String containerName) {
         if (!isReady()) return false;
@@ -400,10 +380,6 @@ public class DockerManagerSpotify implements IDockerManager {
         return true;
     }
 
-    /**
-     * @param containerName The name of the container.
-     * @return
-     */
     @Override
     public boolean stopContainer(String containerName) {
         if (!isReady()) return false;
@@ -419,10 +395,6 @@ public class DockerManagerSpotify implements IDockerManager {
         return true;
     }
 
-    /**
-     * @param containerName The name of the container.
-     * @return
-     */
     @Override
     public boolean removeContainer(String containerName) {
         if (!isReady()) return false;
@@ -472,17 +444,18 @@ public class DockerManagerSpotify implements IDockerManager {
 
     @Override
     public boolean connectContainers(String containerName1, String containerName2) {
+        if (!isReady()) return false;
         return false; //TODO
     }
 
     @Override
     public boolean isAntidoteReady(String containerName) {
+        if (!isReady()) return false;
         return false;//TODO
     }
 
     @Override
     public boolean isContainerRunning(String containerName) {
-
         return getContainerId(containerName, true).equals("");
     }
 
@@ -530,10 +503,6 @@ public class DockerManagerSpotify implements IDockerManager {
         return new ArrayList<>(containerSet);
     }
 
-    /**
-     * @param containerName The name of the container.
-     * @return
-     */
     @Override
     public List<Integer> getHostPortsFromContainer(String containerName) {
         if (!isReady()) return new ArrayList<>();
@@ -576,6 +545,7 @@ public class DockerManagerSpotify implements IDockerManager {
     }
 
     private List<Container> getRunningContainers() {
+        if (!isReady()) return new ArrayList<>();
         try {
             return docker.listContainers(DockerClient.ListContainersParam.filter("ancestor", AdbmConstants.antidoteDockerImageName),
                     DockerClient.ListContainersParam.allContainers(),
@@ -587,6 +557,7 @@ public class DockerManagerSpotify implements IDockerManager {
     }
 
     private List<Container> getAllContainers() {
+        if (!isReady()) return new ArrayList<>();
         try {
             return docker.listContainers(DockerClient.ListContainersParam.filter("ancestor", AdbmConstants.antidoteDockerImageName),
                     DockerClient.ListContainersParam.allContainers());
@@ -597,6 +568,7 @@ public class DockerManagerSpotify implements IDockerManager {
     }
 
     private List<Container> getAllContainersAlsoNonRelevant() {
+        if (!isReady()) return new ArrayList<>();
         try {
             return docker.listContainers(DockerClient.ListContainersParam.allContainers());
         } catch (DockerException | InterruptedException e) {
@@ -607,10 +579,8 @@ public class DockerManagerSpotify implements IDockerManager {
         }
     }
 
-    /**
-     * @param name
-     */
     private void waitUntilContainerIsReady(String name) {
+        if (!isReady()) return;
         try {
             //TODO more efficient and rework
             String containerId = getContainerId(name, true);
@@ -659,6 +629,7 @@ public class DockerManagerSpotify implements IDockerManager {
     }
 
     private String getContainerId(String name, boolean mustBeRunning) {
+        if (!isReady()) return "";
         try {
             List<Container> adbmContainersWithName;
             if (mustBeRunning) {

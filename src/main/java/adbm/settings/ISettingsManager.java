@@ -4,27 +4,74 @@ import adbm.util.IStartStop;
 
 import java.util.HashSet;
 
+/**
+ *
+ */
 public interface ISettingsManager extends IStartStop
 {
 
+    /**
+     *
+     */
     String GitRepoLocationSetting = "GitRepo";
 
-    String getAppSetting(String setting);
+    /**
+     *
+     * @param settingName
+     * @return
+     */
+    String getAppSetting(String settingName);
 
-    boolean setAppSetting(String setting, String value);
+    /**
+     *
+     * @param settingName
+     * @param value
+     * @return
+     */
+    boolean setAppSetting(String settingName, String value);
 
+    /**
+     *
+     * @return
+     */
     boolean resetAppSettings();
 
+    /**
+     *
+     * @return
+     */
     String getGitRepoLocation();
 
-    void setGitRepoLocation(String path);
+    /**
+     *
+     * @param path
+     */
+    boolean setGitRepoLocation(String path);
 
+    /**
+     *
+     * @return
+     */
     HashSet<String> getBenchmarkCommits();
 
-    boolean addBenchmarkCommit(String commitHash);
+    /**
+     *
+     * @param commitId
+     * @return
+     */
+    boolean addBenchmarkCommit(String commitId);
 
-    boolean removeBenchmarkCommit(String commitHash);
+    /**
+     *
+     * @param commitId
+     * @return
+     */
+    boolean removeBenchmarkCommit(String commitId);
 
+    /**
+     *
+     * @return
+     */
     boolean resetBenchmarkCommits();
 
 }
