@@ -22,8 +22,8 @@ public class AntidoteClientWrapperChecks implements IAntidoteClientWrapper
 
     private AntidoteClientWrapper wrapper;
 
-    public AntidoteClientWrapperChecks(String name) {
-        wrapper = new AntidoteClientWrapper(name);
+    public AntidoteClientWrapperChecks(String name, String containerName) {
+        wrapper = new AntidoteClientWrapper(name,containerName);
     }
 
     public AntidoteClientWrapperChecks(AntidoteClientWrapper wrapper) {
@@ -73,6 +73,12 @@ public class AntidoteClientWrapperChecks implements IAntidoteClientWrapper
     }
 
     @Override
+    public String getContainerName()
+    {
+        return wrapper.getContainerName();
+    }
+
+    @Override
     public int getHostPort()
     {
         return wrapper.getHostPort();
@@ -84,6 +90,12 @@ public class AntidoteClientWrapperChecks implements IAntidoteClientWrapper
         return readKeyValue(keyName, Main.getUsedTransactionType());
     }
 
+    /**
+     *
+     * @param keyName The name of the key.
+     * @param txType The transaction type.
+     * @return
+     */
     @Override
     public Object readKeyValue(String keyName, TransactionType txType)
     {
@@ -94,12 +106,23 @@ public class AntidoteClientWrapperChecks implements IAntidoteClientWrapper
         return wrapper.readKeyValue(keyName, txType);
     }
 
+    /**
+     *
+     * @param keyNames An iterable of key names.
+     * @return
+     */
     @Override
     public List<Object> readKeyValues(Iterable<String> keyNames)
     {
         return readKeyValues(keyNames, Main.getUsedTransactionType());
     }
 
+    /**
+     *
+     * @param keyNames An iterable of key names.
+     * @param txType The transaction type.
+     * @return
+     */
     @Override
     public List<Object> readKeyValues(Iterable<String> keyNames, TransactionType txType)
     {
@@ -115,12 +138,21 @@ public class AntidoteClientWrapperChecks implements IAntidoteClientWrapper
         return wrapper.readKeyValues(keyNames, txType);
     }
 
+    /**
+     *
+     * @param operation The update operation that is performed.
+     */
     @Override
     public void updateKey(UpdateOperation operation)
     {
         updateKey(operation, Main.getUsedTransactionType());
     }
 
+    /**
+     *
+     * @param operation The update operation that is performed.
+     * @param txType The transaction type.
+     */
     @Override
     public void updateKey(UpdateOperation operation, TransactionType txType)
     {
@@ -131,12 +163,21 @@ public class AntidoteClientWrapperChecks implements IAntidoteClientWrapper
         wrapper.updateKey(operation, txType);
     }
 
+    /**
+     *
+     * @param operations An iterable of update operations that are performed.
+     */
     @Override
     public void updateKeys(Iterable<UpdateOperation> operations)
     {
         updateKeys(operations, Main.getUsedTransactionType());
     }
 
+    /**
+     *
+     * @param operations An iterable of update operations that are performed.
+     * @param txType The transaction type.
+     */
     @Override
     public void updateKeys(Iterable<UpdateOperation> operations, TransactionType txType)
     {
@@ -152,12 +193,23 @@ public class AntidoteClientWrapperChecks implements IAntidoteClientWrapper
         wrapper.updateKeys(operations, txType);
     }
 
+    /**
+     *
+     * @param operations An iterable of operations that are performed.
+     * @return
+     */
     @Override
     public List<Object> performKeyOperations(Iterable<Operation> operations)
     {
         return performKeyOperations(operations, Main.getUsedTransactionType());
     }
 
+    /**
+     *
+     * @param operations An iterable of operations that are performed.
+     * @param txType The transaction type.
+     * @return
+     */
     @Override
     public List<Object> performKeyOperations(Iterable<Operation> operations,
                                              TransactionType txType)

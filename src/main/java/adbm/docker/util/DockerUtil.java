@@ -6,8 +6,7 @@ import org.apache.logging.log4j.Logger;
 import javax.annotation.Nonnull;
 import java.util.List;
 
-public class DockerUtil
-{
+public class DockerUtil {
 
     private static final Logger log = LogManager.getLogger(DockerUtil.class);
 
@@ -18,15 +17,18 @@ public class DockerUtil
      * @param containerNameFromDocker The name of the container.
      * @return The name where the first character is removed if it was a '/'.
      */
-    public static String normalizeName(String containerNameFromDocker)
-    {
+    public static String normalizeName(String containerNameFromDocker) {
         if (containerNameFromDocker.startsWith("/")) return containerNameFromDocker.substring(1);
         else return containerNameFromDocker;
     }
 
+    /**
+     * @param containerNames
+     * @param containerId
+     * @return
+     */
     @Nonnull
-    public static String getFirstNameOfContainer(List<String> containerNames, String containerId)
-    {
+    public static String getFirstNameOfContainer(List<String> containerNames, String containerId) {
         if (containerNames != null && containerNames.size() > 0) {
             log.trace("Container (id: {}) first name before normalization: {}", containerId, containerNames.get(0));
             String firstName = normalizeName(containerNames.get(0));
@@ -45,8 +47,7 @@ public class DockerUtil
             }
             log.trace("Container (id: {}) first name after normalization: {}", containerId, firstName);
             return firstName;
-        }
-        else {
+        } else {
             log.error("The container (id: {}) does not have a name! This should not be possible!", containerId);
             return "";
         }

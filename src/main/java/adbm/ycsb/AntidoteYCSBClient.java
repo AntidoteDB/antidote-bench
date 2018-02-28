@@ -7,18 +7,27 @@ package adbm.ycsb;
 import adbm.antidote.IAntidoteClientWrapper;
 import adbm.antidote.operations.UpdateOperation;
 import adbm.antidote.util.AntidoteUtil;
+import adbm.antidote.wrappers.AntidoteClientWrapper;
 import adbm.main.Main;
+import adbm.util.AdbmConstants;
 import com.yahoo.ycsb.*;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import java.util.*;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
+
+import static adbm.util.helpers.FormatUtil.format;
 
 public class AntidoteYCSBClient extends DB
 {
 
     private static final Logger log = LogManager.getLogger(AntidoteYCSBClient.class);
+
+    private IAntidoteClientWrapper antidoteClient;
+
+    private static AtomicInteger idCounter = new AtomicInteger(1);
 
     /**
      * Any argument-based initialization should start with init() in YCSB
@@ -28,7 +37,17 @@ public class AntidoteYCSBClient extends DB
     @Override
     public void init() throws DBException
     {
-        Main.initializeBenchmarkClient();
+        //Main.initializeBenchmarkClient();
+        antidoteClient = new AntidoteClientWrapper(format("AntidoteClient-{}", idCounter.getAndIncrement()), AdbmConstants.benchmarkContainerName);
+        if (!antidoteClient.start()) {
+            log.error("The Antidote Client could not be started!");
+            throw new DBException("The Antidote Client could not be started!");
+        }
+    }
+
+    @Override
+    public void cleanup() throws DBException {
+        antidoteClient.stop();
     }
 
     /**
@@ -45,7 +64,7 @@ public class AntidoteYCSBClient extends DB
     {
         if (fields == null) {
             if (key != null) {
-                Main.getBenchmarkClient().readKeyValue(key, IAntidoteClientWrapper.TransactionType.NoTransaction);
+                antidoteClient.readKeyValue(key, IAntidoteClientWrapper.TransactionType.NoTransaction);
                 return Status.OK;
             }
             log.warn("Read operation was not performed because the set of fields to read was null!");
@@ -64,7 +83,7 @@ public class AntidoteYCSBClient extends DB
         }
         // Keep order
         List<String> orderedFields = new ArrayList<>(fields);
-        List<Object> orderedResults = Main.getBenchmarkClient().readKeyValues(orderedFields);
+        List<Object> orderedResults = antidoteClient.readKeyValues(orderedFields);
         for (int i = 0; i < orderedResults.size(); i++) {
             result.put(orderedFields.get(i), new ByteArrayByteIterator(orderedResults.get(i).toString().getBytes()));
         }//TODO think about the result
@@ -107,7 +126,7 @@ public class AntidoteYCSBClient extends DB
             log.info("Update operation was not performed because the map of values was empty!");
             return Status.OK;
         }
-        Main.getBenchmarkClient()
+        antidoteClient
             .updateKeys(values.entrySet().stream().map((s) -> new UpdateOperation<>(s.getKey(), AntidoteUtil
                     .getDefaultOperation(s.getKey()), s.getValue())).collect(Collectors.toList()));
         return Status.OK;

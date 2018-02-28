@@ -42,6 +42,12 @@ public interface IAntidoteClientWrapper extends IStartStop
     String getName();
 
     /**
+     * Returns the name of the AntidoteClientWrapper which is also the name of the container where Antidote database is running.
+     * @return The name.
+     */
+    String getContainerName();
+
+    /**
      * Returns the host port of the AntidoteClientWrapper's container which can be used to connect different Antidote containers.
      * @return The host port.
      */

@@ -415,7 +415,15 @@ public class GitWindow extends JDialog
 
     private class ListCellRendererCommits extends DefaultListCellRenderer
     {
-
+        /**
+         *
+         * @param list
+         * @param value
+         * @param index
+         * @param isSelected
+         * @param cellHasFocus
+         * @return
+         */
         @Override
         public Component getListCellRendererComponent(
                 JList list, Object value, int index,

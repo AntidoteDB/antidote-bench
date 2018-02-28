@@ -16,6 +16,7 @@ import adbm.util.AdbmConstants;
 import com.yahoo.ycsb.Client;
 import eu.antidotedb.antidotepb.AntidotePB;
 import org.apache.commons.cli.*;
+import org.apache.commons.lang.ArrayUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -26,99 +27,123 @@ import java.util.Map;
 
 import static adbm.util.helpers.FormatUtil.format;
 
-public class Main {
+public class Main
+{
 
     private static final Logger log = LogManager.getLogger(Main.class);
 
     private static final Map<String, AntidoteClientWrapperGui> clientList = new HashMap<>();
 
-    public static Map<String, AntidoteClientWrapperGui> getClientList() {
+    public static Map<String, AntidoteClientWrapperGui> getClientList()
+    {
         return clientList;
     }
 
     private static IAntidoteClientWrapper benchmarkClient;
 
-    public static IAntidoteClientWrapper getBenchmarkClient() {
+    public static IAntidoteClientWrapper getBenchmarkClient()
+    {
         return benchmarkClient;
     }
 
     private static boolean guiMode = false;
 
-    public static boolean isGuiMode() {
+    public static boolean isGuiMode()
+    {
         return guiMode;
     }
 
     private static AntidotePB.CRDT_type usedKeyType = AntidotePB.CRDT_type.COUNTER;
 
-    public static AntidotePB.CRDT_type getUsedKeyType() {
+    public static AntidotePB.CRDT_type getUsedKeyType()
+    {
         return usedKeyType;
     }
 
     private static String usedOperation;
 
-    public static String getUsedOperation() {
+    public static String getUsedOperation()
+    {
         return usedOperation;
     }
 
     private static IAntidoteClientWrapper.TransactionType usedTransactionType = IAntidoteClientWrapper.TransactionType.InteractiveTransaction;
 
-    public static IAntidoteClientWrapper.TransactionType getUsedTransactionType() {
+    public static IAntidoteClientWrapper.TransactionType getUsedTransactionType()
+    {
         return usedTransactionType;
     }
 
     //TODO think about this
     private static final List<String> benchmarkCommits = new ArrayList<>();
 
-    public static List<String> getBenchmarkCommits() {
+    public static List<String> getBenchmarkCommits()
+    {
         return benchmarkCommits;
     }
 
     private static IDockerManager dockerManager = DockerManagerSpotify.getInstance();
 
-    public static IDockerManager getDockerManager() {
+    public static IDockerManager getDockerManager()
+    {
         return dockerManager;
     }
 
     private static ISettingsManager settingsManager = MapDBManager.getInstance();
 
-    public static ISettingsManager getSettingsManager() {
+    public static ISettingsManager getSettingsManager()
+    {
         return settingsManager;
     }
 
     private static IAntidoteKeyStoreManager keyManager = MapDBManager.getInstance();
 
-    public static IAntidoteKeyStoreManager getKeyManager() {
+    public static IAntidoteKeyStoreManager getKeyManager()
+    {
         return keyManager;
     }
 
     private static IGitManager gitManager = GitManager.getInstance();
 
-    public static IGitManager getGitManager() {
+    public static IGitManager getGitManager()
+    {
         return gitManager;
     }
 
     public static boolean stopContainers = false;
 
-    public static void closeApp() {
+    public static void closeApp()
+    {
         //TODO Docker Windows general problems
         if (stopContainers) dockerManager.stopAllContainers();
     }
 
-    public static IAntidoteClientWrapper startAntidoteClient(String name) {
-        if (clientList.containsKey(name)) return clientList.get(name);
-        if (dockerManager.runContainer(name)) {
-            AntidoteClientWrapperGui clientWrapper = new AntidoteClientWrapperGui(name);
+    public static IAntidoteClientWrapper startAntidoteClient(String name, String containerName)
+    {
+        if (clientList.containsKey(name)) {
+            IAntidoteClientWrapper wrapper = clientList.get(name);
+            wrapper.start();
+            return wrapper;
+        }
+        if (dockerManager.runContainer(containerName)) {
+            AntidoteClientWrapperGui clientWrapper = new AntidoteClientWrapperGui(name, containerName);
             clientList.put(name, clientWrapper);
             return clientWrapper;
         }
         return null;
     }
 
-    public static void stopAntidoteClient(String name) {
-        dockerManager.stopContainer(name);
+    public static void stopAntidoteClient(String name)
+    {
+        if (clientList.containsKey(name)) {
+            IAntidoteClientWrapper wrapper = clientList.get(name);
+            wrapper.stop();
+        }
+
     }
 
-    public static void removeAntidoteClient(String name) {
+    public static void removeAntidoteClient(String name)
+    {
         dockerManager.removeContainer(name);
         clientList.remove(name);
     }
@@ -126,21 +151,25 @@ public class Main {
 
     private static boolean useTransactions = true;
 
-    public static void setUseTransactions(boolean bool) {
+    public static void setUseTransactions(boolean bool)
+    {
         useTransactions = bool;
     }
 
-    public static boolean getUseTransactions() {
+    public static boolean getUseTransactions()
+    {
         return useTransactions;
     }
 
-    private static String usedWorkload = "workloadTest";
+    private static String usedWorkload = "workloada";
 
-    public static String getUsedWorkLoad() {
+    public static String getUsedWorkLoad()
+    {
         return usedWorkload;
     }
 
-    public static void setUsedWorkload(String workload) {
+    public static void setUsedWorkload(String workload)
+    {
         usedWorkload = workload;
     }
 
@@ -148,37 +177,95 @@ public class Main {
         VisualizationMain test = new VisualizationMain();
     }
 
-    public static void benchmarkTest() {
-        if (!dockerManager.isReady()) {
-            if (!dockerManager.start()) System.exit(1);
-            if (!dockerManager.runContainer("AntidoteBenchmarkClient")) {
-                log.error("Docker is a bad state! Please restart Docker before using this application!");
-                System.exit(1);
+    private static int numberOfThreads = 1;
+
+    public static int getNumberOfThreads()
+    {
+        return numberOfThreads;
+    }
+
+    public static void setNumberOfThreads(int number)
+    {
+        if (number > 0)
+            numberOfThreads = number;
+    }
+
+    private static int targetNumber = 0;
+
+    public static int getTargetNumber()
+    {
+        return targetNumber;
+    }
+
+    public static void setTargetNumber(int number)
+    {
+        if (number >= 0)
+            targetNumber = number;
+    }
+
+    public static void addIfNotEmpty(List<String> list, String[]... elements) {
+        for (String[] element : elements)
+        {
+            for (String e : element)
+            if (!e.isEmpty()) {
+                list.add(e);
             }
         }
-        initializeBenchmarkClient();
+    }
+
+
+
+    public static void benchmarkTest()
+    {
+        //initializeBenchmarkClient();
         String usedDB = "adbm.ycsb.AntidoteYCSBClient";
-        Integer numberOfThreads = 1;
         boolean showStatus = true;
-        String transactionArg = useTransactions ? "-t" : "";
-        String statusArg = showStatus ? "-s" : "";
-        String[] ycsbArgs = new String[]{"-threads", numberOfThreads.toString(), transactionArg, "-db", usedDB, "-P", format(
-                "{}/{}", AdbmConstants.ycsbWorkloadsPath, usedWorkload), statusArg};
+        String[] threadsArg = numberOfThreads <= 1 ? new String[0] : new String[]{"-threads", format("{}", numberOfThreads)};
+        String[] targetArg = targetNumber <= 0 ? new String[0] : new String[]{"-target", format("{}", targetNumber)};
+        String[] transactionArg = useTransactions ? new String[]{"-t"} : new String[0];
+        String[] dbArg = {"-db" ,format("{}", usedDB)};
+        String[] workloadArg = {"-P", format("{}/{}", AdbmConstants.ycsbWorkloadsPath, usedWorkload)};
+        String[] statusArg = showStatus ? new String[]{"-s"} : new String[0];
+
+        List<String> argList = new ArrayList<>();
+        addIfNotEmpty(argList, threadsArg, targetArg, transactionArg, dbArg, workloadArg, statusArg);
+
+
+
+
+        String[] ycsbArgs = argList.toArray(new String[0]);
+        log.info("YCSB Args:");
+        for(String arg : ycsbArgs) {
+            log.info(arg);
+        }
         Client.main(ycsbArgs);
     }
 
-    public static void main(String[] args) {
+    private static boolean startBenchmarkContainer()
+    {
+        if (!dockerManager.isReady()) {
+            if (!dockerManager.start()) {
+                log.error("Docker could not be started!");
+                return false;
+            }
+            if (!dockerManager.runContainer(AdbmConstants.benchmarkContainerName)) {
+                log.error("Docker is a bad state! Please restart Docker before using this application!");
+                return false;
+            }
+        }
+        return true;
+    }
+
+    public static void main(String[] args)
+    {
         Handler handler = new Handler();
         Thread.setDefaultUncaughtExceptionHandler(handler);
-        /*if (!dockerManager.isReady()) {
-            if (!dockerManager.start()) System.exit(1);
-            if (!dockerManager.runContainer("AntidoteBenchmarkClient")) {
-                log.error("Docker is a bad state! Please restart Docker before using this application!");
-                System.exit(1);
-            }
-        }*/
+        if (!startBenchmarkContainer()) {
+            System.exit(1);
+        }
         //benchmarkTest();
         resultsTest();
+        //System.exit(0);
         //DockerManagerJava test = new DockerManagerJava();
         //test.start();
         //System.exit(0);//TODO!
@@ -211,15 +298,15 @@ public class Main {
             Option gui = new Option("gui", "activate gui mode");
             Option debug = new Option("debug", "print debugging information");
             Option config = Option.builder().argName("config")
-                    .hasArg()
-                    .desc("set the used configuration file")
-                    .longOpt("config")
-                    .build();
+                                  .hasArg()
+                                  .desc("set the used configuration file")
+                                  .longOpt("config")
+                                  .build();
             Option commits = Option.builder().argName("commits")
-                    .hasArgs()
-                    .desc("set the commits you want to benchmark and compare")
-                    .longOpt("commits")
-                    .build();
+                                   .hasArgs()
+                                   .desc("set the commits you want to benchmark and compare")
+                                   .longOpt("commits")
+                                   .build();
             Options options = new Options();
             options.addOption(gui);
             options.addOption(debug);
@@ -237,12 +324,14 @@ public class Main {
                 if (line.hasOption("gui")) {
                     guiMode = true;
                     //TODO open GUI and ignore other commands
-                } else {
+                }
+                else {
                     guiMode = false;
                     if (!line.hasOption("config")) {
 
                         //TODO return error
-                    } else {
+                    }
+                    else {
 
                     }
                     if (line.hasOption("commits")) {
@@ -251,7 +340,8 @@ public class Main {
                         for (String value : line.getOptionValues("commits")) {
                             if (gitManager.isCommitId(value)) {
                                 benchmarkCommits.add(value);
-                            } else {
+                            }
+                            else {
                                 log.warn(
                                         "The commit id {} was not found in the repository and cannot be added benchmark!",
                                         value);
@@ -297,17 +387,20 @@ public class Main {
         }
     }
 
-    public static void initializeBenchmarkClient() {
+    public static void initializeBenchmarkClient()
+    {
         if (benchmarkClient == null)
-            benchmarkClient = new AntidoteClientWrapper("AntidoteBenchmarkClient");
+            benchmarkClient = new AntidoteClientWrapper("Test", AdbmConstants.benchmarkContainerName);
         if (!benchmarkClient.isReady())
             benchmarkClient.start();
         //TODO
     }
 
     //TODO test
-    private static class Handler implements Thread.UncaughtExceptionHandler {
-        public void uncaughtException(Thread t, Throwable e) {
+    private static class Handler implements Thread.UncaughtExceptionHandler
+    {
+        public void uncaughtException(Thread t, Throwable e)
+        {
             log.error("An uncaught exception has occurred in the Thread: " + t, e);
             log.warn("Such exceptions are usually caused by coding mistakes!");
         }

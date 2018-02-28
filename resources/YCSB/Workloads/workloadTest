@@ -9,12 +9,12 @@ workload=com.yahoo.ycsb.workloads.CoreWorkload
 # should reads read all fields (true) or just one(false)
 readallfields=false
 
-readproportion=0.5
-updateproportion=0.5
+readproportion=0.4
+updateproportion=0.6
 
 # what distribution should be used to select the records to operate
-requestdistribution=latest
-# zipfan, uniform(default)
+requestdistribution=uniform
+# zipfan, (default)
 
 # Maximum execution time in seconds
-maxexecutiontime=10
+# maxexecutiontime=10
