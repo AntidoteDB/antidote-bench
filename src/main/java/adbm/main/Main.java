@@ -181,8 +181,7 @@ public class Main {
     }
 
 
-    public static void benchmarkTest()
-    {
+    public static void benchmarkTest() {
         if (!isDockerRunning) return;
         String usedDB = "adbm.ycsb.AntidoteYCSBClient";
         boolean showStatus = true;
@@ -220,12 +219,10 @@ public class Main {
 
     public static boolean isDockerRunning;
 
-    public static void main(String[] args)
-    {
+    public static void main(String[] args) {
         Handler handler = new Handler();
         Thread.setDefaultUncaughtExceptionHandler(handler);
         isDockerRunning = startBenchmarkContainer();
-        benchmarkTest();
         //resultsTest();
         /*boolean rebuildSuccess = dockerManager.rebuildAntidoteInContainer("AntidoteBenchmarkClient", secondCommit);
         if (!rebuildSuccess) {
@@ -236,86 +233,67 @@ public class Main {
         //For Command Line
         if (args != null && args.length > 0) {
 
-            //Creating the options
-
-            Option gui = new Option("goto gui", "activate gui mode");
-            Option config = Option.builder().argName("config")
-                    .hasArg()
-                    .desc("set the used configuration file")
-                    .longOpt("config")
-                    .build();
+            //Declaring the options
+            Option gui = new Option("gui", "activate gui mode");
             Option commits = Option.builder().argName("commits")
                     .hasArgs()
                     .desc("set the commits you want to benchmark and compare")
                     .longOpt("commits")
                     .build();
+
             Options options = new Options();
 
             //Adding the options
             options.addOption(gui);
-            options.addOption(config);
             options.addOption(commits);
 
             //Parsing through the command line arguments
             CommandLineParser parser = new DefaultParser();
             try {
-                // parse the command line arguments
                 CommandLine line = parser.parse(options, args);
 
                 //Option to activate gui
                 if (line.hasOption("gui")) {
                     guiMode = true;
                     settingsManager.start();
-                } else {
+                    MainWindow.showMainWindow();
+                } else if (line.hasOption("commits")) {
                     guiMode = false;
-                    if (!line.hasOption("config")) {
-
-                        //TODO return error
-                    }
-                    //Option for commits
-                    else if (line.hasOption("commits")) {
-                        for (String value : line.getOptionValues("commits")) {
-                            if (gitManager.isCommitId(value)) {
-                                benchmarkCommits.add(value);
-                            } else {
-                                log.warn(
-                                        "The commit id {} was not found in the repository and cannot be added benchmark!",
-                                        value);
-                            }
+                    for (String value : line.getOptionValues("commits")) {
+                        if (gitManager.isCommitId(value)) {
+                            benchmarkCommits.add(value);
+                        } else {
+                            log.warn(
+                                    "The commit id {} was not found in the repository and cannot be added benchmark!",
+                                    value);
                         }
-                        if (!benchmarkCommits.isEmpty()) {
-
-                            //Starting the Client
-                            for (String commit : benchmarkCommits) {
-                                initializeBenchmarkClient();
-                                String[] ycsbArgs = new String[]{"-db", "adbm.ycsb.AntidoteYCSBClient", "-P", format(
-                                        "{}/YCSB/Workloads/workloada", AdbmConstants.resourcesPath), "-s"};
-                                Client.main(ycsbArgs);
-                                boolean rebuildSuccess = dockerManager.rebuildAntidoteInContainer("AntidoteBenchmarkClient", commit);
-                                if (!rebuildSuccess) {
-                                    System.exit(1);
-                                }
-
+                    }
+                    if (!benchmarkCommits.isEmpty()) {
+                        startBenchmarkContainer();
+                        for (String commit : benchmarkCommits) {
+                            boolean rebuildSuccess = dockerManager.rebuildAntidoteInContainer(AdbmConstants.benchmarkContainerName, commit);
+                            if (!rebuildSuccess) {
+                                System.exit(1);
+                            } else {
                                 //Calling the benchmark
                                 benchmarkTest();
                             }
-                        } else {
-                            log.warn("No commit id () was found !");
                         }
+                    } else {
+                        log.warn("No commit id () was found !");
                     }
                 }
             } catch (ParseException exp) {
                 // oops, something went wrong
                 log.error("Parsing failed.  Reason: " + exp.getMessage());
             }
-        }
-        //MapDBManager.startMapDB();
-        //GitManager.startGit();
-        //DockerManager.startDocker();
-        guiMode = true; //TODO
-        settingsManager.start();
-        //keyManager.start();//TODO check
-        if (guiMode) {
+        } else {
+            //MapDBManager.startMapDB();
+            //GitManager.startGit();
+            //DockerManager.startDocker();
+            guiMode = true;
+            settingsManager.start();
+            //keyManager.start();//TODO check
             MainWindow.showMainWindow();
             /*log.info("Using the Application:" +
                              "\nFirst click on Application Settings and select Folder for the Antidote Repository." +
