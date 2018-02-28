@@ -8,10 +8,12 @@ import adbm.docker.managers.DockerManagerSpotify;
 import adbm.git.IGitManager;
 import adbm.git.managers.GitManager;
 import adbm.main.ui.MainWindow;
+import adbm.resultsVisualization.VisualizationMain;
 import adbm.settings.IAntidoteKeyStoreManager;
 import adbm.settings.ISettingsManager;
 import adbm.settings.managers.MapDBManager;
 import adbm.util.AdbmConstants;
+import adbm.util.helpers.GeneralUtil;
 import com.yahoo.ycsb.Client;
 import eu.antidotedb.antidotepb.AntidotePB;
 import org.apache.commons.cli.*;
@@ -174,18 +176,14 @@ public class Main {
             targetNumber = number;
     }
 
-    public static void addIfNotEmpty(List<String> list, String[]... elements) {
-        for (String[] element : elements) {
-            for (String e : element)
-                if (!e.isEmpty()) {
-                    list.add(e);
-                }
-        }
+    public static void resultsTest() {
+        VisualizationMain test = new VisualizationMain();
     }
 
 
-    public static void benchmarkTest() {
-        //initializeBenchmarkClient();
+    public static void benchmarkTest()
+    {
+        if (!isDockerRunning) return;
         String usedDB = "adbm.ycsb.AntidoteYCSBClient";
         boolean showStatus = true;
         String[] threadsArg = numberOfThreads <= 1 ? new String[0] : new String[]{"-threads", format("{}", numberOfThreads)};
@@ -196,8 +194,7 @@ public class Main {
         String[] statusArg = showStatus ? new String[]{"-s"} : new String[0];
 
         List<String> argList = new ArrayList<>();
-        addIfNotEmpty(argList, threadsArg, targetArg, transactionArg, dbArg, workloadArg, statusArg);
-
+        GeneralUtil.addIfNotEmpty(argList, threadsArg, targetArg, transactionArg, dbArg, workloadArg, statusArg);
 
         String[] ycsbArgs = argList.toArray(new String[0]);
         log.info("YCSB Args:");
@@ -221,37 +218,16 @@ public class Main {
         return true;
     }
 
-    public static void main(String[] args) {
+    public static boolean isDockerRunning;
+
+    public static void main(String[] args)
+    {
         Handler handler = new Handler();
         Thread.setDefaultUncaughtExceptionHandler(handler);
-        if (!startBenchmarkContainer()) {
-            System.exit(1);
-        }
+        isDockerRunning = startBenchmarkContainer();
         benchmarkTest();
-        //System.exit(0);
-        //DockerManagerJava test = new DockerManagerJava();
-        //test.start();
-        //System.exit(0);//TODO!
-
-        //Validation that Docker can be used!
-        /*
-        if (!dockerManager.start()) System.exit(1);
-        if (!dockerManager.runContainer("AntidoteBenchmarkClient")) {
-            log.error("Docker is a bad state! Please restart Docker before using this application!");
-            System.exit(1);
-        }
-        String firstCommit = "d087ea62cb694dcc10bb09791a61adc819892fff";
-        String secondCommit = "2e539e227ee7edd7058cb32fc966006ca6c75caf";
-        initializeBenchmarkClient();
-        String[] ycsbArgs = new String[]{"-db", "adbm.ycsb.AntidoteYCSBClient", "-P", format(
-                "{}/YCSB/Workloads/workloada", AdbmConstants.resourcesPath), "-s"};
-        Client.main(ycsbArgs);
-        boolean rebuildSuccess = dockerManager.rebuildAntidoteInContainer("AntidoteBenchmarkClient", firstCommit);
-        if (!rebuildSuccess) {
-            System.exit(1);
-        }
-        Client.main(ycsbArgs);
-        rebuildSuccess = dockerManager.rebuildAntidoteInContainer("AntidoteBenchmarkClient", secondCommit);
+        //resultsTest();
+        /*boolean rebuildSuccess = dockerManager.rebuildAntidoteInContainer("AntidoteBenchmarkClient", secondCommit);
         if (!rebuildSuccess) {
             System.exit(1);
         }
