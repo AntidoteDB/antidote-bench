@@ -4,7 +4,7 @@
 exportfile=transaction3.csv
 
 
-recordcount=100000
+recordcount=10000
 
 workload=com.yahoo.ycsb.workloads.CoreWorkload
 
@@ -19,10 +19,10 @@ requestdistribution=uniform
 # zipfan,latest 
 
 # Maximum execution time in seconds
-maxexecutiontime=90
+maxexecutiontime=5
 
 # Latency
 measurementtype=timeseries
 
 # Granularity for time series (in milliseconds)
-timeseries.granularity=5000
+timeseries.granularity=500

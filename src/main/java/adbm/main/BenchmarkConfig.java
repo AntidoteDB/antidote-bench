@@ -1,6 +1,7 @@
 package adbm.main;
 
 import adbm.antidote.IAntidoteClientWrapper;
+import adbm.resultsVisualization.VisualizationMain;
 import adbm.util.AdbmConstants;
 import adbm.util.helpers.GeneralUtil;
 import com.yahoo.ycsb.Client;
@@ -86,13 +87,24 @@ public class BenchmarkConfig
         if (number >= 0) targetNumber = number;
     }
 
-    public boolean runBenchmark() {
+    private boolean rebuildAntidote(String commit)
+    {
+        if (commit == null) return true;
+        boolean rebuildSuccess = Main.getDockerManager()
+                                     .rebuildAntidoteInContainer(AdbmConstants.benchmarkContainerName, commit);
+        return rebuildSuccess;
+    }
+
+    public boolean runBenchmark(String... commits)
+    {
+
         if (!Main.isDockerRunning) return false;
         String usedDB = "adbm.ycsb.AntidoteYCSBClient";
         boolean showStatus = true;
         String[] threadsArg = numberOfThreads <= 1 ? new String[0] : new String[]{"-threads", format("{}",
                                                                                                      numberOfThreads)};
-        String[] targetArg = targetNumber <= 0 ? new String[0] : new String[]{"-target", format("{}", targetNumber)};
+        String[] targetArg = targetNumber <= 0 ? new String[0] : new String[]{"-target", format("{}",
+                                                                                                targetNumber)};
         String[] transactionArg = useTransactions ? new String[]{"-t"} : new String[0];
         String[] dbArg = {"-db", format("{}", usedDB)};
         String[] workloadArg = {"-P", format("{}/{}", AdbmConstants.ycsbWorkloadsPath, usedWorkload)};
@@ -101,12 +113,29 @@ public class BenchmarkConfig
         List<String> argList = new ArrayList<>();
         GeneralUtil.addIfNotEmpty(argList, threadsArg, targetArg, transactionArg, dbArg, workloadArg, statusArg);
 
-        String[] ycsbArgs = argList.toArray(new String[0]);
+
         log.info("YCSB Args:");
-        for (String arg : ycsbArgs) {
+        for (String arg : argList) {
             log.info(arg);
         }
-        Client.main(ycsbArgs);
+        if (commits.length == 0) {
+            commits = new String[]{null};
+        }
+        int counter = 1;
+        String fileName = "BenchmarkResultCommit";
+        String fileEnd = "csv";
+        List<String> resultFiles = new ArrayList<>();
+        for (String commit : commits) {
+            if (!rebuildAntidote(commit)) return false;
+            String resultFileName = format("{}{}.{}", fileName, counter++, fileEnd);
+            resultFiles.add(resultFileName);
+            String[] resultFileArg = new String[]{"-p", format("exportfile={}", resultFileName)};
+            List<String> newArgList = new ArrayList<>(argList);
+            GeneralUtil.addIfNotEmpty(newArgList, resultFileArg);
+            String[] ycsbArgs = newArgList.toArray(new String[0]);
+            Client.main(ycsbArgs);
+        }
+        new VisualizationMain(resultFiles.toArray(new String[0]));
         return true;
     }
 }

@@ -17,4 +17,4 @@ requestdistribution=uniform
 # zipfan, (default)
 
 # Maximum execution time in seconds
-# maxexecutiontime=10
+maxexecutiontime=10

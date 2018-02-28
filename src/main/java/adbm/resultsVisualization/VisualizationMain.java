@@ -44,9 +44,12 @@ public class VisualizationMain extends JFrame {
     public static String chartName;
 
     public VisualizationMain(String... _fileNames) {
+        log.trace("Starting VisualizationMain!");
         this.fileNames = _fileNames;
+        started = true;
         if (started) {
             if (readChart == null) {
+                log.trace("Creating Read Panel!");
                 readDataset = createReadDataset(_fileNames);
                 readChart = createChart(readDataset);
                 chartPanel = new ChartPanel(readChart);
@@ -68,6 +71,7 @@ public class VisualizationMain extends JFrame {
     }
 
     public static XYSeriesCollection createReadDataset(String... fileNames) {
+        log.trace("Updating Read Dataset with Files {}!", fileNames);
         int i = 1;
         if (fileNames.length == 0) {
             fileNames = new String[]{"transaction3.csv"};
@@ -115,6 +119,7 @@ public class VisualizationMain extends JFrame {
     }
 
     public static XYSeriesCollection createUpdateDataset(String... fileNames) {
+        log.trace("Updating Update Dataset with Files {}!", fileNames);
         int i = 1;
         if (fileNames.length == 0) {
             fileNames = new String[]{"transaction3.csv"};

@@ -21,7 +21,7 @@ public class VisualizationPanel extends JPanel
     public VisualizationPanel (ChartPanel chartPanel) {
 
         frame.setContentPane(panel);
-        frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        frame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
         frame.pack();
         UIUtils.centerFrameOnScreen(frame);
         frame.setVisible(true);

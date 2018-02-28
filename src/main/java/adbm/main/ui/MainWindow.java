@@ -89,7 +89,8 @@ public class MainWindow extends JFrame
             public void windowClosing(WindowEvent e)
             {
                 int i = JOptionPane
-                        .showConfirmDialog(null, format("Do you want to close the {} application?", AdbmConstants.appName),
+                        .showConfirmDialog(null,
+                                           format("Do you want to close the {} application?", AdbmConstants.appName),
                                            "Confirmation", JOptionPane.YES_NO_OPTION);
                 if (i == JOptionPane.YES_OPTION) {
                     log.info("The application will be closed now.");
@@ -154,7 +155,8 @@ public class MainWindow extends JFrame
         });
         buttonStartAntidote.addActionListener(e -> {
             if (Main.getDockerManager().isReady())
-                new AntidoteView(new AntidoteClientWrapperGui("AntidoteGuiClient", AdbmConstants.benchmarkContainerName)); //TODO change this!
+                new AntidoteView(new AntidoteClientWrapperGui("AntidoteGuiClient",
+                                                              AdbmConstants.benchmarkContainerName)); //TODO change this!
             //TODO
         });
         buttonCreateDockerfile.addActionListener(e -> {
@@ -200,7 +202,9 @@ public class MainWindow extends JFrame
             }
         });
         buttonRunBenchmark.addActionListener(e -> {
-            Main.getBenchmarkConfig().runBenchmark();
+            executorService.execute(() -> {
+                Main.getBenchmarkConfig().runBenchmark();
+            });
         });
         checkBoxUseTransactions.addActionListener(e -> {
             Main.getBenchmarkConfig().setUseTransactions(checkBoxUseTransactions.isSelected());
@@ -213,7 +217,8 @@ public class MainWindow extends JFrame
             }
         });
         buttonOpenWorkload.addActionListener(e -> {
-            ProcessBuilder pb = new ProcessBuilder("Notepad.exe", format("{}/{}", AdbmConstants.ycsbWorkloadsPath, Main.getBenchmarkConfig().getUsedWorkLoad()));
+            ProcessBuilder pb = new ProcessBuilder("Notepad.exe", format("{}/{}", AdbmConstants.ycsbWorkloadsPath,
+                                                                         Main.getBenchmarkConfig().getUsedWorkLoad()));
             try {
                 pb.start();
             } catch (IOException e1) {
@@ -223,8 +228,8 @@ public class MainWindow extends JFrame
     }
 
 
-
-    private void updateWorkloads() {
+    private void updateWorkloads()
+    {
         comboBoxWorkloadModel.removeAllElements();
         for (String fileName : FileUtil.getAllFileNamesInFolder(AdbmConstants.ycsbWorkloadsPath))
             comboBoxWorkloadModel.addElement(fileName);
