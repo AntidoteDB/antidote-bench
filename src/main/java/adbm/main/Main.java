@@ -8,7 +8,6 @@ import adbm.docker.managers.DockerManagerSpotify;
 import adbm.git.IGitManager;
 import adbm.git.managers.GitManager;
 import adbm.main.ui.MainWindow;
-import adbm.resultsVisualization.VisualizationMain;
 import adbm.settings.IAntidoteKeyStoreManager;
 import adbm.settings.ISettingsManager;
 import adbm.settings.managers.MapDBManager;
@@ -27,99 +26,85 @@ import java.util.Map;
 
 import static adbm.util.helpers.FormatUtil.format;
 
-public class Main
-{
+public class Main {
 
     private static final Logger log = LogManager.getLogger(Main.class);
 
     private static final Map<String, AntidoteClientWrapperGui> clientList = new HashMap<>();
 
-    public static Map<String, AntidoteClientWrapperGui> getClientList()
-    {
+    public static Map<String, AntidoteClientWrapperGui> getClientList() {
         return clientList;
     }
 
     private static IAntidoteClientWrapper benchmarkClient;
 
-    public static IAntidoteClientWrapper getBenchmarkClient()
-    {
+    public static IAntidoteClientWrapper getBenchmarkClient() {
         return benchmarkClient;
     }
 
     private static boolean guiMode = false;
 
-    public static boolean isGuiMode()
-    {
+    public static boolean isGuiMode() {
         return guiMode;
     }
 
     private static AntidotePB.CRDT_type usedKeyType = AntidotePB.CRDT_type.COUNTER;
 
-    public static AntidotePB.CRDT_type getUsedKeyType()
-    {
+    public static AntidotePB.CRDT_type getUsedKeyType() {
         return usedKeyType;
     }
 
     private static String usedOperation;
 
-    public static String getUsedOperation()
-    {
+    public static String getUsedOperation() {
         return usedOperation;
     }
 
     private static IAntidoteClientWrapper.TransactionType usedTransactionType = IAntidoteClientWrapper.TransactionType.InteractiveTransaction;
 
-    public static IAntidoteClientWrapper.TransactionType getUsedTransactionType()
-    {
+    public static IAntidoteClientWrapper.TransactionType getUsedTransactionType() {
         return usedTransactionType;
     }
 
     //TODO think about this
     private static final List<String> benchmarkCommits = new ArrayList<>();
 
-    public static List<String> getBenchmarkCommits()
-    {
+    public static List<String> getBenchmarkCommits() {
         return benchmarkCommits;
     }
 
     private static IDockerManager dockerManager = DockerManagerSpotify.getInstance();
 
-    public static IDockerManager getDockerManager()
-    {
+    public static IDockerManager getDockerManager() {
         return dockerManager;
     }
 
     private static ISettingsManager settingsManager = MapDBManager.getInstance();
 
-    public static ISettingsManager getSettingsManager()
-    {
+    public static ISettingsManager getSettingsManager() {
         return settingsManager;
     }
 
     private static IAntidoteKeyStoreManager keyManager = MapDBManager.getInstance();
 
-    public static IAntidoteKeyStoreManager getKeyManager()
-    {
+    public static IAntidoteKeyStoreManager getKeyManager() {
         return keyManager;
     }
 
     private static IGitManager gitManager = GitManager.getInstance();
 
-    public static IGitManager getGitManager()
-    {
+    public static IGitManager getGitManager() {
         return gitManager;
     }
 
     public static boolean stopContainers = false;
 
-    public static void closeApp()
-    {
+    public static void closeApp() {
         //TODO Docker Windows general problems
         if (stopContainers) dockerManager.stopAllContainers();
     }
 
-    public static IAntidoteClientWrapper startAntidoteClient(String name, String containerName)
-    {
+    public static IAntidoteClientWrapper startAntidoteClient(String name, String containerName) {
         if (clientList.containsKey(name)) {
             IAntidoteClientWrapper wrapper = clientList.get(name);
             wrapper.start();
@@ -133,8 +118,7 @@ public class Main
         return null;
     }
 
-    public static void stopAntidoteClient(String name)
-    {
+    public static void stopAntidoteClient(String name) {
         if (clientList.containsKey(name)) {
             IAntidoteClientWrapper wrapper = clientList.get(name);
             wrapper.stop();
@@ -142,8 +126,7 @@ public class Main
 
     }
 
-    public static void removeAntidoteClient(String name)
-    {
+    public static void removeAntidoteClient(String name) {
         dockerManager.removeContainer(name);
         clientList.remove(name);
     }
@@ -151,79 +134,64 @@ public class Main
 
     private static boolean useTransactions = true;
 
-    public static void setUseTransactions(boolean bool)
-    {
+    public static void setUseTransactions(boolean bool) {
         useTransactions = bool;
     }
 
-    public static boolean getUseTransactions()
-    {
+    public static boolean getUseTransactions() {
         return useTransactions;
     }
 
     private static String usedWorkload = "workloada";
 
-    public static String getUsedWorkLoad()
-    {
+    public static String getUsedWorkLoad() {
         return usedWorkload;
     }
 
-    public static void setUsedWorkload(String workload)
-    {
+    public static void setUsedWorkload(String workload) {
         usedWorkload = workload;
-    }
-
-    public static void resultsTest() {
-        VisualizationMain test = new VisualizationMain();
     }
 
     private static int numberOfThreads = 1;
 
-    public static int getNumberOfThreads()
-    {
+    public static int getNumberOfThreads() {
         return numberOfThreads;
     }
 
-    public static void setNumberOfThreads(int number)
-    {
+    public static void setNumberOfThreads(int number) {
         if (number > 0)
             numberOfThreads = number;
     }
 
     private static int targetNumber = 0;
 
-    public static int getTargetNumber()
-    {
+    public static int getTargetNumber() {
         return targetNumber;
     }
 
-    public static void setTargetNumber(int number)
-    {
+    public static void setTargetNumber(int number) {
         if (number >= 0)
             targetNumber = number;
     }
 
     public static void addIfNotEmpty(List<String> list, String[]... elements) {
-        for (String[] element : elements)
-        {
+        for (String[] element : elements) {
             for (String e : element)
-            if (!e.isEmpty()) {
-                list.add(e);
-            }
+                if (!e.isEmpty()) {
+                    list.add(e);
+                }
         }
     }
 
 
-
-    public static void benchmarkTest()
-    {
+    public static void benchmarkTest() {
         //initializeBenchmarkClient();
         String usedDB = "adbm.ycsb.AntidoteYCSBClient";
         boolean showStatus = true;
         String[] threadsArg = numberOfThreads <= 1 ? new String[0] : new String[]{"-threads", format("{}", numberOfThreads)};
         String[] targetArg = targetNumber <= 0 ? new String[0] : new String[]{"-target", format("{}", targetNumber)};
         String[] transactionArg = useTransactions ? new String[]{"-t"} : new String[0];
-        String[] dbArg = {"-db" ,format("{}", usedDB)};
+        String[] dbArg = {"-db", format("{}", usedDB)};
         String[] workloadArg = {"-P", format("{}/{}", AdbmConstants.ycsbWorkloadsPath, usedWorkload)};
         String[] statusArg = showStatus ? new String[]{"-s"} : new String[0];
 
@@ -231,18 +199,15 @@ public class Main
         addIfNotEmpty(argList, threadsArg, targetArg, transactionArg, dbArg, workloadArg, statusArg);
 
 
-
-
         String[] ycsbArgs = argList.toArray(new String[0]);
         log.info("YCSB Args:");
-        for(String arg : ycsbArgs) {
+        for (String arg : ycsbArgs) {
             log.info(arg);
         }
         Client.main(ycsbArgs);
     }
 
-    private static boolean startBenchmarkContainer()
-    {
+    private static boolean startBenchmarkContainer() {
         if (!dockerManager.isReady()) {
             if (!dockerManager.start()) {
                 log.error("Docker could not be started!");
@@ -256,15 +221,13 @@ public class Main
         return true;
     }
 
-    public static void main(String[] args)
-    {
+    public static void main(String[] args) {
         Handler handler = new Handler();
         Thread.setDefaultUncaughtExceptionHandler(handler);
         if (!startBenchmarkContainer()) {
             System.exit(1);
         }
-        //benchmarkTest();
-        resultsTest();
+        benchmarkTest();
         //System.exit(0);
         //DockerManagerJava test = new DockerManagerJava();
         //test.start();
@@ -294,72 +257,77 @@ public class Main
         }
         Client.main(ycsbArgs);*/
 
+        //For Command Line
         if (args != null && args.length > 0) {
-            Option gui = new Option("gui", "activate gui mode");
-            Option debug = new Option("debug", "print debugging information");
+
+            //Creating the options
+
+            Option gui = new Option("goto gui", "activate gui mode");
             Option config = Option.builder().argName("config")
-                                  .hasArg()
-                                  .desc("set the used configuration file")
-                                  .longOpt("config")
-                                  .build();
+                    .hasArg()
+                    .desc("set the used configuration file")
+                    .longOpt("config")
+                    .build();
             Option commits = Option.builder().argName("commits")
-                                   .hasArgs()
-                                   .desc("set the commits you want to benchmark and compare")
-                                   .longOpt("commits")
-                                   .build();
+                    .hasArgs()
+                    .desc("set the commits you want to benchmark and compare")
+                    .longOpt("commits")
+                    .build();
             Options options = new Options();
+
+            //Adding the options
             options.addOption(gui);
-            options.addOption(debug);
             options.addOption(config);
             options.addOption(commits);
 
+            //Parsing through the command line arguments
             CommandLineParser parser = new DefaultParser();
             try {
                 // parse the command line arguments
                 CommandLine line = parser.parse(options, args);
-                if (line.hasOption("debug")) {
 
-                    //TODO print debug information
-                }
+                //Option to activate gui
                 if (line.hasOption("gui")) {
                     guiMode = true;
-                    //TODO open GUI and ignore other commands
-                }
-                else {
+                    settingsManager.start();
+                } else {
                     guiMode = false;
                     if (!line.hasOption("config")) {
 
                         //TODO return error
                     }
-                    else {
-
-                    }
-                    if (line.hasOption("commits")) {
-
-                        //TODO parsing
+                    //Option for commits
+                    else if (line.hasOption("commits")) {
                         for (String value : line.getOptionValues("commits")) {
                             if (gitManager.isCommitId(value)) {
                                 benchmarkCommits.add(value);
-                            }
-                            else {
+                            } else {
                                 log.warn(
                                         "The commit id {} was not found in the repository and cannot be added benchmark!",
                                         value);
                             }
                         }
+                        if (!benchmarkCommits.isEmpty()) {
 
-                        //TODO return error
-                    }
-                    if (!benchmarkCommits.isEmpty()) {
-                        for (String commit : benchmarkCommits) {
-                            //Client.main(new String[]{"-db","adbm.antidote.AntidoteYCSBClient", "-P", "Workloads/workloada", "-s"});
-                            //TODO start a client
-                            //Client.main(new String[0]);
+                            //Starting the Client
+                            for (String commit : benchmarkCommits) {
+                                initializeBenchmarkClient();
+                                String[] ycsbArgs = new String[]{"-db", "adbm.ycsb.AntidoteYCSBClient", "-P", format(
+                                        "{}/YCSB/Workloads/workloada", AdbmConstants.resourcesPath), "-s"};
+                                Client.main(ycsbArgs);
+                                boolean rebuildSuccess = dockerManager.rebuildAntidoteInContainer("AntidoteBenchmarkClient", commit);
+                                if (!rebuildSuccess) {
+                                    System.exit(1);
+                                }
+
+                                //Calling the benchmark
+                                benchmarkTest();
+                            }
+                        } else {
+                            log.warn("No commit id () was found !");
                         }
-                        //Client.main(new String[0]);
                     }
                 }
-                //TODO config
             } catch (ParseException exp) {
                 // oops, something went wrong
                 log.error("Parsing failed.  Reason: " + exp.getMessage());
@@ -387,8 +355,7 @@ public class Main
         }
     }
 
-    public static void initializeBenchmarkClient()
-    {
+    public static void initializeBenchmarkClient() {
         if (benchmarkClient == null)
             benchmarkClient = new AntidoteClientWrapper("Test", AdbmConstants.benchmarkContainerName);
         if (!benchmarkClient.isReady())
@@ -397,10 +364,8 @@ public class Main
     }
 
     //TODO test
-    private static class Handler implements Thread.UncaughtExceptionHandler
-    {
-        public void uncaughtException(Thread t, Throwable e)
-        {
+    private static class Handler implements Thread.UncaughtExceptionHandler {
+        public void uncaughtException(Thread t, Throwable e) {
             log.error("An uncaught exception has occurred in the Thread: " + t, e);
             log.warn("Such exceptions are usually caused by coding mistakes!");
         }
