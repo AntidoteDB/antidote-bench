@@ -110,5 +110,6 @@
     <orderEntry type="library" name="Maven: com.intellij:forms_rt:17.1.5" level="project" />
     <orderEntry type="library" name="Maven: com.intellij:asm-all:17.1.5" level="project" />
     <orderEntry type="library" name="Maven: commons-cli:commons-cli:1.4" level="project" />
+    <orderEntry type="library" name="Maven: au.com.bytecode:opencsv:2.4" level="project" />
   </component>
 </module>

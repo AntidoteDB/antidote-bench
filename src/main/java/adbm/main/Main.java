@@ -8,6 +8,7 @@ import adbm.docker.managers.DockerManagerSpotify;
 import adbm.git.IGitManager;
 import adbm.git.managers.GitManager;
 import adbm.main.ui.MainWindow;
+import adbm.resultsVisualization.VisualizationMain;
 import adbm.settings.IAntidoteKeyStoreManager;
 import adbm.settings.ISettingsManager;
 import adbm.settings.managers.MapDBManager;
@@ -143,6 +144,10 @@ public class Main {
         usedWorkload = workload;
     }
 
+    public static void resultsTest() {
+        VisualizationMain test = new VisualizationMain();
+    }
+
     public static void benchmarkTest() {
         if (!dockerManager.isReady()) {
             if (!dockerManager.start()) System.exit(1);
@@ -165,14 +170,15 @@ public class Main {
     public static void main(String[] args) {
         Handler handler = new Handler();
         Thread.setDefaultUncaughtExceptionHandler(handler);
-        if (!dockerManager.isReady()) {
+        /*if (!dockerManager.isReady()) {
             if (!dockerManager.start()) System.exit(1);
             if (!dockerManager.runContainer("AntidoteBenchmarkClient")) {
                 log.error("Docker is a bad state! Please restart Docker before using this application!");
                 System.exit(1);
             }
-        }
-        benchmarkTest();
+        }*/
+        //benchmarkTest();
+        resultsTest();
         //DockerManagerJava test = new DockerManagerJava();
         //test.start();
         //System.exit(0);//TODO!
