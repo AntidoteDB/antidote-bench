@@ -21,10 +21,8 @@ import org.apache.commons.lang.ArrayUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.lang.reflect.Array;
+import java.util.*;
 
 import static adbm.util.helpers.FormatUtil.format;
 
@@ -232,7 +230,6 @@ public class Main {
 
         //For Command Line
         if (args != null && args.length > 0) {
-
             //Declaring the options
             Option gui = new Option("gui", "activate gui mode");
             Option commits = Option.builder().argName("commits")
@@ -249,6 +246,7 @@ public class Main {
 
             //Parsing through the command line arguments
             CommandLineParser parser = new DefaultParser();
+
             try {
                 CommandLine line = parser.parse(options, args);
 
@@ -260,12 +258,12 @@ public class Main {
                 } else if (line.hasOption("commits")) {
                     guiMode = false;
                     for (String value : line.getOptionValues("commits")) {
-                        if (gitManager.isCommitId(value)) {
-                            benchmarkCommits.add(value);
-                        } else {
+                        if (value.equals(null)) {
                             log.warn(
                                     "The commit id {} was not found in the repository and cannot be added benchmark!",
                                     value);
+                        } else {
+                            benchmarkCommits.add(value);
                         }
                     }
                     if (!benchmarkCommits.isEmpty()) {
