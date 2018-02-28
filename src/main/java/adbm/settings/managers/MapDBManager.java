@@ -174,8 +174,8 @@ public class MapDBManager implements ISettingsManager, IAntidoteKeyStoreManager
     @Override
     public AntidotePB.CRDT_type getTypeOfKey(String keyName)
     {
-        if (!isReady()) return Main.getUsedKeyType();
-        if (!keyTypeMapDB.containsKey(keyName)) return Main.getUsedKeyType();
+        if (!isReady()) return Main.getBenchmarkConfig().getUsedKeyType();
+        if (!keyTypeMapDB.containsKey(keyName)) return Main.getBenchmarkConfig().getUsedKeyType();
         return AntidotePB.CRDT_type.valueOf(keyTypeMapDB.get(keyName));
     }
 

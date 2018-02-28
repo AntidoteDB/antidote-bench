@@ -31,7 +31,7 @@ public class AntidoteUtil {
     public static Key createKey(String name)
     {
         if (!Main.isGuiMode()) { //TODO maybe performance optimization!
-            return createKey(name, Main.getUsedKeyType());
+            return createKey(name, Main.getBenchmarkConfig().getUsedKeyType());
         }
         return createKeyFromMapDB(name);
     }

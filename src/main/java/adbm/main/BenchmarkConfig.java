@@ -1,8 +1,10 @@
 package adbm.main;
 
+import adbm.antidote.IAntidoteClientWrapper;
 import adbm.util.AdbmConstants;
 import adbm.util.helpers.GeneralUtil;
 import com.yahoo.ycsb.Client;
+import eu.antidotedb.antidotepb.AntidotePB;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -14,6 +16,27 @@ import static adbm.util.helpers.FormatUtil.format;
 public class BenchmarkConfig
 {
     private static final Logger log = LogManager.getLogger(BenchmarkConfig.class);
+
+    private AntidotePB.CRDT_type usedKeyType = AntidotePB.CRDT_type.COUNTER;
+
+    public AntidotePB.CRDT_type getUsedKeyType()
+    {
+        return usedKeyType;
+    }
+
+    private String usedOperation;
+
+    public String getUsedOperation()
+    {
+        return usedOperation;
+    }
+
+    private IAntidoteClientWrapper.TransactionType usedTransactionType = IAntidoteClientWrapper.TransactionType.InteractiveTransaction;
+
+    public IAntidoteClientWrapper.TransactionType getUsedTransactionType()
+    {
+        return usedTransactionType;
+    }
 
     private boolean useTransactions = true;
 

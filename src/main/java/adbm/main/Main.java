@@ -37,13 +37,6 @@ public class Main
         return clientList;
     }
 
-    private static IAntidoteClientWrapper benchmarkClient;
-
-    public static IAntidoteClientWrapper getBenchmarkClient()
-    {
-        return benchmarkClient;
-    }
-
     private static boolean guiMode = false;
 
     public static boolean isGuiMode()
@@ -51,33 +44,9 @@ public class Main
         return guiMode;
     }
 
-    private static AntidotePB.CRDT_type usedKeyType = AntidotePB.CRDT_type.COUNTER;
-
-    public static AntidotePB.CRDT_type getUsedKeyType()
+    public static void setGuiMode(boolean setGuiMode)
     {
-        return usedKeyType;
-    }
-
-    private static String usedOperation;
-
-    public static String getUsedOperation()
-    {
-        return usedOperation;
-    }
-
-    private static IAntidoteClientWrapper.TransactionType usedTransactionType = IAntidoteClientWrapper.TransactionType.InteractiveTransaction;
-
-    public static IAntidoteClientWrapper.TransactionType getUsedTransactionType()
-    {
-        return usedTransactionType;
-    }
-
-    //TODO think about this
-    private static final List<String> benchmarkCommits = new ArrayList<>();
-
-    public static List<String> getBenchmarkCommits()
-    {
-        return benchmarkCommits;
+        guiMode = setGuiMode;
     }
 
     private static IDockerManager dockerManager = DockerManager.getInstance();
@@ -110,7 +79,8 @@ public class Main
 
     private static BenchmarkConfig benchmarkConfig = new BenchmarkConfig();
 
-    public static BenchmarkConfig getBenchmarkConfig() {
+    public static BenchmarkConfig getBenchmarkConfig()
+    {
         return benchmarkConfig;
     }
 
@@ -123,12 +93,13 @@ public class Main
         gitManager.stop();
         settingsManager.stop();
         keyManager.stop();
+        System.exit(0);
     }
 
-    public static IAntidoteClientWrapper startAntidoteClient(String name, String containerName)
+    public static AntidoteClientWrapperGui startAntidoteClient(String name, String containerName)
     {
         if (clientList.containsKey(name)) {
-            IAntidoteClientWrapper wrapper = clientList.get(name);
+            AntidoteClientWrapperGui wrapper = clientList.get(name);
             wrapper.start();
             return wrapper;
         }
@@ -155,12 +126,7 @@ public class Main
         clientList.remove(name);
     }
 
-    public static void resultsTest()
-    {
-        VisualizationMain test = new VisualizationMain();
-    }
-
-    private static boolean startBenchmarkContainer()
+    public static boolean startBenchmarkContainer()
     {
         if (!dockerManager.isReady()) {
             if (!dockerManager.start()) {
@@ -177,7 +143,8 @@ public class Main
 
     public static boolean isDockerRunning;
 
-    public static void main(String[] args) {
+    public static void main(String[] args)
+    {
         Handler handler = new Handler();
         Thread.setDefaultUncaughtExceptionHandler(handler);
         isDockerRunning = startBenchmarkContainer();
@@ -187,72 +154,12 @@ public class Main
             System.exit(1);
         }
         Client.main(ycsbArgs);*/
+        if (AntidoteCommandLine.run(args)) closeApp();
 
-        //For Command Line
-        if (args != null && args.length > 0) {
-            //Declaring the options
-            Option gui = new Option("gui", "activate gui mode");
-            Option commits = Option.builder().argName("commits")
-                    .hasArgs()
-                    .desc("set the commits you want to benchmark and compare")
-                    .longOpt("commits")
-                    .build();
-
-            Options options = new Options();
-
-            //Adding the options
-            options.addOption(gui);
-            options.addOption(commits);
-
-            //Parsing through the command line arguments
-            CommandLineParser parser = new DefaultParser();
-
-            try {
-                CommandLine line = parser.parse(options, args);
-
-                //Option to activate gui
-                if (line.hasOption("gui")) {
-                    guiMode = true;
-                    settingsManager.start();
-                    MainWindow.showMainWindow();
-                } else if (line.hasOption("commits")) {
-                    guiMode = false;
-                    for (String value : line.getOptionValues("commits")) {
-                        if (value.equals(null)) {
-                            log.warn(
-                                    "The commit id {} was not found in the repository and cannot be added benchmark!",
-                                    value);
-                        } else {
-                            benchmarkCommits.add(value);
-                        }
-                    }
-                    if (!benchmarkCommits.isEmpty()) {
-                        startBenchmarkContainer();
-                        for (String commit : benchmarkCommits) {
-                            boolean rebuildSuccess = dockerManager.rebuildAntidoteInContainer(AdbmConstants.benchmarkContainerName, commit);
-                            if (!rebuildSuccess) {
-                                System.exit(1);
-                            } else {
-                                //Calling the benchmark
-                                benchmarkConfig.runBenchmark();
-                            }
-                        }
-                    } else {
-                        log.warn("No commit id () was found !");
-                    }
-                }
-            } catch (ParseException exp) {
-                // oops, something went wrong
-                log.error("Parsing failed.  Reason: " + exp.getMessage());
-            }
-        } else {
-            //MapDBManager.startMapDB();
-            //GitManager.startGit();
-            //DockerManager.startDocker();
-            guiMode = true;
-            settingsManager.start();
-            //keyManager.start();//TODO check
-            MainWindow.showMainWindow();
+        guiMode = true;
+        settingsManager.start();
+        //keyManager.start();//TODO check
+        MainWindow.showMainWindow();
             /*log.info("Using the Application:" +
                              "\nFirst click on Application Settings and select Folder for the Antidote Repository." +
                              "\nThe Folder must be empty or contain only an existing Antidote Repository (it must be in a clean state)." +
@@ -264,10 +171,8 @@ public class Main
                              "\nThe Image building is an asynchronous process that will build an Image for all selected Benchmark Commits." +
                              "\n\nThe building time for an Image is several minutes and may fail completely because Docker is not in the right state (Before building Images restart Docker to be safe)." +
                              "\n");*/
-        }
     }
 
-    //TODO test
     private static class Handler implements Thread.UncaughtExceptionHandler
     {
         public void uncaughtException(Thread t, Throwable e)

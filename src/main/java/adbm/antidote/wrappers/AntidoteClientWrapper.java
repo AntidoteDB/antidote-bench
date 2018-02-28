@@ -155,7 +155,7 @@ public class AntidoteClientWrapper implements IAntidoteClientWrapper
     @Override
     public Object readKeyValue(String keyName)
     {
-        return readKeyValue(keyName, Main.getUsedTransactionType());
+        return readKeyValue(keyName, Main.getBenchmarkConfig().getUsedTransactionType());
     }
 
     @Override
@@ -179,7 +179,7 @@ public class AntidoteClientWrapper implements IAntidoteClientWrapper
     @Override
     public List<Object> readKeyValues(Iterable<String> keyNames)
     {
-        return readKeyValues(keyNames, Main.getUsedTransactionType());
+        return readKeyValues(keyNames, Main.getBenchmarkConfig().getUsedTransactionType());
     }
 
     @Override
@@ -213,7 +213,7 @@ public class AntidoteClientWrapper implements IAntidoteClientWrapper
     @Override
     public void updateKey(UpdateOperation operation)
     {
-        updateKey(operation, Main.getUsedTransactionType());
+        updateKey(operation, Main.getBenchmarkConfig().getUsedTransactionType());
     }
 
     @Override
@@ -245,7 +245,7 @@ public class AntidoteClientWrapper implements IAntidoteClientWrapper
     @Override
     public void updateKeys(Iterable<UpdateOperation> operations)
     {
-        updateKeys(operations, Main.getUsedTransactionType());
+        updateKeys(operations, Main.getBenchmarkConfig().getUsedTransactionType());
     }
 
     @Override
@@ -279,7 +279,7 @@ public class AntidoteClientWrapper implements IAntidoteClientWrapper
     @Override
     public List<Object> performKeyOperations(Iterable<Operation> operations)
     {
-        return performKeyOperations(operations, Main.getUsedTransactionType());
+        return performKeyOperations(operations, Main.getBenchmarkConfig().getUsedTransactionType());
     }
 
     @Override
