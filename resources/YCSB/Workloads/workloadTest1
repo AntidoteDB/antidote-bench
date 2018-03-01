@@ -1,7 +1,7 @@
 # R/W - 20/80 Test
 
 # Output file can be moved to desried file path
-exportfile=transaction3.csv
+exportfile=transaction5.csv
 
 
 recordcount=10000
@@ -19,10 +19,18 @@ requestdistribution=uniform
 # zipfan,latest 
 
 # Maximum execution time in seconds
+<<<<<<< Updated upstream
 maxexecutiontime=5
+=======
+maxexecutiontime=140
+>>>>>>> Stashed changes
 
 # Latency
-measurementtype=timeseries
+# measurementtype=timeseries
 
 # Granularity for time series (in milliseconds)
+<<<<<<< Updated upstream
 timeseries.granularity=500
+=======
+timeseries.granularity=1000
+>>>>>>> Stashed changes

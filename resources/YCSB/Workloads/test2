@@ -1,0 +1,17 @@
+
+exportfile=test1.csv
+readallfields=false
+workload=com.yahoo.ycsb.workloads.CoreWorkload
+recordcount=200000
+readproportion=0.5
+updateproportion=0.5
+
+# what distribution should be used to select the records to operate
+requestdistribution=latest
+# zipfan, uniform(default)
+
+# Maximum execution time in seconds
+maxexecutiontime=10
+
+measurementtype=timeseries 
+timeseries.granularity=2000
