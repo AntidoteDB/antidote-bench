@@ -15,14 +15,14 @@
                 </pattern>
             </PatternLayout>
         </RandomAccessFile>
-        <RandomAccessFile name="RandomAccessFileAppenderInfo" fileName="Logs/InfoLog.log" immediateFlush="false" append="true">
+        <RandomAccessFile name="RandomAccessFileAppenderInfo" fileName="Logs/InfoLog.log" immediateFlush="false" append="false">
             <PatternLayout>
                 <pattern>
                     [%-5level] %d{yyyy-MM-dd HH:mm:ss.SSS} [%t] %c{1} - %msg%n
                 </pattern>
             </PatternLayout>
         </RandomAccessFile>
-        <RandomAccessFile name="RandomAccessFileAppenderTrace" fileName="Logs/TraceLog.log" immediateFlush="false" append="true">
+        <RandomAccessFile name="RandomAccessFileAppenderTrace" fileName="Logs/TraceLog.log" immediateFlush="false" append="false">
             <PatternLayout>
                 <pattern>
                     [%-5level] %d{yyyy-MM-dd HH:mm:ss.SSS} [%t] %c{1} - %msg%n

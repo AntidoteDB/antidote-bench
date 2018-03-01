@@ -1112,6 +1112,7 @@ public class Client
             e.printStackTrace();
             System.exit(-1);
         }
+        Measurements.refreshMeasurements();
         log.info("YCSB Benchmark complete.");
         //TODO
     }

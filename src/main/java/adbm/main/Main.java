@@ -1,29 +1,21 @@
 package adbm.main;
 
 import adbm.antidote.IAntidoteClientWrapper;
-import adbm.antidote.wrappers.AntidoteClientWrapper;
 import adbm.antidote.wrappers.AntidoteClientWrapperGui;
 import adbm.docker.IDockerManager;
 import adbm.docker.managers.DockerManager;
 import adbm.git.IGitManager;
 import adbm.git.managers.GitManager;
 import adbm.main.ui.MainWindow;
-import adbm.resultsVisualization.VisualizationMain;
 import adbm.settings.IAntidoteKeyStoreManager;
 import adbm.settings.ISettingsManager;
 import adbm.settings.managers.MapDBManager;
 import adbm.util.AdbmConstants;
-import adbm.util.helpers.GeneralUtil;
-import com.yahoo.ycsb.Client;
-import eu.antidotedb.antidotepb.AntidotePB;
-import org.apache.commons.cli.*;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-import java.lang.reflect.Array;
-import java.util.*;
-
-import static adbm.util.helpers.FormatUtil.format;
+import java.util.HashMap;
+import java.util.Map;
 
 public class Main
 {

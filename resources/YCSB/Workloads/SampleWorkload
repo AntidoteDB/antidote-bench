@@ -1,0 +1,27 @@
+# R/W - 20/80 Test
+
+# Output file can be moved to desried file path
+
+
+recordcount=10000
+
+workload=adbm.ycsb.AntidoteWorkload
+
+# should reads read all fields (true) or just one(false)
+readallfields=false
+
+readproportion=0.5
+updateproportion=0.5
+
+# what distribution should be used to select the records to operate
+requestdistribution=uniform
+# zipfan,latest
+
+# Maximum execution time in seconds
+maxexecutiontime=5
+
+# Latency
+measurementtype=timeseries
+
+# Granularity for time series (in milliseconds)
+timeseries.granularity=500

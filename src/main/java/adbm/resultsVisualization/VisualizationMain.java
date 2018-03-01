@@ -1,10 +1,7 @@
 package adbm.resultsVisualization;
 
-import java.awt.*;
-import java.awt.geom.Rectangle2D;
-import java.io.*;
-import java.util.ArrayList;
-
+import adbm.util.AdbmConstants;
+import au.com.bytecode.opencsv.CSVReader;
 import com.itextpdf.awt.DefaultFontMapper;
 import com.itextpdf.text.Document;
 import com.itextpdf.text.Rectangle;
@@ -17,75 +14,88 @@ import org.jfree.chart.ChartFactory;
 import org.jfree.chart.ChartPanel;
 import org.jfree.chart.JFreeChart;
 import org.jfree.chart.plot.PlotOrientation;
-import org.jfree.data.xy.XYDataset;
+import org.jfree.chart.ui.UIUtils;
 import org.jfree.data.xy.XYSeries;
 import org.jfree.data.xy.XYSeriesCollection;
 
-import au.com.bytecode.opencsv.CSVReader;
-
 import javax.swing.*;
 import javax.swing.filechooser.FileNameExtensionFilter;
+import java.awt.*;
+import java.awt.geom.Rectangle2D;
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.FileReader;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 
-public class VisualizationMain extends JFrame {
+import static adbm.util.helpers.FormatUtil.format;
+
+public class VisualizationMain extends JDialog
+{
 
     private static final Logger log = LogManager.getLogger(VisualizationMain.class);
 
+    public static void showResultsWindow(String... _fileNames)
+    {
+        VisualizationMain resultsWindow = new VisualizationMain(_fileNames);
+        resultsWindow.setVisible(true);
+    }
 
-    public static XYSeriesCollection readDataset;
-    public static XYSeriesCollection updateDataset;
-    public static JFreeChart readChart = null;
-    public static JFreeChart updateChart = null;
-    public static ChartPanel chartPanel;
-    private static CSVReader reader;
-    private static String[] readNextLine;
-    public static VisualizationPanel visualizationPanel;
-    public static boolean started = false;
-    private String[] fileNames;
-    public static String chartName;
+    private VisualizationMain(String... fileNames)
+    {
+        super(null, "Results Visualization", ModalityType.MODELESS);
+//super("Results Visualization");
+        this.setMinimumSize(new Dimension(1000, 500));
+        setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
 
-    public VisualizationMain(String... _fileNames) {
+        pack();
+        UIUtils.centerFrameOnScreen(this);
         log.trace("Starting VisualizationMain!");
-        this.fileNames = _fileNames;
-        started = true;
-        if (started) {
-            if (readChart == null) {
-                log.trace("Creating Read Panel!");
-                readDataset = createReadDataset(_fileNames);
-                readChart = createChart(readDataset);
-                chartPanel = new ChartPanel(readChart);
-                visualizationPanel = new VisualizationPanel(chartPanel);
-                visualizationPanel.setReadPanel(chartPanel);
-            }
-            if (updateChart == null) {
-                updateDataset = createUpdateDataset(_fileNames);
-                updateChart = createChart(updateDataset);
-                chartPanel = new ChartPanel(updateChart);
-                visualizationPanel.setUpdatePanel(chartPanel);
-            }
-        }
-        started = false;
-    }
-    public static void main(String[] args) {
-        started = true;
-        VisualizationMain visualizationMain = new VisualizationMain();
+        List<ChartPanel> chartPanelList = new ArrayList<>();
+        chartPanelList.add(createChart("READ", "[READ]", fileNames));
+        chartPanelList.add(createChart("UPDATE", "[UPDATE]", fileNames));
+        setContentPane(VisualizationPanel.getPanel(chartPanelList.toArray(new ChartPanel[0])));
     }
 
-    public static XYSeriesCollection createReadDataset(String... fileNames) {
-        log.trace("Updating Read Dataset with Files {}!", fileNames);
+    public static void main(String[] args)
+    {
+        showResultsWindow();
+    }
+
+    private ChartPanel createChart(String chartName, String operationType, String... fileNames)
+    {
+        XYSeriesCollection dataset = createDataset(chartName, operationType, fileNames);
+        JFreeChart chart = ChartFactory.createXYLineChart(format("Benchmark Result for {} Latency", chartName), // chart
+                                                          // title
+                                                          format("{} Operations", chartName), // domain axis label
+                                                          "Latency (µs)", // range axis label
+                                                          dataset, // data
+                                                          PlotOrientation.VERTICAL, // the plot orientation
+                                                          true, // legend
+                                                          true, // tooltips
+                                                          false); // urls
+
+        return new ChartPanel(chart);
+    }
+
+    private XYSeriesCollection createDataset(String name, String operation, String... fileNames)
+    {
+        log.trace("Updating {} Dataset with Files {}!", name, fileNames);
         int i = 1;
         if (fileNames.length == 0) {
-            fileNames = new String[]{"transaction3.csv"};
+            fileNames = new String[]{AdbmConstants.ycsbSampleResultPath};
         }
-        readDataset = new XYSeriesCollection();
+        XYSeriesCollection dataset = new XYSeriesCollection();
         try {
             for (String fileName : fileNames) {
                 if (fileName != null && new File(fileName).isFile()) {
-                    reader = new CSVReader(new FileReader(fileName), ',');
+                    CSVReader reader = new CSVReader(new FileReader(fileName), ',');
                     // Read the header and chuck it away
-                    readNextLine = reader.readNext();
+                    String[] readNextLine;
 
                     // Set up series
-                    final XYSeries seriesRead = new XYSeries("[READ] for Commit " + i);
+                    final XYSeries seriesRead = new XYSeries(format("{} for Commit {}", name , i));
                     i++;
                     while ((readNextLine = reader.readNext()) != null) {
                         // variables declaration
@@ -94,8 +104,7 @@ public class VisualizationMain extends JFrame {
                         double X = 0;
                         double Y = 0;
                         // add values to dataset for READ
-                        if (operationsType.equals("[READ]")) {
-                            chartName = "READ";
+                        if (operationsType.equals(operation)) {
                             try {
                                 X = Double.parseDouble(readNextLine[1]);
                                 Y = Double.parseDouble(readNextLine[2]);
@@ -107,81 +116,21 @@ public class VisualizationMain extends JFrame {
                             }
                         }
                     }
-                    readDataset.addSeries(seriesRead);
-                } else {
+                    dataset.addSeries(seriesRead);
+                }
+                else {
                     log.error("File was null or not a File! File Path: {}", fileName);
                 }
             }
         } catch (IOException e) {
             System.out.println("File could not be read!");
         }
-        return readDataset;
-    }
-
-    public static XYSeriesCollection createUpdateDataset(String... fileNames) {
-        log.trace("Updating Update Dataset with Files {}!", fileNames);
-        int i = 1;
-        if (fileNames.length == 0) {
-            fileNames = new String[]{"transaction3.csv"};
-        }
-        updateDataset = new XYSeriesCollection();
-        try {
-            for (String fileName : fileNames) {
-                if (fileName != null && new File(fileName).isFile()) {
-                    reader = new CSVReader(new FileReader(fileName), ',');
-                    // Read the header and chuck it away
-                    readNextLine = reader.readNext();
-
-                    // Set up series
-                    final XYSeries seriesUpdate = new XYSeries("[UPDATE] for Commit " + i);
-                    i++;
-                    while ((readNextLine = reader.readNext()) != null) {
-                        // variables declaration
-                        boolean isValid = true;
-                        String operationsType = readNextLine[0];
-                        double X = 0;
-                        double Y = 0;
-                        // add values to dataset for UPDATE
-                        if (operationsType.equals("[UPDATE]")) {
-                            chartName = "UPDATE";
-                            try {
-                                X = Double.parseDouble(readNextLine[1]);
-                                Y = Double.parseDouble(readNextLine[2]);
-                            } catch (NumberFormatException e) {
-                                isValid = false;
-                            }
-                            if (isValid) {
-                                seriesUpdate.add(X, Y);
-                            }
-                        }
-                    }
-                    updateDataset.addSeries(seriesUpdate);
-                } else {
-                    log.error("File was null or not a File! File Path: {}", fileName);
-                }
-            }
-        } catch (IOException e) {
-            System.out.println("File could not be read!");
-        }
-        return updateDataset;
-    }
-
-    public static JFreeChart createChart(XYDataset dataset){
-        JFreeChart chart = ChartFactory.createXYLineChart("Benchmarking for " + chartName, // chart
-                // title
-                chartName + " Operations", // domain axis label
-                "Latency (us)", // range axis label
-                dataset, // data
-                PlotOrientation.VERTICAL, // the plot orientation
-                true, // legend
-                true, // tooltips
-                false); // urls
-
-        return chart;
+        return dataset;
     }
 
     // Use for storing the chart as a pdf file
-    public static void convertToPdf (ArrayList<JFreeChart> savedChartList, int width, int height) {
+    public static void convertToPdf(ArrayList<JFreeChart> savedChartList, int width, int height)
+    {
 
         String savedFileName = null;
         // parent component of the dialog
@@ -217,10 +166,10 @@ public class VisualizationMain extends JFrame {
                 Graphics2D g2d = tp.createGraphics(width, height, new DefaultFontMapper());
                 int i = 0;
                 int size = savedChartList.size();
-                for(JFreeChart savedChart : savedChartList) {
-                    Rectangle2D r2d = new Rectangle2D.Double(0, 0, width/size, height);
-                    if (i == 1){
-                        r2d = new Rectangle2D.Double(width/size, 0, width/size, height);
+                for (JFreeChart savedChart : savedChartList) {
+                    Rectangle2D r2d = new Rectangle2D.Double(0, 0, width / size, height);
+                    if (i == 1) {
+                        r2d = new Rectangle2D.Double(width / size, 0, width / size, height);
                     }
                     savedChart.draw(g2d, r2d);
                     i++;

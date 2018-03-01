@@ -9,7 +9,9 @@ import eu.antidotedb.antidotepb.AntidotePB;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 
 import static adbm.util.helpers.FormatUtil.format;
@@ -51,7 +53,7 @@ public class BenchmarkConfig
         return useTransactions;
     }
 
-    private String usedWorkload = "workloada";
+    private String usedWorkload = "SampleWorkload";
 
     public String getUsedWorkLoad()
     {
@@ -99,6 +101,7 @@ public class BenchmarkConfig
     {
 
         if (!Main.isDockerRunning) return false;
+        String currentDateTime = new SimpleDateFormat("yyyy-MM-dd hh-mm-ss").format(new Date());
         String usedDB = "adbm.ycsb.AntidoteYCSBClient";
         boolean showStatus = true;
         String[] threadsArg = numberOfThreads <= 1 ? new String[0] : new String[]{"-threads", format("{}",
@@ -113,16 +116,11 @@ public class BenchmarkConfig
         List<String> argList = new ArrayList<>();
         GeneralUtil.addIfNotEmpty(argList, threadsArg, targetArg, transactionArg, dbArg, workloadArg, statusArg);
 
-
-        log.info("YCSB Args:");
-        for (String arg : argList) {
-            log.info(arg);
-        }
         if (commits.length == 0) {
             commits = new String[]{null};
         }
         int counter = 1;
-        String fileName = "BenchmarkResultCommit";
+        String fileName = format("{}/BenchmarkResultCommit{}", AdbmConstants.ycsbResultsPath, currentDateTime);
         String fileEnd = "csv";
         List<String> resultFiles = new ArrayList<>();
         for (String commit : commits) {
@@ -135,7 +133,7 @@ public class BenchmarkConfig
             String[] ycsbArgs = newArgList.toArray(new String[0]);
             Client.main(ycsbArgs);
         }
-        new VisualizationMain(resultFiles.toArray(new String[0]));
+        VisualizationMain.showResultsWindow(resultFiles.toArray(new String[0]));
         return true;
     }
 }
