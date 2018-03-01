@@ -1,0 +1,29 @@
+# workload 1 for 01 secs
+
+workload=com.yahoo.ycsb.workloads.CoreWorkload
+
+# exportfile=Output3.csv
+
+recordcount=150000
+operationcount=20000
+
+readproportion=0.5
+updateproportion=0.5
+
+requestdistribution=zipfian
+
+# using default value for the below mentioned properties
+fieldcount=10
+fieldlength=100
+
+# should reads read all fields (true) or just one(false)
+readallfields=false
+
+# Maximum execution time in seconds
+maxexecutiontime=01
+
+# Latency
+measurementtype=timeseries
+
+# Granularity for time series (in milliseconds)
+timeseries.granularity=10

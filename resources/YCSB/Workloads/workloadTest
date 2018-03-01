@@ -17,9 +17,6 @@ requestdistribution=uniform
 # zipfan, (default)
 
 # Maximum execution time in seconds
-<<<<<<< Updated upstream
-maxexecutiontime=10
-=======
 maxexecutiontime=10
 
 
@@ -27,4 +24,3 @@ maxexecutiontime=10
 measurementtype=timeseries
 timeseries.granularity=100
 
->>>>>>> Stashed changes
