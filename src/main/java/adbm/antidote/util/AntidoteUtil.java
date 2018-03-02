@@ -53,6 +53,10 @@ public class AntidoteUtil {
         typeKeyMap.get(type).remove(key);
     }
 
+    public static String getOperation() {
+        return Main.getBenchmarkConfig().getUsedOperation();
+    }
+
     public static String getDefaultOperation(String keyName) {
         return typeOperationMap.get(Main.getKeyManager().getTypeOfKey(keyName))[0];
     }

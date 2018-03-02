@@ -43,7 +43,7 @@ public class MapDBManager implements ISettingsManager, IAntidoteKeyStoreManager
     public boolean start()
     {
         log.trace("Starting MapDBManager!");
-        mapDB = DBMaker.fileDB(AdbmConstants.appSettingsPath).closeOnJvmShutdown().transactionEnable().make();
+        mapDB = DBMaker.fileDB(AdbmConstants.APP_SETTINGS_PATH).closeOnJvmShutdown().transactionEnable().make();
         keyTypeMapDB = mapDB
                 .hashMap("keyTypeMapDB", Serializer.STRING, Serializer.STRING)
                 .createOrOpen();
@@ -110,10 +110,10 @@ public class MapDBManager implements ISettingsManager, IAntidoteKeyStoreManager
     @Override
     public String getGitRepoLocation()
     {
-        if (!isReady()) return AdbmConstants.defaultAntidotePath;
+        if (!isReady()) return AdbmConstants.DEFAULT_AD_GIT_REPO_PATH;
         String gitRepo = getAppSetting(GitRepoLocationSetting);
         if (gitRepo.isEmpty()) {
-            return AdbmConstants.defaultAntidotePath;
+            return AdbmConstants.DEFAULT_AD_GIT_REPO_PATH;
         }
         else {
             return gitRepo;

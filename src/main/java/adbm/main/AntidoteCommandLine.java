@@ -2,7 +2,6 @@ package adbm.main;
 
 import adbm.main.ui.MainWindow;
 import adbm.util.AdbmConstants;
-import com.yahoo.ycsb.Client;
 import org.apache.commons.cli.*;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -63,7 +62,7 @@ public class AntidoteCommandLine
                     Main.startBenchmarkContainer();
                     for (String commit : benchmarkCommits) {
                         boolean rebuildSuccess = Main.getDockerManager()
-                                .rebuildAntidoteInContainer(AdbmConstants.benchmarkContainerName, commit);
+                                .rebuildAntidoteInContainer(AdbmConstants.ADBM_CONTAINER, commit);
                         if (!rebuildSuccess) {
                             log.error("Rebuild of Antidote in the container failed! The benchmark cannot be run!");
                         }

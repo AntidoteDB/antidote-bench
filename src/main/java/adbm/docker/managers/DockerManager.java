@@ -96,36 +96,35 @@ public class DockerManager implements IDockerManager {
                 docker = DefaultDockerClient.fromEnv().readTimeoutMillis(3600000).build();
             else return false;
             //else docker = DefaultDockerClient.builder().uri(uri).dockerCertificates(new DockerCertificates(Paths.get(certPath))).build(); //TODO testing
-            log.debug("Checking that image {} is available...", AdbmConstants.requiredImage);
-            if (docker.listImages(DockerClient.ListImagesParam.byName(AdbmConstants.requiredImage)).isEmpty()) {
-                log.info("Image {} is not available and must be pulled.", AdbmConstants.requiredImage);
+            log.debug("Checking that image {} is available...", AdbmConstants.REQUIRED_IMAGE);
+            if (docker.listImages(DockerClient.ListImagesParam.byName(AdbmConstants.REQUIRED_IMAGE)).isEmpty()) {
+                log.info("Image {} is not available and must be pulled.", AdbmConstants.REQUIRED_IMAGE);
                 //TODO add confirm
                 boolean confirm = true;
                 if (Main.isGuiMode()) confirm = JOptionPane.showConfirmDialog(null,
-                        "The image " + AdbmConstants.requiredImage + " is not available in Docker and must be pulled before the " + AdbmConstants.appName + " application can be used.\nPressing \"Cancel\" this will terminate the application.",
+                        "The image " + AdbmConstants.REQUIRED_IMAGE + " is not available in Docker and must be pulled before the " + AdbmConstants.APP_NAME + " application can be used.\nPressing \"Cancel\" this will terminate the application.",
                         "Image need to be pulled",
                         JOptionPane.OK_CANCEL_OPTION,
                         JOptionPane.INFORMATION_MESSAGE) == JOptionPane.OK_OPTION;
-                if (confirm) docker.pull(AdbmConstants.requiredImage, new SimpleProgressHandler("Image"));
+                if (confirm) docker.pull(AdbmConstants.REQUIRED_IMAGE, new SimpleProgressHandler("Image"));
                 else return false;
             } else {
-                log.debug(AdbmConstants.requiredImage + " is available.");
+                log.debug(AdbmConstants.REQUIRED_IMAGE + " is available.");
             }
-            log.debug("Checking that Network {} exists...", AdbmConstants.antidoteDockerNetworkName);
+            log.debug("Checking that Network {} exists...", AdbmConstants.ADBM_DOCKER_NETWORK_NAME);
             boolean containsNetwork = false;
             for (Network network : docker.listNetworks()) {
-                if (network.name().equals(AdbmConstants.antidoteDockerNetworkName)) {
+                if (network.name().equals(AdbmConstants.ADBM_DOCKER_NETWORK_NAME)) {
                     containsNetwork = true;
                     break;
                 }
             }
             if (!containsNetwork) {
-                log.info("Network {} does not exist and will be created.", AdbmConstants.antidoteDockerNetworkName);
-                docker.createNetwork(NetworkConfig.builder().name(AdbmConstants.antidoteDockerNetworkName).driver("bridge").build());
+                log.info("Network {} does not exist and will be created.", AdbmConstants.ADBM_DOCKER_NETWORK_NAME);
+                docker.createNetwork(NetworkConfig.builder().name(AdbmConstants.ADBM_DOCKER_NETWORK_NAME).driver("bridge").build());
             }
             log.info("Docker initialized!");
-            Runtime.getRuntime().addShutdownHook(
-                    new Thread(Main::closeApp));
+
             if (!getNamesOfRunningContainers().isEmpty() && Main.stopContainers) {
                 log.error("The Antidote Benchmark containers cannot be running when the DockerManager starts!" +
                         "\nPlease restart Docker manually!");
@@ -181,10 +180,10 @@ public class DockerManager implements IDockerManager {
     @Override
     public boolean antidoteBenchmarkImageExists() {
         if (!isReady()) return false;
-        log.debug("Checking if the {} image already exists...", AdbmConstants.appName);
+        log.debug("Checking if the {} image already exists...", AdbmConstants.APP_NAME);
         List<Image> images;
         try {
-            images = docker.listImages(DockerClient.ListImagesParam.byName(AdbmConstants.antidoteDockerImageName),
+            images = docker.listImages(DockerClient.ListImagesParam.byName(AdbmConstants.ADBM_DOCKER_IMAGE_NAME),
                     DockerClient.ListImagesParam.allImages());
             log.debug("Existing Images: ", images);
         } catch (DockerException | InterruptedException e) {
@@ -201,24 +200,24 @@ public class DockerManager implements IDockerManager {
             isBuildingImage = true;
             log.debug("Checking if an image already exists...");
             List<Image> images = docker
-                    .listImages(DockerClient.ListImagesParam.byName(AdbmConstants.antidoteDockerImageName));
+                    .listImages(DockerClient.ListImagesParam.byName(AdbmConstants.ADBM_DOCKER_IMAGE_NAME));
             if (images.isEmpty()) {
-                log.debug("Image {} does not exist and will be built.", AdbmConstants.antidoteDockerImageName);
+                log.debug("Image {} does not exist and will be built.", AdbmConstants.ADBM_DOCKER_IMAGE_NAME);
             } else {
-                log.debug("Image {} already exists and will be rebuilt.", AdbmConstants.antidoteDockerImageName);
+                log.debug("Image {} already exists and will be rebuilt.", AdbmConstants.ADBM_DOCKER_IMAGE_NAME);
                 removeAllContainers();
             }
             if (local) Main.getGitManager().checkoutBranch("master");
             DockerfileBuilder.createDockerfile(local);
-            File folder = new File(AdbmConstants.dockerfilePath);
+            File folder = new File(AdbmConstants.DOCKERFILE_PATH);
             String path = folder.getCanonicalPath();
             if (local) {
                 folder = new File(Main.getSettingsManager().getGitRepoLocation()).getParentFile();
                 if (folder != null) path = folder.getCanonicalPath();
             }
-            log.info("Building Image {}...", AdbmConstants.antidoteDockerImageName);
-            docker.build(Paths.get(path), AdbmConstants.antidoteDockerImageName, new SimpleProgressHandler("Image"));
-            log.info("Image {} was successfully built.", AdbmConstants.antidoteDockerImageName);
+            log.info("Building Image {}...", AdbmConstants.ADBM_DOCKER_IMAGE_NAME);
+            docker.build(Paths.get(path), AdbmConstants.ADBM_DOCKER_IMAGE_NAME, new SimpleProgressHandler("Image"));
+            log.info("Image {} was successfully built.", AdbmConstants.ADBM_DOCKER_IMAGE_NAME);
             return true;
         } catch (DockerException | InterruptedException | IOException e) {
             log.error("An error occurred while building an image!", e);
@@ -320,7 +319,7 @@ public class DockerManager implements IDockerManager {
                     log.error(
                             "The name {} cannot be used to create a new container because another container (that was not built from the {} image) has that name!",
                             containerName,
-                            AdbmConstants.appName);
+                            AdbmConstants.APP_NAME);
                     return false;
                 } else {
                     log.debug("Starting the existing container {}", containerName);
@@ -329,8 +328,8 @@ public class DockerManager implements IDockerManager {
             }
         } else {
             List<Integer> portList = getUsedHostPorts();
-            Optional<Integer> hostPortOptional = AdbmConstants.hostPortList.stream().filter(port -> !portList.contains(port))
-                    .findFirst();
+            Optional<Integer> hostPortOptional = AdbmConstants.ADBM_HOST_PORT_LIST.stream().filter(port -> !portList.contains(port))
+                                                                                  .findFirst();
             if (!hostPortOptional.isPresent()) {
                 log.error("Port list contains all ports from the host port list!\n" +
                         "No new containers can be started!\n" +
@@ -341,14 +340,14 @@ public class DockerManager implements IDockerManager {
             final Map<String, List<PortBinding>> portBindings = new HashMap<>();
             List<PortBinding> hostPorts = new ArrayList<>();
             hostPorts.add(PortBinding.of("0.0.0.0", hostPort));
-            portBindings.put(Integer.toString(AdbmConstants.standardClientPort), hostPorts);
+            portBindings.put(Integer.toString(AdbmConstants.STANDARD_ADBM_CLIENT_PORT), hostPorts);
             final HostConfig hostConfig = HostConfig.builder().portBindings(portBindings)
-                    .networkMode(AdbmConstants.antidoteDockerNetworkName).build();
+                                                    .networkMode(AdbmConstants.ADBM_DOCKER_NETWORK_NAME).build();
             log.debug("Creating a new container {}...", containerName);
             ContainerConfig containerConfig = ContainerConfig.builder()
-                    .image(AdbmConstants.antidoteDockerImageName)
+                    .image(AdbmConstants.ADBM_DOCKER_IMAGE_NAME)
                     .hostConfig(hostConfig)
-                    .exposedPorts(Integer.toString(AdbmConstants.standardClientPort))
+                    .exposedPorts(Integer.toString(AdbmConstants.STANDARD_ADBM_CLIENT_PORT))
                     .env("SHORT_NAME=true", "NODE_NAME=antidote@" + containerName)
                     .tty(true)
                     .build();
@@ -386,7 +385,7 @@ public class DockerManager implements IDockerManager {
         log.info("Stopping the container {}...", containerName);
         String containerId = getContainerId(containerName, true);
         try {
-            docker.stopContainer(containerId, AdbmConstants.secondsToWaitBeforeKilling);
+            docker.stopContainer(containerId, AdbmConstants.SECONDS_TO_WAIT_BEFORE_KILLING);
         } catch (DockerException | InterruptedException e) {
             log.error("An error has occurred while stopping a container!", e);
             return false;
@@ -401,7 +400,7 @@ public class DockerManager implements IDockerManager {
         log.debug("Removing the container {}...", containerName);
         String containerId = getContainerId(containerName, false);
         try {
-            docker.stopContainer(containerId, AdbmConstants.secondsToWaitBeforeKilling);
+            docker.stopContainer(containerId, AdbmConstants.SECONDS_TO_WAIT_BEFORE_KILLING);
             docker.removeContainer(containerId);
         } catch (DockerException | InterruptedException e) {
             log.error("An error has occurred while removing a container!", e);
@@ -414,10 +413,10 @@ public class DockerManager implements IDockerManager {
     @Override
     public boolean stopAllContainers() {
         if (!isReady()) return false;
-        log.debug("Stopping all containers that were created from the image {}!", AdbmConstants.antidoteDockerImageName);
+        log.debug("Stopping all containers that were created from the image {}!", AdbmConstants.ADBM_DOCKER_IMAGE_NAME);
         try {
             for (Container container : getRunningContainers()) {
-                docker.stopContainer(container.id(), AdbmConstants.secondsToWaitBeforeKilling);
+                docker.stopContainer(container.id(), AdbmConstants.SECONDS_TO_WAIT_BEFORE_KILLING);
             }
         } catch (DockerException | InterruptedException e) {
             log.error("An error occurred while stopping all containers!", e);
@@ -429,10 +428,10 @@ public class DockerManager implements IDockerManager {
     @Override
     public boolean removeAllContainers() {
         if (!isReady()) return false;
-        log.debug("Removing all containers that were created from the image {}!", AdbmConstants.antidoteDockerImageName);
+        log.debug("Removing all containers that were created from the image {}!", AdbmConstants.ADBM_DOCKER_IMAGE_NAME);
         try {
             for (Container container : getAllContainers()) {
-                docker.stopContainer(container.id(), AdbmConstants.secondsToWaitBeforeKilling);
+                docker.stopContainer(container.id(), AdbmConstants.SECONDS_TO_WAIT_BEFORE_KILLING);
                 docker.removeContainer(container.id());
             }
         } catch (DockerException | InterruptedException e) {
@@ -522,8 +521,8 @@ public class DockerManager implements IDockerManager {
             HostConfig config = containerInfo.hostConfig();
             ImmutableMap<String, List<PortBinding>> portBindingMap = config != null ? config.portBindings() : null;
             if (portBindingMap != null) {
-                if (portBindingMap.containsKey(Integer.toString(AdbmConstants.standardClientPort))) {
-                    List<PortBinding> portBindingList = portBindingMap.get(Integer.toString(AdbmConstants.standardClientPort));
+                if (portBindingMap.containsKey(Integer.toString(AdbmConstants.STANDARD_ADBM_CLIENT_PORT))) {
+                    List<PortBinding> portBindingList = portBindingMap.get(Integer.toString(AdbmConstants.STANDARD_ADBM_CLIENT_PORT));
                     if (!portBindingList.isEmpty()) {
                         //TODO different IP possible but later
                         List<Integer> portList = portBindingList.stream().map(portBinding -> Integer
@@ -547,7 +546,7 @@ public class DockerManager implements IDockerManager {
     private List<Container> getRunningContainers() {
         if (!isReady()) return new ArrayList<>();
         try {
-            return docker.listContainers(DockerClient.ListContainersParam.filter("ancestor", AdbmConstants.antidoteDockerImageName),
+            return docker.listContainers(DockerClient.ListContainersParam.filter("ancestor", AdbmConstants.ADBM_DOCKER_IMAGE_NAME),
                     DockerClient.ListContainersParam.allContainers(),
                     DockerClient.ListContainersParam.withStatusRunning());
         } catch (DockerException | InterruptedException e) {
@@ -559,7 +558,7 @@ public class DockerManager implements IDockerManager {
     private List<Container> getAllContainers() {
         if (!isReady()) return new ArrayList<>();
         try {
-            return docker.listContainers(DockerClient.ListContainersParam.filter("ancestor", AdbmConstants.antidoteDockerImageName),
+            return docker.listContainers(DockerClient.ListContainersParam.filter("ancestor", AdbmConstants.ADBM_DOCKER_IMAGE_NAME),
                     DockerClient.ListContainersParam.allContainers());
         } catch (DockerException | InterruptedException e) {
             log.error("An error has occurred while getting all containers (internal)!", e);
@@ -635,13 +634,13 @@ public class DockerManager implements IDockerManager {
             if (mustBeRunning) {
                 adbmContainersWithName = docker.listContainers(DockerClient.ListContainersParam.filter("name", name),
                         DockerClient.ListContainersParam
-                                .filter("ancestor", AdbmConstants.antidoteDockerImageName),
+                                .filter("ancestor", AdbmConstants.ADBM_DOCKER_IMAGE_NAME),
                         DockerClient.ListContainersParam.allContainers(),
                         DockerClient.ListContainersParam.withStatusRunning());
             } else {
                 adbmContainersWithName = docker.listContainers(DockerClient.ListContainersParam.filter("name", name),
                         DockerClient.ListContainersParam
-                                .filter("ancestor", AdbmConstants.antidoteDockerImageName),
+                                .filter("ancestor", AdbmConstants.ADBM_DOCKER_IMAGE_NAME),
                         DockerClient.ListContainersParam.allContainers());
             }
             if (adbmContainersWithName.isEmpty()) {

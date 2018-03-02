@@ -142,7 +142,7 @@ public class DockerfileBuilder
         //else
             dockerfile = getRemoteDockerfile();
         try (Writer writer = new BufferedWriter(new OutputStreamWriter(
-                new FileOutputStream(format("{}/Dockerfile", AdbmConstants.dockerfilePath), false), "utf-8")))
+                new FileOutputStream(format("{}/Dockerfile", AdbmConstants.DOCKERFILE_PATH), false), "utf-8")))
         {
             writer.write(dockerfile);
             writer.close();

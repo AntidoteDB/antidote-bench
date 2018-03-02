@@ -46,7 +46,7 @@ public class VisualizationMain extends JDialog
     {
         super(null, "Results Visualization", ModalityType.MODELESS);
 //super("Results Visualization");
-        this.setMinimumSize(new Dimension(1000, 500));
+        this.setMinimumSize(new Dimension(1000, 600));
         setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
 
         pack();
@@ -68,7 +68,7 @@ public class VisualizationMain extends JDialog
         XYSeriesCollection dataset = createDataset(chartName, operationType, fileNames);
         JFreeChart chart = ChartFactory.createXYLineChart(format("Benchmark Result for {} Latency", chartName), // chart
                                                           // title
-                                                          format("{} Operations", chartName), // domain axis label
+                                                          format("{} Operations", operationType), // domain axis label
                                                           "Latency (µs)", // range axis label
                                                           dataset, // data
                                                           PlotOrientation.VERTICAL, // the plot orientation
@@ -84,7 +84,7 @@ public class VisualizationMain extends JDialog
         log.trace("Updating {} Dataset with Files {}!", name, fileNames);
         int i = 1;
         if (fileNames.length == 0) {
-            fileNames = new String[]{AdbmConstants.ycsbSampleResultPath};
+            fileNames = new String[]{AdbmConstants.YCSB_SAMPLE_RESULT_PATH};
         }
         XYSeriesCollection dataset = new XYSeriesCollection();
         try {
@@ -95,7 +95,7 @@ public class VisualizationMain extends JDialog
                     String[] readNextLine;
 
                     // Set up series
-                    final XYSeries seriesRead = new XYSeries(format("{} for Commit {}", name , i));
+                    final XYSeries seriesRead = new XYSeries(format("{} for Commit {}", operation , i));
                     i++;
                     while ((readNextLine = reader.readNext()) != null) {
                         // variables declaration

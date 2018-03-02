@@ -14,7 +14,7 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
-public class GitWindow extends JDialog
+public class GitDialog extends JDialog
 {
     private JList<String> listBranches;
     private JPanel panel;
@@ -36,32 +36,32 @@ public class GitWindow extends JDialog
     private DefaultListModel<RevCommit> listCommitsModel = new DefaultListModel<>();
     private DefaultListModel<RevCommit> listBenchmarkCommitsModel = new DefaultListModel<>();
 
-    private static final Logger log = LogManager.getLogger(GitWindow.class);
+    private static final Logger log = LogManager.getLogger(GitDialog.class);
 
-    private static GitWindow gitWindow;
+    private static GitDialog gitDialog;
 
-    private static void checkGitWindow()
+    private static void checkGitDialog()
     {
-        if (gitWindow == null) {
-            gitWindow = new GitWindow();
+        if (gitDialog == null) {
+            gitDialog = new GitDialog();
         }
     }
 
-    public static GitWindow getGitWindow()
+    public static GitDialog getGitDialog()
     {
-        checkGitWindow();
-        return gitWindow;
+        checkGitDialog();
+        return gitDialog;
     }
 
-    public static void showGitWindow()
+    public static void showGitDialog()
     {
-        checkGitWindow();
-        gitWindow.setVisible(true);
+        checkGitDialog();
+        gitDialog.setVisible(true);
     }
 
-    private GitWindow()
+    private GitDialog()
     {
-        super(MainWindow.getMainWindow(),"Antidote Git Manager", ModalityType.MODELESS);
+        super(MainWindow.getMainWindow(),"Antidote Git Repo Manager", ModalityType.MODELESS);
 
         setContentPane(panel);
         setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);

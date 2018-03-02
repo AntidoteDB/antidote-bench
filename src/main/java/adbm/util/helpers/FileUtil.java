@@ -62,7 +62,7 @@ public class FileUtil
         FileWriter fileWriter;
         BufferedWriter bufferedWriter = null;
         try {
-            file = new File(AdbmConstants.logSettingsPath);
+            file = new File(AdbmConstants.LOG_SETTINGS_PATH);
             fileReader = new FileReader(file);
             bufferedReader = new BufferedReader(fileReader);
             while ((line = bufferedReader.readLine()) != null) {
