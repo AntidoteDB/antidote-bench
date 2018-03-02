@@ -37,7 +37,8 @@ public class AntidoteYCSBClient extends DB
     public void init() throws DBException
     {
         //Main.initializeBenchmarkClient();
-        antidoteClient = new AntidoteClientWrapper(format("AntidoteClient-{}", idCounter.getAndIncrement()), AdbmConstants.benchmarkContainerName);
+        antidoteClient = new AntidoteClientWrapper(format("AntidoteClient-{}", idCounter.getAndIncrement()),
+                                                   AdbmConstants.ADBM_CONTAINER);
         if (!antidoteClient.start()) {
             log.error("The Antidote Client could not be started!");
             throw new DBException("The Antidote Client could not be started!");
@@ -45,7 +46,8 @@ public class AntidoteYCSBClient extends DB
     }
 
     @Override
-    public void cleanup() throws DBException {
+    public void cleanup() throws DBException
+    {
         antidoteClient.stop();
         antidoteClient = null;
     }
@@ -63,15 +65,11 @@ public class AntidoteYCSBClient extends DB
     public Status read(String table, String key, Set<String> fields, HashMap<String, ByteIterator> result)
     {
         if (fields == null) {
-            if (key != null) {
-                antidoteClient.readKeyValue(key, IAntidoteClientWrapper.TransactionType.NoTransaction);
-                return Status.OK;
-            }
-            log.warn("Read operation was not performed because the set of fields to read was null!");
-            return Status.BAD_REQUEST;
+            log.warn("The Antidote Database does not support reading all fields!");
+            return Status.NOT_IMPLEMENTED;
         }
         if (fields.size() == 0) {
-            log.info("Read operation was not performed because the set of fields to read was empty!");
+            log.debug("No field were read!");
             return Status.OK;
         }
         if (result == null) {
@@ -127,8 +125,8 @@ public class AntidoteYCSBClient extends DB
             return Status.OK;
         }
         antidoteClient
-            .updateKeys(values.entrySet().stream().map((s) -> new UpdateOperation<>(s.getKey(), AntidoteUtil
-                    .getDefaultOperation(s.getKey()), s.getValue())).collect(Collectors.toList()));
+                .updateKeys(values.entrySet().stream().map((s) -> new UpdateOperation<>(s.getKey(), AntidoteUtil
+                        .getOperation(), s.getValue())).collect(Collectors.toList()));
         return Status.OK;
     }
 

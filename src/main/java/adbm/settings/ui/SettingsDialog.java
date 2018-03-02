@@ -33,7 +33,7 @@ public class SettingsDialog extends JDialog
     {
         super(MainWindow.getMainWindow(), "Settings", ModalityType.APPLICATION_MODAL);
         setTitle("Settings");
-        setIconImage(new ImageIcon(format("{}/AntidoteIcon.PNG", AdbmConstants.imagesPath)).getImage());
+        setIconImage(new ImageIcon(format("{}/AntidoteIcon.PNG", AdbmConstants.IMAGES_PATH)).getImage());
         setContentPane(panel);
         setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
         pack();

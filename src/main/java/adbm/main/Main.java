@@ -14,6 +14,7 @@ import adbm.util.AdbmConstants;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
+import javax.swing.*;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -85,6 +86,7 @@ public class Main
         gitManager.stop();
         settingsManager.stop();
         keyManager.stop();
+        Runtime.getRuntime().removeShutdownHook(shutdownHook);
         System.exit(0);
     }
 
@@ -125,7 +127,7 @@ public class Main
                 log.error("Docker could not be started!");
                 return false;
             }
-            if (!dockerManager.runContainer(AdbmConstants.benchmarkContainerName)) {
+            if (!dockerManager.runContainer(AdbmConstants.ADBM_CONTAINER)) {
                 log.error("Docker is a bad state! Please restart Docker before using this application!");
                 return false;
             }
@@ -135,10 +137,22 @@ public class Main
 
     public static boolean isDockerRunning;
 
+    private static Thread shutdownHook = new Thread(Main::closeApp);
+
     public static void main(String[] args)
     {
         Handler handler = new Handler();
         Thread.setDefaultUncaughtExceptionHandler(handler);
+        Runtime.getRuntime().addShutdownHook(shutdownHook);
+        try {
+            // Set System L&F
+            UIManager.setLookAndFeel(
+                    UIManager.getSystemLookAndFeelClassName());
+        }
+        catch (UnsupportedLookAndFeelException | ClassNotFoundException | InstantiationException | IllegalAccessException e) {
+            log.error("An error occurred while setting the LookAndFeel!" , e);
+        }
+
         isDockerRunning = startBenchmarkContainer();
         //resultsTest();
         /*boolean rebuildSuccess = dockerManager.rebuildAntidoteInContainer("AntidoteBenchmarkClient", secondCommit);

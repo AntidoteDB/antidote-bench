@@ -27,11 +27,19 @@ public class BenchmarkConfig
         return usedKeyType;
     }
 
-    private String usedOperation;
+    public void setUsedKeyType(AntidotePB.CRDT_type type) {
+        usedKeyType = type;
+    }
+
+    private String usedOperation = "increment";
 
     public String getUsedOperation()
     {
         return usedOperation;
+    }
+
+    public void setUsedOperation(String operation) {
+        usedOperation = operation;
     }
 
     private IAntidoteClientWrapper.TransactionType usedTransactionType = IAntidoteClientWrapper.TransactionType.InteractiveTransaction;
@@ -39,6 +47,10 @@ public class BenchmarkConfig
     public IAntidoteClientWrapper.TransactionType getUsedTransactionType()
     {
         return usedTransactionType;
+    }
+
+    public void setUsedTransactionType(IAntidoteClientWrapper.TransactionType txType) {
+        usedTransactionType = txType;
     }
 
     private boolean useTransactions = true;
@@ -53,7 +65,7 @@ public class BenchmarkConfig
         return useTransactions;
     }
 
-    private String usedWorkload = "SampleWorkload";
+    private String usedWorkload = AdbmConstants.YCSB_SAMPLE_WORKLOAD_NAME;
 
     public String getUsedWorkLoad()
     {
@@ -89,20 +101,34 @@ public class BenchmarkConfig
         if (number >= 0) targetNumber = number;
     }
 
+    private boolean showStatus = true;
+
+    public boolean getShowStatus() {
+        return showStatus;
+    }
+
+    public void setShowStatus(boolean status) {
+        showStatus = status;
+    }
+
     private boolean rebuildAntidote(String commit)
     {
         if (commit == null) return true;
         boolean rebuildSuccess = Main.getDockerManager()
-                                     .rebuildAntidoteInContainer(AdbmConstants.benchmarkContainerName, commit);
+                                     .rebuildAntidoteInContainer(AdbmConstants.ADBM_CONTAINER, commit);
         return rebuildSuccess;
+    }
+
+    public boolean runBenchmark(List<String> commits) {
+        return runBenchmark(commits.toArray(new String[0]));
     }
 
     public boolean runBenchmark(String... commits)
     {
 
         if (!Main.isDockerRunning) return false;
-        String currentDateTime = new SimpleDateFormat(AdbmConstants.dateFormat).format(new Date());
-        String usedDB = AdbmConstants.ycsbDBClassName;
+        String currentDateTime = new SimpleDateFormat(AdbmConstants.DATE_FORMAT).format(new Date());
+        String usedDB = AdbmConstants.YCSB_DB_CLASS_NAME;
         boolean showStatus = true;
         String[] threadsArg = numberOfThreads <= 1 ? new String[0] : new String[]{"-threads", format("{}",
                                                                                                      numberOfThreads)};
@@ -110,7 +136,7 @@ public class BenchmarkConfig
                                                                                                 targetNumber)};
         String[] transactionArg = useTransactions ? new String[]{"-t"} : new String[0];
         String[] dbArg = {"-db", format("{}", usedDB)};
-        String[] workloadArg = {"-P", format("{}/{}", AdbmConstants.ycsbWorkloadsPath, usedWorkload)};
+        String[] workloadArg = {"-P", AdbmConstants.getWorkloadPath(usedWorkload)};
         String[] statusArg = showStatus ? new String[]{"-s"} : new String[0];
 
         List<String> argList = new ArrayList<>();
@@ -119,14 +145,14 @@ public class BenchmarkConfig
         if (commits.length == 0) {
             commits = new String[]{null};
         }
-        String fileName = format("{}/{}", AdbmConstants.ycsbResultsPath, AdbmConstants.resultFileName);
+        String fileNameStart = format("{}/{}", AdbmConstants.YCSB_RESULTS_PATH, AdbmConstants.RESULT_FILE_NAME_START);
         String fileEnd = ".csv";
         List<String> resultFiles = new ArrayList<>();
         for (String commit : commits) {
             if (!rebuildAntidote(commit)) return false;
-            if (commit == null) commit = Main.getDockerManager().getCommitOfContainer(AdbmConstants.benchmarkContainerName);
-            String shortCommit = commit.substring(0, Math.min(commit.length(), AdbmConstants.numberCommitAbbreviation));
-            String resultFileName = format("{}_{}_{}{}", fileName, shortCommit, currentDateTime, fileEnd);
+            if (commit == null) commit = Main.getDockerManager().getCommitOfContainer(AdbmConstants.ADBM_CONTAINER);
+            String shortCommit = commit.substring(0, Math.min(commit.length(), AdbmConstants.NUMBER_COMMIT_ABBREVIATION));
+            String resultFileName = format("{}_{}_{}{}", fileNameStart, shortCommit, currentDateTime, fileEnd);
             resultFiles.add(resultFileName);
             String[] resultFileArg = new String[]{"-p", format("exportfile={}", resultFileName)};
             List<String> newArgList = new ArrayList<>(argList);

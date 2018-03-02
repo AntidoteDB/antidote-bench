@@ -71,7 +71,7 @@ public class AntidoteClientWrapper implements IAntidoteClientWrapper
         }
         this.name = name;
         if (isNullOrEmpty(containerName)) {
-            containerName = AdbmConstants.benchmarkContainerName;
+            containerName = AdbmConstants.ADBM_CONTAINER;
         }
         this.containerName = containerName;
     }
@@ -94,7 +94,7 @@ public class AntidoteClientWrapper implements IAntidoteClientWrapper
             if (hostPort <= 0) return false;
         }
         if (isNullOrEmpty(address)) {
-            address = AdbmConstants.antidoteHost;
+            address = AdbmConstants.ADBM_CLIENT_HOST;
         }
         try {
             antidoteClient = new AntidoteClient(new InetSocketAddress(address, hostPort));

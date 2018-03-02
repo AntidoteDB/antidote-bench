@@ -23,11 +23,11 @@ public class AddBranchDialog extends JDialog
 
     private AddBranchDialog()
     {
-        super(GitWindow.getGitWindow(), "Add Branch", ModalityType.APPLICATION_MODAL);
+        super(GitDialog.getGitDialog(), "Add Branch", ModalityType.APPLICATION_MODAL);
         setContentPane(panel);
         setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
         pack();
-        setLocationRelativeTo(GitWindow.getGitWindow());
+        setLocationRelativeTo(GitDialog.getGitDialog());
         DefaultListModel<String> listAvailableBranchesModel = new DefaultListModel<>();
         Main.getGitManager().getAllNonLocalRemoteBranches().forEach(listAvailableBranchesModel::addElement);
         listAvailableBranches.setModel(listAvailableBranchesModel);

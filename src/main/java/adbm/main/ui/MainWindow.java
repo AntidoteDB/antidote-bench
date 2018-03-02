@@ -2,14 +2,12 @@ package adbm.main.ui;
 
 import adbm.antidote.ui.AntidoteView;
 import adbm.antidote.wrappers.AntidoteClientWrapperGui;
-import adbm.docker.util.DockerfileBuilder;
-import adbm.git.ui.GitWindow;
+import adbm.git.ui.GitDialog;
 import adbm.main.Main;
 import adbm.settings.ui.SettingsDialog;
 import adbm.util.AdbmConstants;
 import adbm.util.TextPaneAppender;
 import adbm.util.helpers.FileUtil;
-import org.apache.commons.lang.time.StopWatch;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -35,14 +33,7 @@ public class MainWindow extends JFrame
     private JButton buttonStartGit;
     private JButton buttonShowGitSettings;
     private JButton buttonStartAntidote;
-    private JButton buttonCreateDockerfile;
-    private JButton buttonBuildBenchmarkImages;
-    private JButton buttonRunBenchmark;
-    private JButton buttonOpenWorkload;
-    private JComboBox<String> comboBoxWorkload;
-    private JCheckBox checkBoxUseTransactions;
-    private JSpinner spinnerThreadCount;
-    private JSpinner spinnerTarget;
+    private JButton buttonOpenBenchmarkDialog;
     private ExecutorService executorService = Executors.newSingleThreadExecutor();
 
     private DefaultComboBoxModel<String> comboBoxWorkloadModel = new DefaultComboBoxModel<>();
@@ -70,8 +61,8 @@ public class MainWindow extends JFrame
     private MainWindow()
     {
         super();
-        setTitle(AdbmConstants.appName);
-        setIconImage(new ImageIcon(format("{}/AntidoteIcon.PNG", AdbmConstants.imagesPath)).getImage());
+        setTitle(AdbmConstants.APP_NAME);
+        setIconImage(new ImageIcon(format("{}/AntidoteIcon.PNG", AdbmConstants.IMAGES_PATH)).getImage());
         setContentPane(panel);
         setDefaultCloseOperation(WindowConstants.DO_NOTHING_ON_CLOSE);
         pack();
@@ -83,7 +74,7 @@ public class MainWindow extends JFrame
             {
                 int i = JOptionPane
                         .showConfirmDialog(null,
-                                           format("Do you want to close the {} application?", AdbmConstants.appName),
+                                           format("Do you want to close the {} application?", AdbmConstants.APP_NAME),
                                            "Confirmation", JOptionPane.YES_NO_OPTION);
                 if (i == JOptionPane.YES_OPTION) {
                     log.info("The application will be closed now.");
@@ -95,37 +86,6 @@ public class MainWindow extends JFrame
                 }
             }
         });
-        spinnerThreadCount.setValue(Main.getBenchmarkConfig().getNumberOfThreads());
-        JComponent comp = spinnerThreadCount.getEditor();
-        JFormattedTextField field = (JFormattedTextField) comp.getComponent(0);
-        DefaultFormatter formatter = (DefaultFormatter) field.getFormatter();
-        formatter.setCommitsOnValidEdit(true);
-        spinnerThreadCount.addChangeListener(e -> {
-            int numberOfThreads = 0;
-            try {
-                numberOfThreads = Integer.parseInt(spinnerThreadCount.getValue().toString());
-            } catch (NumberFormatException e1) {
-                log.error("Thread Count is not a Number!", e1);
-            }
-            Main.getBenchmarkConfig().setNumberOfThreads(numberOfThreads);
-            spinnerThreadCount.setValue(Main.getBenchmarkConfig().getNumberOfThreads());
-        });
-        spinnerTarget.setValue(Main.getBenchmarkConfig().getNumberOfThreads());
-        comp = spinnerTarget.getEditor();
-        field = (JFormattedTextField) comp.getComponent(0);
-        formatter = (DefaultFormatter) field.getFormatter();
-        formatter.setCommitsOnValidEdit(true);
-        spinnerTarget.addChangeListener(e -> {
-            int numberOfThreads = 0;
-            try {
-                numberOfThreads = Integer.parseInt(spinnerTarget.getValue().toString());
-            } catch (NumberFormatException e1) {
-                log.error("Thread Count is not a Number!", e1);
-            }
-            Main.getBenchmarkConfig().setNumberOfThreads(numberOfThreads);
-            spinnerTarget.setValue(Main.getBenchmarkConfig().getNumberOfThreads());
-        });
-        comboBoxWorkload.setModel(comboBoxWorkloadModel);
         updateWorkloads();
         TextPaneAppender.addTextPane(textPaneConsole);
         buttonSettings.addActionListener(e -> {
@@ -144,19 +104,15 @@ public class MainWindow extends JFrame
         });
         buttonShowGitSettings.addActionListener(e -> {
             if (Main.getGitManager().isReady())
-                GitWindow.showGitWindow();
+                GitDialog.showGitDialog();
         });
         buttonStartAntidote.addActionListener(e -> {
             if (Main.getDockerManager().isReady())
                 new AntidoteView(new AntidoteClientWrapperGui("AntidoteGuiClient",
-                                                              AdbmConstants.benchmarkContainerName)); //TODO change this!
+                                                              AdbmConstants.ADBM_CONTAINER)); //TODO change this!
             //TODO
         });
-        buttonCreateDockerfile.addActionListener(e -> {
-            if (Main.getGitManager().isReady())
-                DockerfileBuilder.createDockerfile(false);
-        });
-        buttonBuildBenchmarkImages.addActionListener(e -> {
+        /*buttonBuildBenchmarkImages.addActionListener(e -> {
             if (Main.getDockerManager().isReady()) {
                 int confirm = JOptionPane.showConfirmDialog(
                         mainWindow,
@@ -193,30 +149,9 @@ public class MainWindow extends JFrame
                     }
                 });
             }
-        });
-        buttonRunBenchmark.addActionListener(e -> {
-            executorService.execute(() -> {
-                Main.getBenchmarkConfig().runBenchmark();
-            });
-        });
-        checkBoxUseTransactions.addActionListener(e -> {
-            Main.getBenchmarkConfig().setUseTransactions(checkBoxUseTransactions.isSelected());
-        });
-        comboBoxWorkload.addActionListener(e -> {
-            String selectedItem = comboBoxWorkloadModel.getSelectedItem().toString();
-            if (selectedItem != null && !Main.getBenchmarkConfig().getUsedWorkLoad().equals(selectedItem)) {
-                Main.getBenchmarkConfig().setUsedWorkload(selectedItem);
-                updateWorkloads();
-            }
-        });
-        buttonOpenWorkload.addActionListener(e -> {
-            ProcessBuilder pb = new ProcessBuilder("Notepad.exe", format("{}/{}", AdbmConstants.ycsbWorkloadsPath,
-                                                                         Main.getBenchmarkConfig().getUsedWorkLoad()));
-            try {
-                pb.start();
-            } catch (IOException e1) {
-                log.error("An error occurred while opening the workload with Notepad.exe!", e1);
-            }
+        });*/
+        buttonOpenBenchmarkDialog.addActionListener(e -> {
+            BenchmarkDialog.showBenchmarkDialog();
         });
     }
 
@@ -224,7 +159,7 @@ public class MainWindow extends JFrame
     private void updateWorkloads()
     {
         comboBoxWorkloadModel.removeAllElements();
-        for (String fileName : FileUtil.getAllFileNamesInFolder(AdbmConstants.ycsbWorkloadsPath))
+        for (String fileName : FileUtil.getAllFileNamesInFolder(AdbmConstants.YCSB_WORKLOADS_PATH))
             comboBoxWorkloadModel.addElement(fileName);
         comboBoxWorkloadModel.setSelectedItem(Main.getBenchmarkConfig().getUsedWorkLoad());
     }

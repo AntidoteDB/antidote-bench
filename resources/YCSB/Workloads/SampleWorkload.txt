@@ -3,7 +3,7 @@
 # Output file can be moved to desried file path
 
 
-recordcount=10000
+recordcount=1000
 
 workload=adbm.ycsb.AntidoteWorkload
 

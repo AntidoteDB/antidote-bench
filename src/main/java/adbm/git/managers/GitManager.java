@@ -40,7 +40,7 @@ public class GitManager implements IGitManager
 
     private Git git;
 
-    private int attempts = AdbmConstants.numberOfAttemptsToStartGit;
+    private int attempts = AdbmConstants.NUMBER_OF_ATTEMPTS_TO_START_GIT;
 
     private static GitManager instance = new GitManager();
 
@@ -59,21 +59,21 @@ public class GitManager implements IGitManager
     {
         log.trace("Starting GitManager!");
         if (attempts <= 0) {
-            attempts = AdbmConstants.numberOfAttemptsToStartGit;
+            attempts = AdbmConstants.NUMBER_OF_ATTEMPTS_TO_START_GIT;
             return false;
         }
         attempts--;
         if (!Main.isGuiMode()) return false;
         String repoLocation = Main.getSettingsManager().getGitRepoLocation();
-        if (repoLocation.equals(AdbmConstants.defaultAntidotePath) && Files
-                .notExists(Paths.get(getAbsolutePath(AdbmConstants.defaultAntidotePath))))
+        if (repoLocation.equals(AdbmConstants.DEFAULT_AD_GIT_REPO_PATH) && Files
+                .notExists(Paths.get(getAbsolutePath(AdbmConstants.DEFAULT_AD_GIT_REPO_PATH))))
         {
             //TODO remember decision
             int res = JOptionPane.showConfirmDialog(MainWindow.getMainWindow(),
                                                     format("Do you want to use the default path for the Antidote repository?\n\n" +
                                                                    "This will pull the Antidote repository if it doesn't exist in that directory.\n\n" +
                                                                    "Default Path: {}",
-                                                           getAbsolutePath(AdbmConstants.defaultAntidotePath)));
+                                                           getAbsolutePath(AdbmConstants.DEFAULT_AD_GIT_REPO_PATH)));
             if (res != JOptionPane.YES_OPTION) {
                 log.info("No location for the git repository was selected!");
                 //int res = JOptionPane.showConfirmDialog(MainWindow.getMainWindow(), "Do you want to use the default location");
@@ -82,7 +82,7 @@ public class GitManager implements IGitManager
                 return start();
             }
             else {
-                boolean success = new File(AdbmConstants.defaultAntidotePath).mkdirs();
+                boolean success = new File(AdbmConstants.DEFAULT_AD_GIT_REPO_PATH).mkdirs();
                 if (!success) {
                     log.error("Folder creation has failed!");//TODO
                 }
@@ -105,14 +105,14 @@ public class GitManager implements IGitManager
             try {
                 if (git.status().call().isClean()) {
                     String url = git.getRepository().getConfig().getString("remote", "origin", "url");
-                    if (url.equals(AdbmConstants.gitUrl)) {
+                    if (url.equals(AdbmConstants.AD_GIT_REPO_URL)) {
                         log.info("Git connection was successfully established!");
                         log.trace("Git Fetch: {}", git.fetch().call().getMessages());
                         return true;
                     }
                     else {
                         log.info(
-                                "The location for the git repository contains a another repository that is not equal to " + AdbmConstants.gitUrl + "!");
+                                "The location for the git repository contains a another repository that is not equal to " + AdbmConstants.AD_GIT_REPO_URL + "!");
                         log.info(
                                 "Please select another location in the settings or remove that git repository first!");
                         git = null;
@@ -133,14 +133,14 @@ public class GitManager implements IGitManager
         else {
             log.info("There is currently no git repository at the selected location!");
             log.info(
-                    "The git repository " + AdbmConstants.gitUrl + " will be cloned to the selected location if there are no files in that directory.");
+                    "The git repository " + AdbmConstants.AD_GIT_REPO_URL + " will be cloned to the selected location if there are no files in that directory.");
 
             if (contents.length == 0) {
                 log.info(
-                        "Cloning the git repository " + AdbmConstants.gitUrl + " to the location " + repoLocation + "!");
+                        "Cloning the git repository " + AdbmConstants.AD_GIT_REPO_URL + " to the location " + repoLocation + "!");
                 try {
                     git = Git.cloneRepository()
-                             .setURI(AdbmConstants.gitUrl)
+                             .setURI(AdbmConstants.AD_GIT_REPO_URL)
                              .setDirectory(new File(repoLocation))
                              .setProgressMonitor(new TextProgressMonitor(new PrintWriter(System.out)))
                              .call();
