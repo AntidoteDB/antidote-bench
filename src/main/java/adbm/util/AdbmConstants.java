@@ -21,6 +21,14 @@ public class AdbmConstants
 
     public static final String benchmarkContainerName = "AntidoteBenchmarkContainer";
 
+    public static final String ycsbDBClassName = "adbm.ycsb.AntidoteYCSBClient";
+
+    public static final String dateFormat = "yyyyMMdd'T'HHmmssXX";
+
+    public static final String resultFileName = "Result";
+
+    public static final int numberCommitAbbreviation = 10; //Should be plenty
+
     /**
      * This is the path to the resources folder where all resource except some properties are stored.
      */

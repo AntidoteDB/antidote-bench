@@ -231,7 +231,7 @@ public class DockerManager implements IDockerManager {
     @Override
     public String getCommitOfContainer(String containerName) {
         if (!isReady()) return "";
-        return ""; //TODO
+        return "master"; //TODO
     }
 
     @Override
