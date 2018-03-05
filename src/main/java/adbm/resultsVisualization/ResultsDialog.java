@@ -103,7 +103,7 @@ public class ResultsDialog extends JDialog
                         String operationsType = readNextLine[0];
                         double X = 0;
                         double Y = 0;
-                        // add values to dataset for READ
+                        // add values to dataset for an operation READ or UPDATE
                         if (operationsType.equals(operation)) {
                             try {
                                 X = Double.parseDouble(readNextLine[1]);
@@ -128,7 +128,7 @@ public class ResultsDialog extends JDialog
         return dataset;
     }
 
-    // Use for storing the chart as a pdf file
+    // This method is using for storing the chart as a pdf file
     public static void convertToPdf(ArrayList<JFreeChart> savedChartList, int width, int height)
     {
 
