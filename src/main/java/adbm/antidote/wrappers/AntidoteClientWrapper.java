@@ -71,7 +71,7 @@ public class AntidoteClientWrapper implements IAntidoteClientWrapper
         }
         this.name = name;
         if (isNullOrEmpty(containerName)) {
-            containerName = AdbmConstants.ADBM_CONTAINER;
+            containerName = AdbmConstants.ADBM_CONTAINER_NAME;
         }
         this.containerName = containerName;
     }
@@ -155,7 +155,7 @@ public class AntidoteClientWrapper implements IAntidoteClientWrapper
     @Override
     public Object readKeyValue(String keyName)
     {
-        return readKeyValue(keyName, Main.getBenchmarkConfig().getUsedTransactionType());
+        return readKeyValue(keyName, Main.getAntidoteYCSBConfiguration().getUsedTransactionType());
     }
 
     @Override
@@ -179,7 +179,7 @@ public class AntidoteClientWrapper implements IAntidoteClientWrapper
     @Override
     public List<Object> readKeyValues(Iterable<String> keyNames)
     {
-        return readKeyValues(keyNames, Main.getBenchmarkConfig().getUsedTransactionType());
+        return readKeyValues(keyNames, Main.getAntidoteYCSBConfiguration().getUsedTransactionType());
     }
 
     @Override
@@ -213,7 +213,7 @@ public class AntidoteClientWrapper implements IAntidoteClientWrapper
     @Override
     public void updateKey(UpdateOperation operation)
     {
-        updateKey(operation, Main.getBenchmarkConfig().getUsedTransactionType());
+        updateKey(operation, Main.getAntidoteYCSBConfiguration().getUsedTransactionType());
     }
 
     @Override
@@ -245,7 +245,7 @@ public class AntidoteClientWrapper implements IAntidoteClientWrapper
     @Override
     public void updateKeys(Iterable<UpdateOperation> operations)
     {
-        updateKeys(operations, Main.getBenchmarkConfig().getUsedTransactionType());
+        updateKeys(operations, Main.getAntidoteYCSBConfiguration().getUsedTransactionType());
     }
 
     @Override
@@ -279,7 +279,7 @@ public class AntidoteClientWrapper implements IAntidoteClientWrapper
     @Override
     public List<Object> performKeyOperations(Iterable<Operation> operations)
     {
-        return performKeyOperations(operations, Main.getBenchmarkConfig().getUsedTransactionType());
+        return performKeyOperations(operations, Main.getAntidoteYCSBConfiguration().getUsedTransactionType());
     }
 
     @Override

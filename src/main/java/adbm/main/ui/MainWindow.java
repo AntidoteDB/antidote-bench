@@ -8,14 +8,13 @@ import adbm.settings.ui.SettingsDialog;
 import adbm.util.AdbmConstants;
 import adbm.util.TextPaneAppender;
 import adbm.util.helpers.FileUtil;
+import adbm.ycsb.ui.AntidoteYCSBConfigurationDialog;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import javax.swing.*;
-import javax.swing.text.DefaultFormatter;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
-import java.io.IOException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
@@ -29,10 +28,10 @@ public class MainWindow extends JFrame
     private JTextPane textPaneConsole;
     private JPanel panel;
     private JButton buttonSettings;
-    private JButton buttonStartDocker;
+    //private JButton buttonStartDocker;
     private JButton buttonStartGit;
     private JButton buttonShowGitSettings;
-    private JButton buttonStartAntidote;
+    //private JButton buttonStartAntidote;
     private JButton buttonOpenBenchmarkDialog;
     private ExecutorService executorService = Executors.newSingleThreadExecutor();
 
@@ -97,21 +96,21 @@ public class MainWindow extends JFrame
                 executorService.execute(Main.getGitManager()::start);
             else log.info("Git is already started!");
         });
-        buttonStartDocker.addActionListener(e -> {
+        /*buttonStartDocker.addActionListener(e -> {
             if (!Main.getDockerManager().isReady())
                 executorService.execute(() -> Main.getDockerManager().start());
             else log.info("Docker is already started!");
-        });
+        });*/
         buttonShowGitSettings.addActionListener(e -> {
             if (Main.getGitManager().isReady())
                 GitDialog.showGitDialog();
         });
-        buttonStartAntidote.addActionListener(e -> {
+        /*buttonStartAntidote.addActionListener(e -> {
             if (Main.getDockerManager().isReady())
                 new AntidoteView(new AntidoteClientWrapperGui("AntidoteGuiClient",
-                                                              AdbmConstants.ADBM_CONTAINER)); //TODO change this!
+                                                              AdbmConstants.ADBM_CONTAINER_NAME)); //TODO change this!
             //TODO
-        });
+        });*/
         /*buttonBuildBenchmarkImages.addActionListener(e -> {
             if (Main.getDockerManager().isReady()) {
                 int confirm = JOptionPane.showConfirmDialog(
@@ -151,7 +150,7 @@ public class MainWindow extends JFrame
             }
         });*/
         buttonOpenBenchmarkDialog.addActionListener(e -> {
-            BenchmarkDialog.showBenchmarkDialog();
+            AntidoteYCSBConfigurationDialog.showBenchmarkDialog();
         });
     }
 
@@ -161,7 +160,7 @@ public class MainWindow extends JFrame
         comboBoxWorkloadModel.removeAllElements();
         for (String fileName : FileUtil.getAllFileNamesInFolder(AdbmConstants.YCSB_WORKLOADS_PATH))
             comboBoxWorkloadModel.addElement(fileName);
-        comboBoxWorkloadModel.setSelectedItem(Main.getBenchmarkConfig().getUsedWorkLoad());
+        comboBoxWorkloadModel.setSelectedItem(Main.getAntidoteYCSBConfiguration().getUsedWorkLoad());
     }
 
 }

@@ -62,13 +62,13 @@ public class AntidoteCommandLine
                     Main.startBenchmarkContainer();
                     for (String commit : benchmarkCommits) {
                         boolean rebuildSuccess = Main.getDockerManager()
-                                .rebuildAntidoteInContainer(AdbmConstants.ADBM_CONTAINER, commit);
+                                .rebuildAntidoteInContainer(AdbmConstants.ADBM_CONTAINER_NAME, commit);
                         if (!rebuildSuccess) {
                             log.error("Rebuild of Antidote in the container failed! The benchmark cannot be run!");
                         }
                         else {
                             //Calling the benchmark
-                            Main.getBenchmarkConfig().runBenchmark();
+                            Main.getAntidoteYCSBConfiguration().runBenchmark();
                         }
                     }
                 }

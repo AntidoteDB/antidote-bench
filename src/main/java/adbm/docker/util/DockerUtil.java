@@ -17,15 +17,19 @@ public class DockerUtil {
      * @param containerNameFromDocker The name of the container.
      * @return The name where the first character is removed if it was a '/'.
      */
-    public static String normalizeName(String containerNameFromDocker) {
+    private static String normalizeName(@Nonnull String containerNameFromDocker) {
         if (containerNameFromDocker.startsWith("/")) return containerNameFromDocker.substring(1);
         else return containerNameFromDocker;
     }
 
     /**
-     * @param containerNames
-     * @param containerId
-     * @return
+     * Gets the first name of a container.
+     * Logs if the container has multiple names or if the container does not have a name (although this should not be possible).
+     * Also logs the name of the container before and after the normalization.
+     *
+     * @param containerNames The list of names of the container (should normally contain one name)
+     * @param containerId The id of the container (for logging)
+     * @return The first name of the container.
      */
     @Nonnull
     public static String getFirstNameOfContainer(List<String> containerNames, String containerId) {

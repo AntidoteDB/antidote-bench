@@ -7,7 +7,7 @@ import javax.swing.*;
 import java.awt.*;
 import java.util.ArrayList;
 
-public class VisualizationPanel
+public class ResultsPanel
 {
     private JPanel panel;
     private JButton buttonSave;
@@ -17,11 +17,11 @@ public class VisualizationPanel
 
     public static JPanel getPanel(ChartPanel... chartPanels)
     {
-        VisualizationPanel resultsPanel = new VisualizationPanel(chartPanels);
+        ResultsPanel resultsPanel = new ResultsPanel(chartPanels);
         return resultsPanel.panel;
     }
 
-    private VisualizationPanel(ChartPanel... chartPanels)
+    private ResultsPanel(ChartPanel... chartPanels)
     {
         int i = 1;
         for (ChartPanel chartPanel : chartPanels) {
@@ -40,7 +40,7 @@ public class VisualizationPanel
             }
             i++;
         }
-        buttonSave.addActionListener(e -> VisualizationMain.convertToPdf(savedChartList, 640, 480));
+        buttonSave.addActionListener(e -> ResultsDialog.convertToPdf(savedChartList, 640, 480));
     }
 
 }

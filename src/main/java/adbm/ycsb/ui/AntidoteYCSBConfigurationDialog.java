@@ -1,10 +1,10 @@
-package adbm.main.ui;
+package adbm.ycsb.ui;
 
 import adbm.antidote.IAntidoteClientWrapper;
 import adbm.antidote.util.AntidoteUtil;
-import adbm.git.managers.GitManager;
 import adbm.git.ui.GitDialog;
 import adbm.main.Main;
+import adbm.main.ui.MainWindow;
 import adbm.util.AdbmConstants;
 import adbm.util.TextPaneAppender;
 import adbm.util.helpers.FileUtil;
@@ -16,8 +16,6 @@ import org.apache.logging.log4j.Logger;
 import javax.swing.*;
 import javax.swing.text.DefaultFormatter;
 import java.awt.*;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
@@ -25,9 +23,9 @@ import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
-public class BenchmarkDialog extends JDialog
+public class AntidoteYCSBConfigurationDialog extends JDialog
 {
-    private static final Logger log = LogManager.getLogger(BenchmarkDialog.class);
+    private static final Logger log = LogManager.getLogger(AntidoteYCSBConfigurationDialog.class);
 
     private JTextPane textPaneConsole;
     private JButton buttonRunYCSBBenchmark;
@@ -44,43 +42,45 @@ public class BenchmarkDialog extends JDialog
     private JPanel panel;
 
     private DefaultComboBoxModel<String> comboBoxWorkloadModel = new DefaultComboBoxModel<>();
-    private DefaultComboBoxModel<AntidotePB.CRDT_type> comboBoxCrdtModel = new DefaultComboBoxModel<>(AntidotePB.CRDT_type.values());
+    private DefaultComboBoxModel<AntidotePB.CRDT_type> comboBoxCrdtModel = new DefaultComboBoxModel<>(
+            AntidotePB.CRDT_type.values());
     private DefaultComboBoxModel<IAntidoteClientWrapper.TransactionType> comboBoxTxTypeModel = new DefaultComboBoxModel<>(
             IAntidoteClientWrapper.TransactionType.values());
     private DefaultComboBoxModel<String> comboBoxOperationModel = new DefaultComboBoxModel<>();
     private DefaultListModel<String> listCommitsModel = new DefaultListModel<>();
 
-    private static BenchmarkDialog benchmarkDialog;
+    private static AntidoteYCSBConfigurationDialog antidoteYCSBConfigurationDialog;
 
     private ExecutorService executorService = Executors.newSingleThreadExecutor();
 
     private static void checkBenchmarkDialog()
     {
-        if (benchmarkDialog == null) {
-            benchmarkDialog = new BenchmarkDialog();
+        if (antidoteYCSBConfigurationDialog == null) {
+            antidoteYCSBConfigurationDialog = new AntidoteYCSBConfigurationDialog();
         }
     }
 
-    public static BenchmarkDialog getBenchmarkDialog()
+    public static AntidoteYCSBConfigurationDialog getAntidoteYCSBConfigurationDialog()
     {
         checkBenchmarkDialog();
-        return benchmarkDialog;
+        return antidoteYCSBConfigurationDialog;
     }
 
     public static void showBenchmarkDialog()
     {
         checkBenchmarkDialog();
-        benchmarkDialog.invokeCommitChange();
-        benchmarkDialog.setVisible(true);
+        antidoteYCSBConfigurationDialog.invokeCommitChange();
+        antidoteYCSBConfigurationDialog.setVisible(true);
     }
 
-    private BenchmarkDialog() {
-        super(MainWindow.getMainWindow(),"YCSB Benchmark Manager", ModalityType.MODELESS);
+    private AntidoteYCSBConfigurationDialog()
+    {
+        super(MainWindow.getMainWindow(), "YCSB Benchmark Manager", ModalityType.MODELESS);
         setContentPane(panel);
         setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
         pack();
         setLocationRelativeTo(MainWindow.getMainWindow());
-        spinnerThreads.setValue(Main.getBenchmarkConfig().getNumberOfThreads());
+        spinnerThreads.setValue(Main.getAntidoteYCSBConfiguration().getNumberOfThreads());
         JComponent comp = spinnerThreads.getEditor();
         JFormattedTextField field = (JFormattedTextField) comp.getComponent(0);
         DefaultFormatter formatter = (DefaultFormatter) field.getFormatter();
@@ -92,23 +92,23 @@ public class BenchmarkDialog extends JDialog
             } catch (NumberFormatException e1) {
                 log.error("Thread Count is not a Number!", e1);
             }
-            Main.getBenchmarkConfig().setNumberOfThreads(numberOfThreads);
-            spinnerThreads.setValue(Main.getBenchmarkConfig().getNumberOfThreads());
+            Main.getAntidoteYCSBConfiguration().setNumberOfThreads(numberOfThreads);
+            spinnerThreads.setValue(Main.getAntidoteYCSBConfiguration().getNumberOfThreads());
         });
-        spinnerTarget.setValue(Main.getBenchmarkConfig().getNumberOfThreads());
+        spinnerTarget.setValue(Main.getAntidoteYCSBConfiguration().getTargetNumber());
         comp = spinnerTarget.getEditor();
         field = (JFormattedTextField) comp.getComponent(0);
         formatter = (DefaultFormatter) field.getFormatter();
         formatter.setCommitsOnValidEdit(true);
         spinnerTarget.addChangeListener(e -> {
-            int numberOfThreads = 0;
+            int targetNumber = 0;
             try {
-                numberOfThreads = Integer.parseInt(spinnerTarget.getValue().toString());
+                targetNumber = Integer.parseInt(spinnerTarget.getValue().toString());
             } catch (NumberFormatException e1) {
-                log.error("Thread Count is not a Number!", e1);
+                log.error("Target Count is not a Number!", e1);
             }
-            Main.getBenchmarkConfig().setNumberOfThreads(numberOfThreads);
-            spinnerTarget.setValue(Main.getBenchmarkConfig().getNumberOfThreads());
+            Main.getAntidoteYCSBConfiguration().setTargetNumber(targetNumber);
+            spinnerTarget.setValue(Main.getAntidoteYCSBConfiguration().getTargetNumber());
         });
 
         comboBoxCrdt.setModel(comboBoxCrdtModel);
@@ -129,36 +129,48 @@ public class BenchmarkDialog extends JDialog
             GitDialog.showGitDialog();
         });
         comboBoxCrdt.addActionListener(e -> {
-            IAntidoteClientWrapper.TransactionType selectedItem = (IAntidoteClientWrapper.TransactionType) comboBoxTxTypeModel.getSelectedItem();
-            if (!Main.getBenchmarkConfig().getUsedTransactionType().equals(selectedItem)) {
-                Main.getBenchmarkConfig().setUsedTransactionType(selectedItem);
-                updateTransactionType();
+            AntidotePB.CRDT_type selectedItem = (AntidotePB.CRDT_type) comboBoxCrdtModel.getSelectedItem();
+            if (selectedItem == null) return;
+            if (!Main.getAntidoteYCSBConfiguration().getUsedKeyType().equals(selectedItem)) {
+                Main.getAntidoteYCSBConfiguration().setUsedKeyType(selectedItem);
+                updateCrdtType();
             }
         });
         comboBoxOperation.addActionListener(e -> {
-
+            Object selectedObject = comboBoxOperationModel.getSelectedItem();
+            if (selectedObject == null) return;
+            String selectedItem = comboBoxOperationModel.getSelectedItem().toString();
+            if (!Main.getAntidoteYCSBConfiguration().getUsedOperation().equals(selectedItem)) {
+                Main.getAntidoteYCSBConfiguration().setUsedOperation(selectedItem);
+                updateOperations();
+            }
         });
         comboBoxTxType.addActionListener(e -> {
-            AntidotePB.CRDT_type selectedItem = (AntidotePB.CRDT_type) comboBoxCrdtModel.getSelectedItem();
-            if (!Main.getBenchmarkConfig().getUsedKeyType().equals(selectedItem)) {
-                Main.getBenchmarkConfig().setUsedKeyType(selectedItem);
-                updateCrdtType();
+            IAntidoteClientWrapper.TransactionType selectedItem = (IAntidoteClientWrapper.TransactionType) comboBoxTxTypeModel
+                    .getSelectedItem();
+            if (selectedItem == null) return;
+            if (!Main.getAntidoteYCSBConfiguration().getUsedTransactionType().equals(selectedItem)) {
+                Main.getAntidoteYCSBConfiguration().setUsedTransactionType(selectedItem);
+                updateTransactionType();
             }
         });
         comboBoxWorkloadFile.addActionListener(e -> {
             // TODO checks
+            Object selectedObject = comboBoxOperationModel.getSelectedItem();
+            if (selectedObject == null) return;
             String selectedItem = comboBoxWorkloadModel.getSelectedItem().toString();
-            if (!Main.getBenchmarkConfig().getUsedWorkLoad().equals(selectedItem)) {
-                Main.getBenchmarkConfig().setUsedWorkload(selectedItem);
+            if (!Main.getAntidoteYCSBConfiguration().getUsedWorkLoad().equals(selectedItem)) {
+                Main.getAntidoteYCSBConfiguration().setUsedWorkload(selectedItem);
                 updateWorkloads();
             }
         });
         checkBoxShowStatus.addActionListener(e -> {
-            Main.getBenchmarkConfig().setShowStatus(checkBoxShowStatus.isSelected());
+            Main.getAntidoteYCSBConfiguration().setShowStatus(checkBoxShowStatus.isSelected());
         });
         buttonEditWorkloadFile.addActionListener(e -> {
             try {
-                Desktop.getDesktop().edit(new File(AdbmConstants.getWorkloadPath(Main.getBenchmarkConfig().getUsedWorkLoad())));
+                Desktop.getDesktop()
+                       .edit(new File(AdbmConstants.getWorkloadPath(Main.getAntidoteYCSBConfiguration().getUsedWorkLoad())));
             } catch (IOException e1) {
                 log.error("An error occurred while opening the Workload file with standard .txt file editor.", e1);
             }
@@ -169,12 +181,13 @@ public class BenchmarkDialog extends JDialog
                 for (Object element : listCommitsModel.toArray()) {
                     commits.add(element.toString());
                 }
-                Main.getBenchmarkConfig().runBenchmark(commits);
+                Main.getAntidoteYCSBConfiguration().runBenchmark(commits);
             });
         });
     }
 
-    public void invokeCommitChange() {
+    public void invokeCommitChange()
+    {
         SwingUtilities.invokeLater(() -> {
             listCommitsModel.removeAllElements();
             for (String commit : Main.getSettingsManager().getBenchmarkCommits())
@@ -182,29 +195,32 @@ public class BenchmarkDialog extends JDialog
         });
     }
 
-    private void updateStatus() {
-        checkBoxShowStatus.setSelected(Main.getBenchmarkConfig().getShowStatus());
+    private void updateStatus()
+    {
+        checkBoxShowStatus.setSelected(Main.getAntidoteYCSBConfiguration().getShowStatus());
     }
 
-    private void updateOperations() {
+    private void updateOperations()
+    {
         comboBoxOperationModel.removeAllElements();
-        for (String operation : AntidoteUtil.typeOperationMap.get(Main.getBenchmarkConfig().getUsedKeyType())) {
+        for (String operation : AntidoteUtil.typeOperationMap.get(Main.getAntidoteYCSBConfiguration().getUsedKeyType())) {
             comboBoxOperationModel.addElement(operation);
         }
-        if (comboBoxOperationModel.getIndexOf(Main.getBenchmarkConfig().getUsedOperation()) == -1)
-        {
-            Main.getBenchmarkConfig().setUsedOperation(comboBoxOperationModel.getElementAt(0));
-            comboBoxOperationModel.setSelectedItem(Main.getBenchmarkConfig().getUsedOperation());
+        if (comboBoxOperationModel.getIndexOf(Main.getAntidoteYCSBConfiguration().getUsedOperation()) == -1) {
+            Main.getAntidoteYCSBConfiguration().setUsedOperation(comboBoxOperationModel.getElementAt(0));
         }
+        comboBoxOperationModel.setSelectedItem(Main.getAntidoteYCSBConfiguration().getUsedOperation());
     }
 
-    private void updateCrdtType() {
-        comboBoxCrdtModel.setSelectedItem(Main.getBenchmarkConfig().getUsedKeyType());
+    private void updateCrdtType()
+    {
+        comboBoxCrdtModel.setSelectedItem(Main.getAntidoteYCSBConfiguration().getUsedKeyType());
         updateOperations();
     }
 
-    private void updateTransactionType() {
-        comboBoxTxTypeModel.setSelectedItem(Main.getBenchmarkConfig().getUsedTransactionType());
+    private void updateTransactionType()
+    {
+        comboBoxTxTypeModel.setSelectedItem(Main.getAntidoteYCSBConfiguration().getUsedTransactionType());
     }
 
     private void updateWorkloads()
@@ -212,6 +228,6 @@ public class BenchmarkDialog extends JDialog
         comboBoxWorkloadModel.removeAllElements();
         for (String fileName : FileUtil.getAllFileNamesInFolder(AdbmConstants.YCSB_WORKLOADS_PATH))
             comboBoxWorkloadModel.addElement(FilenameUtils.removeExtension(fileName));
-        comboBoxWorkloadModel.setSelectedItem(Main.getBenchmarkConfig().getUsedWorkLoad());
+        comboBoxWorkloadModel.setSelectedItem(Main.getAntidoteYCSBConfiguration().getUsedWorkLoad());
     }
 }

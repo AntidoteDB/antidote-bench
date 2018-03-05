@@ -11,12 +11,15 @@ import adbm.settings.IAntidoteKeyStoreManager;
 import adbm.settings.ISettingsManager;
 import adbm.settings.managers.MapDBManager;
 import adbm.util.AdbmConstants;
+import adbm.ycsb.AntidoteYCSBConfiguration;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import javax.swing.*;
 import java.util.HashMap;
 import java.util.Map;
+
+import static adbm.util.helpers.FormatUtil.format;
 
 public class Main
 {
@@ -70,11 +73,11 @@ public class Main
         return gitManager;
     }
 
-    private static BenchmarkConfig benchmarkConfig = new BenchmarkConfig();
+    private static AntidoteYCSBConfiguration antidoteYCSBConfiguration = new AntidoteYCSBConfiguration();
 
-    public static BenchmarkConfig getBenchmarkConfig()
+    public static AntidoteYCSBConfiguration getAntidoteYCSBConfiguration()
     {
-        return benchmarkConfig;
+        return antidoteYCSBConfiguration;
     }
 
     public static boolean stopContainers = false;
@@ -127,7 +130,7 @@ public class Main
                 log.error("Docker could not be started!");
                 return false;
             }
-            if (!dockerManager.runContainer(AdbmConstants.ADBM_CONTAINER)) {
+            if (!dockerManager.runContainer(AdbmConstants.ADBM_CONTAINER_NAME)) {
                 log.error("Docker is a bad state! Please restart Docker before using this application!");
                 return false;
             }
@@ -154,6 +157,11 @@ public class Main
         }
 
         isDockerRunning = startBenchmarkContainer();
+        if (!isDockerRunning) closeApp();
+        //String commit = dockerManager.getCommitOfContainer(AdbmConstants.ADBM_CONTAINER_NAME);
+        //dockerManager.rebuildAntidoteInContainer(AdbmConstants.ADBM_CONTAINER_NAME, commit);
+        //dockerManager.performExec(AdbmConstants.ADBM_CONTAINER_NAME, true, new String[]{"bash", "-c", "ls /opt/antidote/data"});
+        //closeApp();
         //resultsTest();
         /*boolean rebuildSuccess = dockerManager.rebuildAntidoteInContainer("AntidoteBenchmarkClient", secondCommit);
         if (!rebuildSuccess) {

@@ -36,9 +36,8 @@ public class AntidoteYCSBClient extends DB
     @Override
     public void init() throws DBException
     {
-        //Main.initializeBenchmarkClient();
         antidoteClient = new AntidoteClientWrapper(format("AntidoteClient-{}", idCounter.getAndIncrement()),
-                                                   AdbmConstants.ADBM_CONTAINER);
+                                                   AdbmConstants.ADBM_CONTAINER_NAME);
         if (!antidoteClient.start()) {
             log.error("The Antidote Client could not be started!");
             throw new DBException("The Antidote Client could not be started!");
@@ -68,10 +67,6 @@ public class AntidoteYCSBClient extends DB
             log.warn("The Antidote Database does not support reading all fields!");
             return Status.NOT_IMPLEMENTED;
         }
-        if (fields.size() == 0) {
-            log.debug("No field were read!");
-            return Status.OK;
-        }
         if (result == null) {
             log.warn("Read operation was not performed because the map of results was null!");
             return Status.BAD_REQUEST;
@@ -79,13 +74,28 @@ public class AntidoteYCSBClient extends DB
         if (result.size() != 0) {
             log.warn("The map of results was not empty before the read!");
         }
-        // Keep order
-        List<String> orderedFields = new ArrayList<>(fields);
-        List<Object> orderedResults = antidoteClient.readKeyValues(orderedFields);
-        for (int i = 0; i < orderedResults.size(); i++) {
-            result.put(orderedFields.get(i), new ByteArrayByteIterator(orderedResults.get(i).toString().getBytes()));
-        }//TODO think about the result
-        return Status.OK;
+        int size = fields.size();
+        switch (size) {
+            case 0:
+                log.debug("No field is read!");
+                return Status.OK;
+            case 1:
+                log.debug("Single field is read!");
+                String field = fields.iterator().next();
+                result.put(field, new ByteArrayByteIterator(antidoteClient.readKeyValue(field).toString().getBytes()));
+                return Status.OK;
+            default:
+                log.debug("Multiple fields ({}) are read!", size);
+                // Keep order
+                List<String> orderedFields = new ArrayList<>(fields);
+                List<Object> orderedResults = antidoteClient.readKeyValues(orderedFields);
+                for (int i = 0; i < orderedResults.size(); i++) {
+                    result.put(orderedFields.get(i),
+                               new ByteArrayByteIterator(orderedResults.get(i).toString().getBytes()));
+                }//TODO think about the result
+                return Status.OK;
+        }
+
     }
 
     /**
@@ -120,14 +130,23 @@ public class AntidoteYCSBClient extends DB
             log.warn("Update operation was not performed because the map of values was null!");
             return Status.BAD_REQUEST;
         }
-        if (values.size() == 0) {
-            log.info("Update operation was not performed because the map of values was empty!");
-            return Status.OK;
+        int size = values.size();
+        switch (size) {
+            case 0:
+                log.debug("No update operation is performed.");
+                return Status.OK;
+            case 1:
+                log.debug("Single update operation is performed.");
+                Map.Entry<String, ByteIterator> entry = values.entrySet().iterator().next();
+                antidoteClient.updateKey(new UpdateOperation<>(entry.getKey(), AntidoteUtil.getOperation(), entry.getValue()));
+                return Status.OK;
+            default:
+                log.debug("Multiple update operations ({}) are performed", size);
+                antidoteClient
+                        .updateKeys(values.entrySet().stream().map((s) -> new UpdateOperation<>(s.getKey(), AntidoteUtil
+                                .getOperation(), s.getValue())).collect(Collectors.toList()));
+                return Status.OK;
         }
-        antidoteClient
-                .updateKeys(values.entrySet().stream().map((s) -> new UpdateOperation<>(s.getKey(), AntidoteUtil
-                        .getOperation(), s.getValue())).collect(Collectors.toList()));
-        return Status.OK;
     }
 
     /**

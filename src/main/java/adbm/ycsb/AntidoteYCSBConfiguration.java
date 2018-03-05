@@ -1,7 +1,11 @@
-package adbm.main;
+package adbm.ycsb;
 
 import adbm.antidote.IAntidoteClientWrapper;
-import adbm.resultsVisualization.VisualizationMain;
+import adbm.antidote.operations.UpdateOperation;
+import adbm.antidote.util.AntidoteUtil;
+import adbm.antidote.wrappers.AntidoteClientWrapper;
+import adbm.main.Main;
+import adbm.resultsVisualization.ResultsDialog;
 import adbm.util.AdbmConstants;
 import adbm.util.helpers.GeneralUtil;
 import com.yahoo.ycsb.Client;
@@ -16,9 +20,9 @@ import java.util.List;
 
 import static adbm.util.helpers.FormatUtil.format;
 
-public class BenchmarkConfig
+public class AntidoteYCSBConfiguration
 {
-    private static final Logger log = LogManager.getLogger(BenchmarkConfig.class);
+    private static final Logger log = LogManager.getLogger(AntidoteYCSBConfiguration.class);
 
     private AntidotePB.CRDT_type usedKeyType = AntidotePB.CRDT_type.COUNTER;
 
@@ -114,9 +118,13 @@ public class BenchmarkConfig
     private boolean rebuildAntidote(String commit)
     {
         if (commit == null) return true;
-        boolean rebuildSuccess = Main.getDockerManager()
-                                     .rebuildAntidoteInContainer(AdbmConstants.ADBM_CONTAINER, commit);
-        return rebuildSuccess;
+        String currentCommit = Main.getDockerManager().getCommitOfContainer(AdbmConstants.ADBM_CONTAINER_NAME).trim();
+        log.trace("Current Commit: {}", currentCommit);
+        log.trace("New Commit: {}", commit);
+        if (commit.trim().equals(currentCommit)) {
+            return true;
+        }
+        return Main.getDockerManager().rebuildAntidoteInContainer(AdbmConstants.ADBM_CONTAINER_NAME, commit);
     }
 
     public boolean runBenchmark(List<String> commits) {
@@ -129,7 +137,6 @@ public class BenchmarkConfig
         if (!Main.isDockerRunning) return false;
         String currentDateTime = new SimpleDateFormat(AdbmConstants.DATE_FORMAT).format(new Date());
         String usedDB = AdbmConstants.YCSB_DB_CLASS_NAME;
-        boolean showStatus = true;
         String[] threadsArg = numberOfThreads <= 1 ? new String[0] : new String[]{"-threads", format("{}",
                                                                                                      numberOfThreads)};
         String[] targetArg = targetNumber <= 0 ? new String[0] : new String[]{"-target", format("{}",
@@ -150,7 +157,12 @@ public class BenchmarkConfig
         List<String> resultFiles = new ArrayList<>();
         for (String commit : commits) {
             if (!rebuildAntidote(commit)) return false;
-            if (commit == null) commit = Main.getDockerManager().getCommitOfContainer(AdbmConstants.ADBM_CONTAINER);
+            AntidoteClientWrapper test = new AntidoteClientWrapper("Test", AdbmConstants.ADBM_CONTAINER_NAME);
+            test.start();
+            log.trace("TestValue Initial: {}", test.readKeyValue("Test").toString());
+            test.updateKey(new UpdateOperation<>("Test", AntidoteUtil.getOperation(), 1));
+            log.trace("TestValue After: {}", test.readKeyValue("Test").toString());
+            if (commit == null) commit = Main.getDockerManager().getCommitOfContainer(AdbmConstants.ADBM_CONTAINER_NAME);
             String shortCommit = commit.substring(0, Math.min(commit.length(), AdbmConstants.NUMBER_COMMIT_ABBREVIATION));
             String resultFileName = format("{}_{}_{}{}", fileNameStart, shortCommit, currentDateTime, fileEnd);
             resultFiles.add(resultFileName);
@@ -160,7 +172,9 @@ public class BenchmarkConfig
             String[] ycsbArgs = newArgList.toArray(new String[0]);
             Client.main(ycsbArgs);
         }
-        VisualizationMain.showResultsWindow(resultFiles.toArray(new String[0]));
+        ResultsDialog.showResultsWindow(resultFiles.toArray(new String[0]));
         return true;
     }
+
+
 }

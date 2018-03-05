@@ -3,12 +3,16 @@ package adbm.ycsb;
 import com.yahoo.ycsb.*;
 import com.yahoo.ycsb.generator.*;
 import com.yahoo.ycsb.measurements.Measurements;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import java.io.IOException;
 import java.util.*;
 
-public class AntidoteWorkload extends Workload
+public class AntidoteYCSBWorkload extends Workload
 {
+    private static final Logger log = LogManager.getLogger(AntidoteYCSBWorkload.class);
+    
     /**
      * The name of the database table to run queries against.
      */
@@ -342,9 +346,9 @@ public class AntidoteWorkload extends Workload
                 Integer.parseInt(p.getProperty(INSERT_COUNT_PROPERTY, String.valueOf(recordcount - insertstart)));
         // Confirm valid values for insertstart and insertcount in relation to recordcount
         if (recordcount < (insertstart + insertcount)) {
-            System.err.println("Invalid combination of insertstart, insertcount and recordcount.");
-            System.err.println("recordcount must be bigger than insertstart + insertcount.");
-            System.exit(-1);
+            log.error("Invalid combination of insertstart, insertcount and recordcount.");
+            log.error("recordcount must be bigger than insertstart + insertcount.");
+            requestStop();
         }
         zeropadding =
                 Integer.parseInt(p.getProperty(ZERO_PADDING_PROPERTY, ZERO_PADDING_PROPERTY_DEFAULT));
@@ -361,8 +365,8 @@ public class AntidoteWorkload extends Workload
         if (dataintegrity && !(p.getProperty(
                 FIELD_LENGTH_DISTRIBUTION_PROPERTY,
                 FIELD_LENGTH_DISTRIBUTION_PROPERTY_DEFAULT)).equals("constant")) {
-            System.err.println("Must have constant field size to check data integrity.");
-            System.exit(-1);
+            log.error("Must have constant field size to check data integrity.");
+            requestStop();
         }
 
         if (p.getProperty(INSERT_ORDER_PROPERTY, INSERT_ORDER_PROPERTY_DEFAULT).compareTo("hashed") == 0) {
@@ -535,7 +539,7 @@ public class AntidoteWorkload extends Workload
             // even if one single insertion fails. User can optionally configure
             // an insertion retry limit (default is 0) to enable retry.
             if (++numOfRetries <= insertionRetryLimit) {
-                System.err.println("Retrying insertion, retry count: " + numOfRetries);
+                log.error("Retrying insertion, retry count: " + numOfRetries);
                 try {
                     // Sleep for a random number between [0.8, 1.2)*insertionRetryInterval.
                     int sleepTime = (int) (1000 * insertionRetryInterval * (0.8 + 0.4 * Math.random()));
@@ -545,7 +549,7 @@ public class AntidoteWorkload extends Workload
                 }
 
             } else {
-                System.err.println("Error inserting, not retrying any more. number of attempts: " + numOfRetries +
+                log.error("Error inserting, not retrying any more. number of attempts: " + numOfRetries +
                                            "Insertion Retry Limit: " + insertionRetryLimit);
                 break;
 
@@ -554,7 +558,7 @@ public class AntidoteWorkload extends Workload
 
         return null != status && status.isOk();
     }
-
+    
     /**
      * Do one transaction operation. Because it will be called concurrently from multiple client
      * threads, this function must be thread safe. However, avoid synchronized, or the threads will block waiting
@@ -563,7 +567,16 @@ public class AntidoteWorkload extends Workload
      */
     @Override
     public boolean doTransaction(DB db, Object threadstate) {
-        switch (operationchooser.nextString()) {
+        if (operationchooser == null) {
+            log.error("The operationchooser was null!");
+            return false;
+        }
+        String nextOp = operationchooser.nextString();
+        if (nextOp == null) {
+            log.error("The next operation was null!");
+            return false;
+        }
+        switch (nextOp) {
             case "READ":
                 doTransactionRead(db);
                 break;
@@ -643,8 +656,9 @@ public class AntidoteWorkload extends Workload
         }
 
         HashMap<String, ByteIterator> cells = new HashMap<String, ByteIterator>();
+        log.trace("Before Read!");
         db.read(table, keyname, fields, cells);
-
+        log.trace("After Read!");
         if (dataintegrity) {
             verifyRow(keyname, cells);
         }

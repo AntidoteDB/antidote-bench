@@ -1,6 +1,6 @@
 package adbm.util.helpers;
 
-import org.apache.logging.log4j.message.ParameterizedMessage;
+import org.apache.logging.log4j.message.FormattedMessage;
 
 public class FormatUtil
 {
@@ -11,6 +11,6 @@ public class FormatUtil
 
     public static String format(String text, Object... params)
     {
-        return ParameterizedMessage.format(text, params);
+        return new FormattedMessage(text, params).getFormattedMessage();
     }
 }

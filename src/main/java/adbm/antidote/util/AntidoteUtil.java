@@ -31,7 +31,7 @@ public class AntidoteUtil {
     public static Key createKey(String name)
     {
         if (!Main.isGuiMode()) { //TODO maybe performance optimization!
-            return createKey(name, Main.getBenchmarkConfig().getUsedKeyType());
+            return createKey(name, Main.getAntidoteYCSBConfiguration().getUsedKeyType());
         }
         return createKeyFromMapDB(name);
     }
@@ -54,7 +54,7 @@ public class AntidoteUtil {
     }
 
     public static String getOperation() {
-        return Main.getBenchmarkConfig().getUsedOperation();
+        return Main.getAntidoteYCSBConfiguration().getUsedOperation();
     }
 
     public static String getDefaultOperation(String keyName) {

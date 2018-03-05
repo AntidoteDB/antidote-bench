@@ -23,7 +23,7 @@ public class AdbmConstants
      */
     public static final String APP_NAME = "Antidote Benchmark";
 
-    public static final String ADBM_CONTAINER = "AntidoteBenchmarkContainer";
+    public static final String ADBM_CONTAINER_NAME = "AntidoteBenchmarkContainer";
 
     public static final String YCSB_DB_CLASS_NAME = "adbm.ycsb.AntidoteYCSBClient";
 
@@ -73,7 +73,9 @@ public class AdbmConstants
     /**
      * This is the path to the Dockerfile that is used to build the benchmark image.
      */
-    public static final String DOCKERFILE_PATH = format("{}/Dockerfile", RESOURCES_PATH);
+    public static final String DOCKERFILE_RESOURCES_PATH = format("{}/Dockerfile", RESOURCES_PATH);
+
+    public static final String DOCKERFILE_PATH = format("{}/Dockerfile", DOCKERFILE_RESOURCES_PATH);
 
     /**
      * This is the path to the images that are used in the gui.

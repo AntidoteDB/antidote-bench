@@ -31,18 +31,18 @@ import java.util.List;
 
 import static adbm.util.helpers.FormatUtil.format;
 
-public class VisualizationMain extends JDialog
+public class ResultsDialog extends JDialog
 {
 
-    private static final Logger log = LogManager.getLogger(VisualizationMain.class);
+    private static final Logger log = LogManager.getLogger(ResultsDialog.class);
 
     public static void showResultsWindow(String... _fileNames)
     {
-        VisualizationMain resultsWindow = new VisualizationMain(_fileNames);
+        ResultsDialog resultsWindow = new ResultsDialog(_fileNames);
         resultsWindow.setVisible(true);
     }
 
-    private VisualizationMain(String... fileNames)
+    private ResultsDialog(String... fileNames)
     {
         super(null, "Results Visualization", ModalityType.MODELESS);
 //super("Results Visualization");
@@ -51,11 +51,11 @@ public class VisualizationMain extends JDialog
 
         pack();
         UIUtils.centerFrameOnScreen(this);
-        log.trace("Starting VisualizationMain!");
+        log.trace("Starting ResultsDialog!");
         List<ChartPanel> chartPanelList = new ArrayList<>();
         chartPanelList.add(createChart("READ", "[READ]", fileNames));
         chartPanelList.add(createChart("UPDATE", "[UPDATE]", fileNames));
-        setContentPane(VisualizationPanel.getPanel(chartPanelList.toArray(new ChartPanel[0])));
+        setContentPane(ResultsPanel.getPanel(chartPanelList.toArray(new ChartPanel[0])));
     }
 
     public static void main(String[] args)

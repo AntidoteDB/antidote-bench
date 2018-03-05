@@ -16,6 +16,7 @@ public interface IDockerManager extends IStartStop
     /**
      * Returns true if an image is currently building.
      * Otherwise false.
+     *
      * @return true if an image is currently building. Otherwise false.
      */
     boolean isBuildingImage();
@@ -23,31 +24,33 @@ public interface IDockerManager extends IStartStop
     /**
      * Returns true if the Antidote benchmark image already exists and does not have to be built.
      * Otherwise false.
+     *
      * @return true if the Antidote benchmark image already exists and does not have to be built. Otherwise false.
      */
     boolean antidoteBenchmarkImageExists();
 
+    List<String> performExec(String containerName, boolean attachOutput, String[]... args);
+
     /**
      * Builds the Antidote benchmark image.
      * It creates a new Dockerfile and uses it to build the Antidote benchmark image.
-     * The image can be built using a local Antidote git repository which is copied inside the container.
-     * Otherwise the image is built by pulling the Antidote git repository remotely.
+     * The image is built by pulling the Antidote git repository remotely.
      * Will override an existing Antidote benchmark image (and remove all its containers).
      * Usually takes a few minutes to complete and should be called with another thread to avoid blocking the main thread.
-     * @param local If true the image is built by copying a local Antidote git repository otherwise the git repository is pulled remotely.
+     *
      * @return true if the image building process succeeded. Otherwise false.
      */
-    boolean buildAntidoteBenchmarkImage(boolean local);
+    boolean buildAntidoteBenchmarkImage();
 
     /**
      * Returns the commit id of the Antidote database that is currently running in the container.
+     *
      * @param containerName The name of the container.
      * @return the commit id of the Antidote database that is currently running in the container.
      */
     String getCommitOfContainer(String containerName);
 
     /**
-     *
      * @param containerName
      * @param commit
      * @return
@@ -93,19 +96,16 @@ public interface IDockerManager extends IStartStop
     boolean removeContainer(String containerName);
 
     /**
-     *
      * @return
      */
     boolean stopAllContainers();
 
     /**
-     *
      * @return
      */
     boolean removeAllContainers();
 
     /**
-     *
      * @param containerName1
      * @param containerName2
      * @return
@@ -113,14 +113,12 @@ public interface IDockerManager extends IStartStop
     boolean connectContainers(String containerName1, String containerName2);
 
     /**
-     *
      * @param containerName
      * @return
      */
     boolean isAntidoteReady(String containerName);
 
     /**
-     *
      * @param containerName
      * @return
      */
@@ -156,7 +154,6 @@ public interface IDockerManager extends IStartStop
      * @return The host port of the container.
      */
     List<Integer> getHostPortsFromContainer(String containerName);
-
 
 
 }
