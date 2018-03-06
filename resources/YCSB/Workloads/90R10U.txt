@@ -1,0 +1,28 @@
+# workload 1 for 10 secs
+
+workload=com.yahoo.ycsb.workloads.CoreWorkload
+
+recordcount=350000
+
+operationcount=20000
+
+readproportion=0.9
+updateproportion=0.1
+
+requestdistribution=latest
+
+# using default value for the below mentioned properties
+fieldcount=10
+fieldlength=100
+
+# should reads read all fields (true) or just one(false)
+readallfields=false
+
+# Maximum execution time in seconds
+maxexecutiontime=10
+
+# Latency
+measurementtype=timeseries
+
+# Granularity for time series (in milliseconds)
+timeseries.granularity=1500
