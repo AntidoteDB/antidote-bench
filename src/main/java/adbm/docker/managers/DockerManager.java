@@ -569,7 +569,7 @@ public class DockerManager implements IDockerManager
         }
         if (containerInfo != null) {
             HostConfig config = containerInfo.hostConfig();
-            ImmutableMap<String, List<PortBinding>> portBindingMap = config != null ? config.portBindings() : null;
+            Map<String, List<PortBinding>> portBindingMap = config != null ? config.portBindings() : null;
             if (portBindingMap != null) {
                 if (portBindingMap.containsKey(Integer.toString(AdbmConstants.STANDARD_ADBM_CLIENT_PORT))) {
                     List<PortBinding> portBindingList = portBindingMap

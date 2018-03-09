@@ -158,21 +158,10 @@ public class Main
 
         isDockerRunning = startBenchmarkContainer();
         if (!isDockerRunning) closeApp();
-        //String commit = dockerManager.getCommitOfContainer(AdbmConstants.ADBM_CONTAINER_NAME);
-        //dockerManager.rebuildAntidoteInContainer(AdbmConstants.ADBM_CONTAINER_NAME, commit);
-        //dockerManager.performExec(AdbmConstants.ADBM_CONTAINER_NAME, true, new String[]{"bash", "-c", "ls /opt/antidote/data"});
-        //closeApp();
-        //resultsTest();
-        /*boolean rebuildSuccess = dockerManager.rebuildAntidoteInContainer("AntidoteBenchmarkClient", secondCommit);
-        if (!rebuildSuccess) {
-            System.exit(1);
-        }
-        Client.main(ycsbArgs);*/
         if (AntidoteCommandLine.run(args)) closeApp();
 
         guiMode = true;
         settingsManager.start();
-        //keyManager.start();//TODO check
         MainWindow.showMainWindow();
             /*log.info("Using the Application:" +
                              "\nFirst click on Application Settings and select Folder for the Antidote Repository." +

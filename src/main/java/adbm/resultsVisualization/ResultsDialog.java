@@ -2,12 +2,6 @@ package adbm.resultsVisualization;
 
 import adbm.util.AdbmConstants;
 import au.com.bytecode.opencsv.CSVReader;
-import com.itextpdf.awt.DefaultFontMapper;
-import com.itextpdf.text.Document;
-import com.itextpdf.text.Rectangle;
-import com.itextpdf.text.pdf.PdfContentByte;
-import com.itextpdf.text.pdf.PdfTemplate;
-import com.itextpdf.text.pdf.PdfWriter;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jfree.chart.ChartFactory;
@@ -128,58 +122,6 @@ public class ResultsDialog extends JDialog
         return dataset;
     }
 
-    // This method is using for storing the chart as a pdf file
-    public static void convertToPdf(ArrayList<JFreeChart> savedChartList, int width, int height)
-    {
 
-        String savedFileName = null;
-        // parent component of the dialog
-        JFrame parentFrame = new JFrame();
 
-        JFileChooser fileChooser = new JFileChooser();
-        fileChooser.setDialogTitle("Enter the pdf file name");
-        fileChooser.addChoosableFileFilter(new FileNameExtensionFilter("PDF Documents", "pdf"));
-
-        int userSelection = fileChooser.showSaveDialog(parentFrame);
-
-        if (userSelection == JFileChooser.APPROVE_OPTION) {
-            File fileToSave = fileChooser.getSelectedFile();
-            try {
-                String fileName = fileToSave.getCanonicalPath();
-                if (!fileName.endsWith(".pdf")) {
-                    fileToSave = new File(fileName + ".pdf");
-                }
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-            System.out.println("Save as file: " + fileToSave.getAbsolutePath());
-            savedFileName = fileToSave.getName();
-
-            Document document = new Document(new Rectangle(width, height));
-
-            try {
-                PdfWriter writer;
-                writer = PdfWriter.getInstance(document, new FileOutputStream(fileToSave));
-                document.open();
-                PdfContentByte cb = writer.getDirectContent();
-                PdfTemplate tp = cb.createTemplate(width, height);
-                Graphics2D g2d = tp.createGraphics(width, height, new DefaultFontMapper());
-                int i = 0;
-                int size = savedChartList.size();
-                for (JFreeChart savedChart : savedChartList) {
-                    Rectangle2D r2d = new Rectangle2D.Double(0, 0, width / size, height);
-                    if (i == 1) {
-                        r2d = new Rectangle2D.Double(width / size, 0, width / size, height);
-                    }
-                    savedChart.draw(g2d, r2d);
-                    i++;
-                }
-                g2d.dispose();
-                cb.addTemplate(tp, 0, 0);
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
-            document.close();
-        }
-    }
 }

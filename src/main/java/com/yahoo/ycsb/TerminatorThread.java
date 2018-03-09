@@ -47,7 +47,7 @@ public class TerminatorThread extends Thread
         this.threads = threads;
         this.workload = workload;
         waitTimeOutInMS = 2000;
-        log.error("Maximum execution time specified as: " + maxExecutionTime + " secs");
+        log.info("Maximum execution time specified as: " + maxExecutionTime + " secs");
     }
 
     public void run()
@@ -60,7 +60,7 @@ public class TerminatorThread extends Thread
             try {
                 Thread.sleep(maxtime - time);
             } catch (InterruptedException e) {
-                log.error("Could not wait until max specified time, TerminatorThread interrupted.");
+                log.debug("Could not wait until max specified time, TerminatorThread interrupted.");
                 //return;
             }
             time = watch.getTime();

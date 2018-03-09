@@ -15,6 +15,7 @@ import org.apache.logging.log4j.Logger;
 
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
 
@@ -155,13 +156,13 @@ public class AntidoteYCSBConfiguration
         String fileNameStart = format("{}/{}", AdbmConstants.YCSB_RESULTS_PATH, AdbmConstants.RESULT_FILE_NAME_START);
         String fileEnd = ".csv";
         List<String> resultFiles = new ArrayList<>();
+        //String currentCommit = Main.getDockerManager().getCommitOfContainer(AdbmConstants.ADBM_CONTAINER_NAME).trim();
+        //List<String> commitList = Arrays.asList(commits);
+        //if (commitList.contains(currentCommit)) {
+
+        //}
         for (String commit : commits) {
             if (!rebuildAntidote(commit)) return false;
-            AntidoteClientWrapper test = new AntidoteClientWrapper("Test", AdbmConstants.ADBM_CONTAINER_NAME);
-            test.start();
-            log.trace("TestValue Initial: {}", test.readKeyValue("Test").toString());
-            test.updateKey(new UpdateOperation<>("Test", AntidoteUtil.getOperation(), 1));
-            log.trace("TestValue After: {}", test.readKeyValue("Test").toString());
             if (commit == null) commit = Main.getDockerManager().getCommitOfContainer(AdbmConstants.ADBM_CONTAINER_NAME);
             String shortCommit = commit.substring(0, Math.min(commit.length(), AdbmConstants.NUMBER_COMMIT_ABBREVIATION));
             String resultFileName = format("{}_{}_{}{}", fileNameStart, shortCommit, currentDateTime, fileEnd);

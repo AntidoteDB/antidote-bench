@@ -193,6 +193,7 @@ public class AntidoteYCSBConfigurationDialog extends JDialog
             for (String commit : Main.getSettingsManager().getBenchmarkCommits())
                 listCommitsModel.addElement(commit);
         });
+        log.trace("Test");
     }
 
     private void updateStatus()

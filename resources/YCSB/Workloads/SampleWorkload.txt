@@ -23,4 +23,4 @@ maxexecutiontime=5
 measurementtype=timeseries
 
 # Granularity for time series (in milliseconds)
-timeseries.granularity=100
+timeseries.granularity=10

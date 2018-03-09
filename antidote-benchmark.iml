@@ -11,9 +11,7 @@
     </content>
     <orderEntry type="inheritedJdk" />
     <orderEntry type="sourceFolder" forTests="false" />
-    <orderEntry type="library" name="Maven: commons-codec:commons-codec:1.9" level="project" />
-    <orderEntry type="library" name="Maven: commons-codec:commons-codec:1.9" level="project" />
-    <orderEntry type="library" name="Maven: com.spotify:docker-client:8.11.1" level="project" />
+    <orderEntry type="library" name="Maven: com.spotify:docker-client:shaded:8.11.1" level="project" />
     <orderEntry type="library" name="Maven: org.slf4j:slf4j-api:1.7.22" level="project" />
     <orderEntry type="library" name="Maven: com.google.guava:guava:20.0" level="project" />
     <orderEntry type="library" name="Maven: com.fasterxml.jackson.jaxrs:jackson-jaxrs-json-provider:2.9.4" level="project" />
@@ -89,7 +87,6 @@
     <orderEntry type="library" name="Maven: com.lmax:disruptor:3.3.4" level="project" />
     <orderEntry type="library" name="Maven: org.jfree:jfreechart:1.5.0" level="project" />
     <orderEntry type="library" name="Maven: jfree:jcommon:1.0.16" level="project" />
-    <orderEntry type="library" name="Maven: com.itextpdf:itextpdf:5.5.12" level="project" />
     <orderEntry type="library" name="Maven: com.intellij:javac2:17.1.5" level="project" />
     <orderEntry type="library" name="Maven: com.intellij:forms_rt:17.1.5" level="project" />
     <orderEntry type="library" name="Maven: com.intellij:asm-all:17.1.5" level="project" />
