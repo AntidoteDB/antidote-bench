@@ -173,7 +173,7 @@ public class AntidoteYCSBConfiguration
             String[] ycsbArgs = newArgList.toArray(new String[0]);
             Client.main(ycsbArgs);
         }
-        ResultsDialog.showResultsWindow(resultFiles.toArray(new String[0]));
+        //ResultsDialog.showResultsWindow(resultFiles.toArray(new String[0]));
         return true;
     }
 

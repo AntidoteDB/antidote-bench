@@ -61,7 +61,7 @@ public class AntidoteYCSBClient extends DB
      * @return
      */
     @Override
-    public Status read(String table, String key, Set<String> fields, HashMap<String, ByteIterator> result)
+    public Status read(String table, String key, Set<String> fields, Map<String, ByteIterator> result)
     {
         if (fields == null) {
             log.warn("The Antidote Database does not support reading all fields!");
@@ -122,7 +122,7 @@ public class AntidoteYCSBClient extends DB
      * @return
      */
     @Override
-    public Status update(String table, String key, HashMap<String, ByteIterator> values)
+    public Status update(String table, String key, Map<String, ByteIterator> values)
     {
 
         //Using the hashmap creating an Operation(keyName,OperationName,value) and passing it as a list of Operation
@@ -158,7 +158,7 @@ public class AntidoteYCSBClient extends DB
      * @return
      */
     @Override
-    public Status insert(String table, String key, HashMap<String, ByteIterator> values)
+    public Status insert(String table, String key, Map<String, ByteIterator> values)
     {
         return update(table, key, values);
     }

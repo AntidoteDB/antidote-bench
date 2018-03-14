@@ -10,19 +10,22 @@ import org.jfree.chart.JFreeChart;
 import org.jfree.chart.plot.PlotOrientation;
 import org.jfree.data.category.CategoryDataset;
 import org.jfree.data.category.DefaultCategoryDataset;
+import org.jfree.data.xy.XYSeries;
+import org.jfree.data.xy.XYSeriesCollection;
 import org.jfree.ui.ApplicationFrame;
 import org.jfree.ui.RefineryUtilities;
 
+import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
 
 import static adbm.util.helpers.FormatUtil.format;
 
-public class BarChartTest extends ApplicationFrame {
+public class ChartUtils extends ApplicationFrame {
 
-    private static final Logger log = LogManager.getLogger(BarChartTest.class);
+    private static final Logger log = LogManager.getLogger(ChartUtils.class);
 
-    public BarChartTest(String applicationTitle , String chartTitle ) {
+    public ChartUtils(String applicationTitle , String chartTitle ) {
         super(applicationTitle);
         JFreeChart barChart = ChartFactory.createBarChart(
                 chartTitle,
@@ -37,7 +40,7 @@ public class BarChartTest extends ApplicationFrame {
         setContentPane(chartPanel);
     }
 
-    private CategoryDataset createDataset() {
+    public static CategoryDataset createDataset() {
         final String read = "[READ]";
         final String cleanup = "[CLEANUP]";
         final String update = "[UPDATE]";
@@ -124,9 +127,58 @@ public class BarChartTest extends ApplicationFrame {
         return dataset;
     }
 
+    public static XYSeriesCollection createDataset(String name, String operation, String... fileNames)
+    {
+        log.trace("Updating {} Dataset with Files {}!", name, fileNames);
+        int i = 1;
+        if (fileNames.length == 0) {
+            fileNames = new String[]{AdbmConstants.YCSB_SAMPLE_RESULT_PATH};
+        }
+        XYSeriesCollection dataset = new XYSeriesCollection();
+        try {
+            for (String fileName : fileNames) {
+                if (fileName != null && new File(fileName).isFile()) {
+                    CSVReader reader = new CSVReader(new FileReader(fileName), ',');
+                    // Read the header and chuck it away
+                    String[] readNextLine;
+
+                    // Set up series
+                    final XYSeries seriesRead = new XYSeries(format("{} for Commit {}", operation, i));
+                    i++;
+                    while ((readNextLine = reader.readNext()) != null) {
+                        // variables declaration
+                        boolean isValid = true;
+                        String operationsType = readNextLine[0];
+                        double X = 0;
+                        double Y = 0;
+                        // add values to dataset for an operation READ or UPDATE
+                        if (operationsType.equals(operation)) {
+                            try {
+                                X = Double.parseDouble(readNextLine[1]);
+                                Y = Double.parseDouble(readNextLine[2]);
+                            } catch (NumberFormatException e) {
+                                isValid = false;
+                            }
+                            if (isValid) {
+                                seriesRead.add(X, Y);
+                            }
+                        }
+                    }
+                    dataset.addSeries(seriesRead);
+                }
+                else {
+                    log.error("File was null or not a File! File Path: {}", fileName);
+                }
+            }
+        } catch (IOException e) {
+            System.out.println("File could not be read!");
+        }
+        return dataset;
+    }
+
     public static void main(String[] args) {
-        BarChartTest chart = new BarChartTest("Results Usage Statistics",
-                "Which operation is better?");
+        ChartUtils chart = new ChartUtils("Results Usage Statistics",
+                                          "Which operation is better?");
         chart.pack( );
         RefineryUtilities.centerFrameOnScreen(chart);
         chart.setVisible(true);

@@ -84,7 +84,7 @@
     <orderEntry type="library" name="Maven: org.hdrhistogram:HdrHistogram:2.1.4" level="project" />
     <orderEntry type="library" name="Maven: org.apache.logging.log4j:log4j-api:2.10.0" level="project" />
     <orderEntry type="library" name="Maven: org.apache.logging.log4j:log4j-core:2.10.0" level="project" />
-    <orderEntry type="library" name="Maven: com.lmax:disruptor:3.3.4" level="project" />
+    <orderEntry type="library" name="Maven: com.lmax:disruptor:3.4.1" level="project" />
     <orderEntry type="library" name="Maven: org.jfree:jfreechart:1.5.0" level="project" />
     <orderEntry type="library" name="Maven: jfree:jcommon:1.0.16" level="project" />
     <orderEntry type="library" name="Maven: com.intellij:javac2:17.1.5" level="project" />
@@ -92,5 +92,7 @@
     <orderEntry type="library" name="Maven: com.intellij:asm-all:17.1.5" level="project" />
     <orderEntry type="library" name="Maven: commons-cli:commons-cli:1.4" level="project" />
     <orderEntry type="library" name="Maven: au.com.bytecode:opencsv:2.4" level="project" />
+    <orderEntry type="library" name="Maven: org.apache.logging.log4j:log4j-slf4j-impl:2.10.0" level="project" />
+    <orderEntry type="library" name="Maven: com.yahoo.ycsb:core-embedded:0.14.0-SNAPSHOT" level="project" />
   </component>
 </module>

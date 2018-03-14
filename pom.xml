@@ -110,19 +110,6 @@
                     <outputDirectory>${project.build.outputDirectory}/javadoc</outputDirectory>
                 </configuration>
             </plugin>
-            <plugin>
-                <groupId>org.codehaus.mojo</groupId>
-                <artifactId>license-maven-plugin</artifactId>
-                <version>1.14</version>
-                <executions>
-                    <execution>
-                        <id>download-licenses</id>
-                        <goals>
-                            <goal>download-licenses</goal>
-                        </goals>
-                    </execution>
-                </executions>
-            </plugin>
         </plugins>
         <resources>
             <resource>
@@ -211,10 +198,11 @@
             <version>2.10.0</version>
         </dependency>
 
+        <!-- https://mvnrepository.com/artifact/com.lmax/disruptor -->
         <dependency>
             <groupId>com.lmax</groupId>
             <artifactId>disruptor</artifactId>
-            <version>3.3.4</version>
+            <version>3.4.1</version>
         </dependency>
 
         <dependency>
@@ -234,13 +222,6 @@
             <groupId>org.apache.pdfbox</groupId>
             <artifactId>pdfbox</artifactId>
             <version>2.0.8</version>
-        </dependency>-->
-
-
-        <!--<dependency>
-            <groupId>com.itextpdf</groupId>
-            <artifactId>itextpdf</artifactId>
-            <version>5.5.12</version>
         </dependency>-->
 
         <dependency>
@@ -274,5 +255,16 @@
             <version>2.4</version>
         </dependency>
 
+        <!-- https://mvnrepository.com/artifact/org.apache.logging.log4j/log4j-slf4j-impl -->
+        <dependency>
+            <groupId>org.apache.logging.log4j</groupId>
+            <artifactId>log4j-slf4j-impl</artifactId>
+            <version>2.10.0</version>
+        </dependency>
+        <dependency>
+            <groupId>com.yahoo.ycsb</groupId>
+            <artifactId>core-embedded</artifactId>
+            <version>0.14.0-SNAPSHOT</version>
+        </dependency>
     </dependencies>
 </project>
