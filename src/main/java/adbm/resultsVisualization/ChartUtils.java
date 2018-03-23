@@ -52,7 +52,6 @@ public class ChartUtils extends ApplicationFrame {
 
 
         log.trace("Updating {} Dataset with Files {}!"/*, name*/, fileNames);
-        int i = 1;
         if (fileNames.length == 0) {
             fileNames = new String[]{AdbmConstants.YCSB_SAMPLE_RESULT_PATH};
         }
