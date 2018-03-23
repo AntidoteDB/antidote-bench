@@ -40,7 +40,7 @@ public class ChartUtils extends ApplicationFrame {
         setContentPane(chartPanel);
     }
 
-    public static CategoryDataset createDataset() {
+    public static CategoryDataset createDataset(String... fileNames) {
         final String read = "[READ]";
         final String cleanup = "[CLEANUP]";
         final String update = "[UPDATE]";
@@ -51,72 +51,82 @@ public class ChartUtils extends ApplicationFrame {
         final DefaultCategoryDataset dataset = new DefaultCategoryDataset();
 
 
+        log.trace("Updating {} Dataset with Files {}!"/*, name*/, fileNames);
+        int i = 1;
+        if (fileNames.length == 0) {
+            fileNames = new String[]{AdbmConstants.YCSB_SAMPLE_RESULT_PATH};
+        }
         try {
-            CSVReader reader = new CSVReader(new FileReader(format("{}/Result_master_20180302T230249+0100.csv", AdbmConstants.YCSB_RESULTS_PATH)), ',');
-            String[] readNextLine;
+            for (String fileName : fileNames) {
+                if(fileName != null && new File(fileName).isFile()) {
+                    //CSVReader reader = new CSVReader(new FileReader(format("{}/Result_master_20180302T230249+0100.csv", AdbmConstants.YCSB_RESULTS_PATH)), ',');
+                    CSVReader reader = new CSVReader(new FileReader(fileName), ',');
+                    String[] readNextLine;
 
-            while ((readNextLine = reader.readNext()) != null) {
-                if (readNextLine.length < 3) {
-                    log.debug("CSV Line could not be read! {}", readNextLine);
-                    continue;
-                }
+                    while ((readNextLine = reader.readNext()) != null) {
+                        if (readNextLine.length < 3) {
+                            log.debug("CSV Line could not be read! {}", readNextLine);
+                            continue;
+                        }
 
-                String type = readNextLine[0].trim();
-                String name = readNextLine[1].trim();
-                String value = readNextLine[2].trim();
-                log.trace("Read CSV Line: {}, {}, {}", type, name, value);
-                double doubleValue = 0;
-                try {
-                    doubleValue = Double.parseDouble(value);
-                } catch (NumberFormatException e) {
-                    log.debug("Conversion to double failed! Value: " + value, e);
-                }
-                if (type.equals("[OVERALL]") && name.equals("Throughput(ops/sec)")) {
-                    //ToDo
-                    dataset.addValue(doubleValue, read, throughput);
-                    dataset.addValue(doubleValue, cleanup, throughput);
-                    dataset.addValue(doubleValue, update, throughput);
-                }
-                if (!type.isEmpty() && name.equals("AverageLatency(us)")) {
-                    //ToDo
-                    switch (type) {
-                        case "[READ]":
-                            dataset.addValue(doubleValue, read, averageLatency);
-                            break;
-                        case "[CLEANUP]":
-                            dataset.addValue(doubleValue, cleanup, averageLatency);
-                            break;
-                        case "[UPDATE]":
-                            dataset.addValue(doubleValue, update, averageLatency);
-                            break;
-                    }
-                }
-                if (!type.isEmpty() && name.equals("MinLatency(us)")) {
-                    //ToDo
-                    switch (type) {
-                        case "[READ]":
-                            dataset.addValue(doubleValue, read, minLatency);
-                            break;
-                        case "[CLEANUP]":
-                            dataset.addValue(doubleValue, cleanup, minLatency);
-                            break;
-                        case "[UPDATE]":
-                            dataset.addValue(doubleValue, update, minLatency);
-                            break;
-                    }
-                }
-                if (!type.isEmpty() && name.equals("MaxLatency(us)")) {
-                    //ToDo
-                    switch (type) {
-                        case "[READ]":
-                            dataset.addValue(doubleValue, read, maxLatency);
-                            break;
-                        case "[CLEANUP]":
-                            dataset.addValue(doubleValue, cleanup, maxLatency);
-                            break;
-                        case "[UPDATE]":
-                            dataset.addValue(doubleValue, update, maxLatency);
-                            break;
+                        String type = readNextLine[0].trim();
+                        String name = readNextLine[1].trim();
+                        String value = readNextLine[2].trim();
+                        log.trace("Read CSV Line: {}, {}, {}", type, name, value);
+                        double doubleValue = 0;
+                        try {
+                            doubleValue = Double.parseDouble(value);
+                        } catch (NumberFormatException e) {
+                            log.debug("Conversion to double failed! Value: " + value, e);
+                        }
+                        if (type.equals("[OVERALL]") && name.equals("Throughput(ops/sec)")) {
+                            //ToDo
+                            dataset.addValue(doubleValue, read, throughput);
+                            dataset.addValue(doubleValue, cleanup, throughput);
+                            dataset.addValue(doubleValue, update, throughput);
+                        }
+                        if (!type.isEmpty() && name.equals("AverageLatency(us)")) {
+                            //ToDo
+                            switch (type) {
+                                case "[READ]":
+                                    dataset.addValue(doubleValue, read, averageLatency);
+                                    break;
+                                case "[CLEANUP]":
+                                    dataset.addValue(doubleValue, cleanup, averageLatency);
+                                    break;
+                                case "[UPDATE]":
+                                    dataset.addValue(doubleValue, update, averageLatency);
+                                    break;
+                            }
+                        }
+                        if (!type.isEmpty() && name.equals("MinLatency(us)")) {
+                            //ToDo
+                            switch (type) {
+                                case "[READ]":
+                                    dataset.addValue(doubleValue, read, minLatency);
+                                    break;
+                                case "[CLEANUP]":
+                                    dataset.addValue(doubleValue, cleanup, minLatency);
+                                    break;
+                                case "[UPDATE]":
+                                    dataset.addValue(doubleValue, update, minLatency);
+                                    break;
+                            }
+                        }
+                        if (!type.isEmpty() && name.equals("MaxLatency(us)")) {
+                            //ToDo
+                            switch (type) {
+                                case "[READ]":
+                                    dataset.addValue(doubleValue, read, maxLatency);
+                                    break;
+                                case "[CLEANUP]":
+                                    dataset.addValue(doubleValue, cleanup, maxLatency);
+                                    break;
+                                case "[UPDATE]":
+                                    dataset.addValue(doubleValue, update, maxLatency);
+                                    break;
+                            }
+                        }
                     }
                 }
             }

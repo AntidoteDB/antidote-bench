@@ -31,7 +31,7 @@ public class ResultsDialog extends JDialog
     private ResultsDialog(boolean timeSeries, String... fileNames)
     {
         super(null, "Results Visualization", ModalityType.MODELESS);
-//super("Results Visualization");
+        //super("Results Visualization");
         this.setMinimumSize(new Dimension(1000, 600));
         setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
 
@@ -44,7 +44,7 @@ public class ResultsDialog extends JDialog
             chartPanelList.add(createTimeSeriesChart("UPDATE", "[UPDATE]", fileNames));
         }
         else {
-
+            chartPanelList.add(createBarChart("Which operation is better?","",fileNames));
         }
         setContentPane(ResultsPanel.getPanel(chartPanelList.toArray(new ChartPanel[0])));
     }
@@ -70,7 +70,7 @@ public class ResultsDialog extends JDialog
     }
 
     private ChartPanel createBarChart(String chartName, String operationType, String... fileNames) {
-        CategoryDataset dataset = ChartUtils.createDataset();
+        CategoryDataset dataset = ChartUtils.createDataset(fileNames);
         JFreeChart barChart = ChartFactory.createBarChart(
                 chartName,
                 "Category",
