@@ -158,7 +158,6 @@ public class Main
 
         isDockerRunning = startBenchmarkContainer();
         if (!isDockerRunning) closeApp();
-        if (AntidoteCommandLine.run(args)) closeApp();
 
         guiMode = true;
         settingsManager.start();
