@@ -23,6 +23,10 @@ public class AdbmConstants
      */
     public static final String APP_NAME = "Antidote Benchmark";
 
+    public static final String DATE_FORMAT_TIME = "HHmmssXX";
+
+    public static final String DATE_FORMAT_DATE = "yyyyMMdd";
+
     public static final String ADBM_CONTAINER_NAME = "AntidoteBenchmarkContainer";
 
     public static final String YCSB_DB_CLASS_NAME = "adbm.ycsb.AntidoteYCSBClient";

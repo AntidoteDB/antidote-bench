@@ -16,6 +16,19 @@ public interface ISettingsManager extends IStartStop
     String GitRepoLocationSetting = "GitRepo";
 
     /**
+     * @param settingName
+     * @return
+     */
+    String getYCSBSetting(String settingName);
+
+    /**
+     * @param settingName
+     * @param value
+     * @return
+     */
+    boolean setYCSBSetting(String settingName, String value);
+
+    /**
      *
      * @param settingName
      * @return

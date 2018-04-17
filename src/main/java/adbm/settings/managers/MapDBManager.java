@@ -25,6 +25,8 @@ public class MapDBManager implements ISettingsManager, IAntidoteKeyStoreManager
 
     private HTreeMap<String, String> appSettings;
 
+    private HTreeMap<String, String> ycsbSettings;
+
     private HTreeMap.KeySet<String> benchmarkCommits;
 
     private static MapDBManager instance = new MapDBManager();
@@ -46,6 +48,9 @@ public class MapDBManager implements ISettingsManager, IAntidoteKeyStoreManager
         mapDB = DBMaker.fileDB(AdbmConstants.APP_SETTINGS_PATH).closeOnJvmShutdown().transactionEnable().make();
         keyTypeMapDB = mapDB
                 .hashMap("keyTypeMapDB", Serializer.STRING, Serializer.STRING)
+                .createOrOpen();
+        ycsbSettings = mapDB
+                .hashMap("ycsbSettings", Serializer.STRING, Serializer.STRING)
                 .createOrOpen();
         appSettings = mapDB
                 .hashMap("appSettings", Serializer.STRING, Serializer.STRING)
@@ -70,6 +75,7 @@ public class MapDBManager implements ISettingsManager, IAntidoteKeyStoreManager
         mapDB = null;
         keyTypeMapDB = null;
         appSettings = null;
+        ycsbSettings = null;
         benchmarkCommits = null;
         return true;
     }
@@ -156,6 +162,22 @@ public class MapDBManager implements ISettingsManager, IAntidoteKeyStoreManager
     {
         if (!isReady()) return false;
         benchmarkCommits.clear();
+        mapDB.commit();
+        return true;
+    }
+
+    @Override
+    public String getYCSBSetting(String settingName)
+    {
+        if (!isReady()) return "";
+        return ycsbSettings.getOrDefault(settingName, "");
+    }
+
+    @Override
+    public boolean setYCSBSetting(String settingName, String value)
+    {
+        if (!isReady()) return false;
+        ycsbSettings.put(settingName, value);
         mapDB.commit();
         return true;
     }
