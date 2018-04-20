@@ -136,7 +136,7 @@ public class AntidoteYCSBConfiguration
     {
 
         if (!Main.isDockerRunning) return false;
-        String currentDateTime = new SimpleDateFormat(AdbmConstants.DATE_FORMAT).format(new Date());
+        String currentDateTime = new SimpleDateFormat(AdbmConstants.DATE_FORMAT_TIME).format(new Date());
         String usedDB = AdbmConstants.YCSB_DB_CLASS_NAME;
         String[] threadsArg = numberOfThreads <= 1 ? new String[0] : new String[]{"-threads", format("{}",
                                                                                                      numberOfThreads)};
@@ -153,7 +153,7 @@ public class AntidoteYCSBConfiguration
         if (commits.length == 0) {
             commits = new String[]{null};
         }
-        String fileNameStart = format("{}/{}", AdbmConstants.YCSB_RESULTS_PATH, AdbmConstants.RESULT_FILE_NAME_START);
+        String fileNameStart = format("{}/{}", AdbmConstants.YCSB_RESULT_FOLDER_PATH, AdbmConstants.YCSB_RESULT_FILE_NAME_START);
         String fileEnd = ".csv";
         List<String> resultFiles = new ArrayList<>();
         //String currentCommit = Main.getDockerManager().getCommitOfContainer(AdbmConstants.ADBM_CONTAINER_NAME).trim();

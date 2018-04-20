@@ -15,6 +15,8 @@ import org.mapdb.Serializer;
 
 import java.util.*;
 
+import static adbm.util.helpers.FormatUtil.format;
+
 public class MapDBManager implements ISettingsManager, IAntidoteKeyStoreManager
 {
     private static final Logger log = LogManager.getLogger(MapDBManager.class);
@@ -22,6 +24,8 @@ public class MapDBManager implements ISettingsManager, IAntidoteKeyStoreManager
     private DB mapDB;
 
     private HTreeMap<String, String> keyTypeMapDB;
+
+    private HTreeMap<String, String> ycsbSettings;
 
     private HTreeMap<String, String> appSettings;
 
@@ -47,6 +51,9 @@ public class MapDBManager implements ISettingsManager, IAntidoteKeyStoreManager
         keyTypeMapDB = mapDB
                 .hashMap("keyTypeMapDB", Serializer.STRING, Serializer.STRING)
                 .createOrOpen();
+        ycsbSettings = mapDB
+                .hashMap("ycsbSettings", Serializer.STRING, Serializer.STRING)
+                .createOrOpen();
         appSettings = mapDB
                 .hashMap("appSettings", Serializer.STRING, Serializer.STRING)
                 .createOrOpen();
@@ -69,6 +76,7 @@ public class MapDBManager implements ISettingsManager, IAntidoteKeyStoreManager
         }
         mapDB = null;
         keyTypeMapDB = null;
+        ycsbSettings = null;
         appSettings = null;
         benchmarkCommits = null;
         return true;
@@ -77,16 +85,67 @@ public class MapDBManager implements ISettingsManager, IAntidoteKeyStoreManager
     @Override
     public boolean isReady()
     {
-        boolean isReady = mapDB != null && keyTypeMapDB != null && appSettings != null && benchmarkCommits != null;
+        boolean isReady = mapDB != null && keyTypeMapDB != null && ycsbSettings != null && appSettings != null && benchmarkCommits != null;
         if (!isReady) log.trace("MapDBManager was not ready!");
         return isReady;
     }
 
     @Override
-    public String getAppSetting(String settingName)
+    public boolean resetAllSettings() {
+        if (!isReady()) return false;
+        ycsbSettings.clear();
+        appSettings.clear();
+        benchmarkCommits.clear();
+        mapDB.commit();
+        return true;
+    }
+
+    @Override
+    public String getAllSettings() {
+        //TODO Update with keytype
+        if (!isReady()) return "";
+        StringBuilder s = new StringBuilder();
+        s.append("App Settings:\n\n");
+        appSettings.forEach((key, value) -> s.append(format("{} = {}\n", key, value)));
+
+        s.append("\nYCSB Settings:\n\n");
+        ycsbSettings.forEach((key, value) -> s.append(format("{} = {}\n", key, value)));
+
+        s.append("\nBenchmark Commits:\n\n");
+        benchmarkCommits.forEach(commit -> s.append(format("{}\n", commit)));
+        return s.toString();
+    }
+
+    @Override
+    public String getYCSBSetting(String settingName)
     {
         if (!isReady()) return "";
-        return appSettings.getOrDefault(settingName, "");
+        return ycsbSettings.getOrDefault(settingName, "");
+    }
+
+    @Override
+    public boolean setYCSBSetting(String settingName, String value)
+    {
+        if (!isReady()) return false;
+        ycsbSettings.put(settingName, value);
+        mapDB.commit();
+        return true;
+    }
+
+    @Override
+    public boolean resetYCSBSettings()
+    {
+        if (!isReady()) return false;
+        ycsbSettings.clear();
+        mapDB.commit();
+        return true;
+    }
+
+    @Override
+    public String getAppSetting(String settingName)
+    {
+        if (!isReady()) return checkDefaultSetting(settingName, "");
+        return checkDefaultSetting(settingName, appSettings.getOrDefault(settingName, ""));
     }
 
     @Override
@@ -105,25 +164,6 @@ public class MapDBManager implements ISettingsManager, IAntidoteKeyStoreManager
         appSettings.clear();
         mapDB.commit();
         return true;
-    }
-
-    @Override
-    public String getGitRepoLocation()
-    {
-        if (!isReady()) return AdbmConstants.DEFAULT_AD_GIT_REPO_PATH;
-        String gitRepo = getAppSetting(GitRepoLocationSetting);
-        if (gitRepo.isEmpty()) {
-            return AdbmConstants.DEFAULT_AD_GIT_REPO_PATH;
-        }
-        else {
-            return gitRepo;
-        }
-    }
-
-    @Override
-    public boolean setGitRepoLocation(String path)
-    {
-        return setAppSetting(GitRepoLocationSetting, path);
     }
 
     @Override

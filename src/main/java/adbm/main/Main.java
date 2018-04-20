@@ -11,15 +11,17 @@ import adbm.settings.IAntidoteKeyStoreManager;
 import adbm.settings.ISettingsManager;
 import adbm.settings.managers.MapDBManager;
 import adbm.util.AdbmConstants;
+import adbm.util.helpers.FileUtil;
 import adbm.ycsb.AntidoteYCSBConfiguration;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import picocli.CommandLine;
 
 import javax.swing.*;
+import java.io.File;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
-
-import static adbm.util.helpers.FormatUtil.format;
 
 public class Main
 {
@@ -80,6 +82,8 @@ public class Main
         return antidoteYCSBConfiguration;
     }
 
+    //public static File AppFolder = new File(Main.class.getProtectionDomain().getCodeSource().getLocation().toURI().getPath());
+
     public static boolean stopContainers = false;
 
     public static void closeApp()
@@ -90,8 +94,12 @@ public class Main
         settingsManager.stop();
         keyManager.stop();
         Runtime.getRuntime().removeShutdownHook(shutdownHook);
+        //TODO maybe delete folder
+        //FileUtil.deleteDirectory(new File(AdbmConstants.DOCKER_FOLDER_PATH));
         System.exit(0);
     }
+
+
 
     public static AntidoteClientWrapperGui startAntidoteClient(String name, String containerName)
     {
@@ -151,14 +159,17 @@ public class Main
             // Set System L&F
             UIManager.setLookAndFeel(
                     UIManager.getSystemLookAndFeelClassName());
+        } catch (UnsupportedLookAndFeelException | ClassNotFoundException | InstantiationException | IllegalAccessException e) {
+            log.error("An error occurred while setting the LookAndFeel!", e);
         }
-        catch (UnsupportedLookAndFeelException | ClassNotFoundException | InstantiationException | IllegalAccessException e) {
-            log.error("An error occurred while setting the LookAndFeel!" , e);
+        boolean success = FileSetup.setupFoldersAndFiles();
+        if (!success) {
+            log.error("Failed File Setup!");
         }
-
         isDockerRunning = startBenchmarkContainer();
         if (!isDockerRunning) closeApp();
-        if (AntidoteCommandLine.run(args)) closeApp();
+        MainWindow.showMainWindow();
+        if (1 == 1) return;
 
         guiMode = true;
         settingsManager.start();

@@ -35,6 +35,7 @@ out/
 target/
 Logs/
 AntidoteGitRepo/
+Settings/
 
 # mpeltonen/sbt-idea plugin
 .idea_modules/

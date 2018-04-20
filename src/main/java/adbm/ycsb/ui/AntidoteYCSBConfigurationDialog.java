@@ -9,7 +9,6 @@ import adbm.util.AdbmConstants;
 import adbm.util.TextPaneAppender;
 import adbm.util.helpers.FileUtil;
 import eu.antidotedb.antidotepb.AntidotePB;
-import org.apache.commons.io.FilenameUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -227,8 +226,8 @@ public class AntidoteYCSBConfigurationDialog extends JDialog
     private void updateWorkloads()
     {
         comboBoxWorkloadModel.removeAllElements();
-        for (String fileName : FileUtil.getAllFileNamesInFolder(AdbmConstants.YCSB_WORKLOADS_PATH))
-            comboBoxWorkloadModel.addElement(FilenameUtils.removeExtension(fileName));
+        for (String fileName : FileUtil.getAllFileNamesInFolder(AdbmConstants.YCSB_WORKLOADS_FOLDER_PATH))
+            comboBoxWorkloadModel.addElement(fileName);
         comboBoxWorkloadModel.setSelectedItem(Main.getAntidoteYCSBConfiguration().getUsedWorkLoad());
     }
 }

@@ -6,7 +6,6 @@ import adbm.docker.util.DockerfileBuilder;
 import adbm.main.Main;
 import adbm.util.AdbmConstants;
 import adbm.util.SimpleProgressHandler;
-import com.google.common.collect.ImmutableMap;
 import com.spotify.docker.client.DefaultDockerClient;
 import com.spotify.docker.client.DockerClient;
 import com.spotify.docker.client.LogStream;
@@ -223,10 +222,9 @@ public class DockerManager implements IDockerManager
             if (!DockerfileBuilder.createDockerfile()) {
                 return false;
             }
-            File folder = new File(AdbmConstants.DOCKERFILE_RESOURCES_PATH);
-            String path = folder.getCanonicalPath();
-            log.info("Building Image {}...", AdbmConstants.ADBM_DOCKER_IMAGE_NAME);
-            docker.build(Paths.get(path), AdbmConstants.ADBM_DOCKER_IMAGE_NAME, new SimpleProgressHandler("Image"));
+            File folder = new File(AdbmConstants.DOCKER_FOLDER_PATH);
+            log.info("Building Image {} from {}...", AdbmConstants.ADBM_DOCKER_IMAGE_NAME, folder.getCanonicalPath());
+            docker.build(folder.toPath(), AdbmConstants.ADBM_DOCKER_IMAGE_NAME, new SimpleProgressHandler("Image"));
             log.info("Image {} was successfully built.", AdbmConstants.ADBM_DOCKER_IMAGE_NAME);
             return true;
         } catch (DockerException | InterruptedException | IOException e) {

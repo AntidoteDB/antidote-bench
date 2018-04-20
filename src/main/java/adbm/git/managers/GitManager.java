@@ -3,6 +3,7 @@ package adbm.git.managers;
 import adbm.git.IGitManager;
 import adbm.main.Main;
 import adbm.main.ui.MainWindow;
+import adbm.settings.ISettingsManager;
 import adbm.settings.ui.SettingsDialog;
 import adbm.util.AdbmConstants;
 import org.apache.logging.log4j.LogManager;
@@ -64,7 +65,7 @@ public class GitManager implements IGitManager
         }
         attempts--;
         if (!Main.isGuiMode()) return false;
-        String repoLocation = Main.getSettingsManager().getGitRepoLocation();
+        String repoLocation = Main.getSettingsManager().getAppSetting(ISettingsManager.GIT_REPO_PATH_SETTING);
         if (repoLocation.equals(AdbmConstants.DEFAULT_AD_GIT_REPO_PATH) && Files
                 .notExists(Paths.get(getAbsolutePath(AdbmConstants.DEFAULT_AD_GIT_REPO_PATH))))
         {
@@ -157,6 +158,95 @@ public class GitManager implements IGitManager
                         "Please select an empty directory in the settings or remove the existing files in that directory!");
                 SettingsDialog.showSettingsDialog();
                 return start();
+            }
+        }
+        return false;
+    }
+
+    @Override
+    public boolean start(String folderPath, String... otherArgs)
+    {
+        boolean autofetch = otherArgs.length != 0 && Boolean.valueOf(otherArgs[0]);
+        log.trace("Starting GitManager!");
+        String repoLocation = folderPath;
+        if (repoLocation == null) {
+            repoLocation = AdbmConstants.DEFAULT_AD_GIT_REPO_PATH;
+            boolean success = new File(repoLocation).mkdirs();
+            if (!success) {
+                log.error("Folder creation has failed! Git cannot be started!");//TODO
+                return false;
+            }
+        }
+        File directory = new File(repoLocation);
+        if (!directory.exists()) {
+            boolean success = directory.mkdirs();
+            if (!success) {
+                log.error("Folder creation has failed! Git cannot be started!");//TODO
+                return false;
+            }
+        }
+        File[] contents = directory.listFiles();
+        if (contents == null) {
+            log.error("The location for the git repository is not a directory!");
+            return false;
+        }
+        try {
+            git = Git.open(directory);
+        } catch (IOException e) {
+            git = null;
+        }
+        if (git != null) {
+            try {
+                if (git.status().call().isClean()) {
+                    String url = git.getRepository().getConfig().getString("remote", "origin", "url");
+                    if (url.equals(AdbmConstants.AD_GIT_REPO_URL)) {
+                        log.info("Git connection was successfully established!");
+                        if (autofetch) {
+                            log.trace("Git Fetch: {}", git.fetch().call().getMessages());
+                        }
+                        return true;
+                    }
+                    else {
+                        log.error(
+                                "The location for the git repository contains a another repository that is not equal to {}!",AdbmConstants.AD_GIT_REPO_URL);
+                        log.info(
+                                "Please select another location in the settings or remove that git repository first!");
+                        git = null;
+                    }
+                }
+                else {
+                    log.error("The git repository is not clean!");
+                    log.info("Please commit all changes before using this application!");
+                    git = null;
+                }
+            } catch (GitAPIException e) {
+                log.error("An error occurred while checking the status of the git repository!", e);
+            }
+        }
+        else {
+            log.info("There is currently no git repository at the selected location!");
+            log.info(
+                    "The git repository {} will be cloned to the selected location if there are no files in that directory.", AdbmConstants.AD_GIT_REPO_URL);
+
+            if (contents.length == 0) {
+                log.info(
+                        "Cloning the git repository {} to the location {}!", AdbmConstants.AD_GIT_REPO_URL, repoLocation);
+                try {
+                    git = Git.cloneRepository()
+                             .setURI(AdbmConstants.AD_GIT_REPO_URL)
+                             .setDirectory(new File(repoLocation))
+                             .setProgressMonitor(new TextProgressMonitor(new PrintWriter(System.out)))
+                             .call();
+                } catch (GitAPIException e) {
+                    log.error("An error occurred while cloning the git repository!", e);
+                }
+                return true;
+            }
+            else {
+                log.error(
+                        "The directory at selected location contains files and cannot be used as a git repository.");
+                log.info(
+                        "Please select an empty directory in the settings or remove the existing files in that directory!");
             }
         }
         return false;

@@ -1,7 +1,5 @@
 package adbm.main.ui;
 
-import adbm.antidote.ui.AntidoteView;
-import adbm.antidote.wrappers.AntidoteClientWrapperGui;
 import adbm.git.ui.GitDialog;
 import adbm.main.Main;
 import adbm.settings.ui.SettingsDialog;
@@ -61,7 +59,7 @@ public class MainWindow extends JFrame
     {
         super();
         setTitle(AdbmConstants.APP_NAME);
-        setIconImage(new ImageIcon(format("{}/AntidoteIcon.PNG", AdbmConstants.IMAGES_PATH)).getImage());
+        //setIconImage(new ImageIcon(AdbmConstants.AD_ICON_URL).getImage()); //TODO
         setContentPane(panel);
         setDefaultCloseOperation(WindowConstants.DO_NOTHING_ON_CLOSE);
         pack();
@@ -158,7 +156,7 @@ public class MainWindow extends JFrame
     private void updateWorkloads()
     {
         comboBoxWorkloadModel.removeAllElements();
-        for (String fileName : FileUtil.getAllFileNamesInFolder(AdbmConstants.YCSB_WORKLOADS_PATH))
+        for (String fileName : FileUtil.getAllFileNamesInFolder(AdbmConstants.YCSB_WORKLOADS_FOLDER_PATH))
             comboBoxWorkloadModel.addElement(fileName);
         comboBoxWorkloadModel.setSelectedItem(Main.getAntidoteYCSBConfiguration().getUsedWorkLoad());
     }

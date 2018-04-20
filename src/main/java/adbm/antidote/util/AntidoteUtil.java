@@ -1,7 +1,6 @@
 package adbm.antidote.util;
 
 import adbm.main.Main;
-import com.google.common.collect.Maps;
 import com.google.protobuf.ByteString;
 import eu.antidotedb.antidotepb.AntidotePB;
 import eu.antidotedb.client.Key;
@@ -121,7 +120,7 @@ public class AntidoteUtil {
     public static final Map<String, AntidotePB.CRDT_type> STRING_CRDT_TYPE_MAP = createStringEnumMap(AntidotePB.CRDT_type.values());
 
     private static <T extends Enum<T>> Map<String, T> createStringEnumMap(T[] values) {
-        Map<String, T> map = Maps.newHashMapWithExpectedSize(values.length);
+        Map<String, T> map = new HashMap<>(values.length, 1.0F);
         for (T value : values) {
             map.put(value.name().toUpperCase(), value);
         }

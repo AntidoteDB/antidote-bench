@@ -1,31 +1,31 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<Configuration status="debug" monitorInterval="30">
+<Configuration status="info" monitorInterval="30">
     <Appenders>
         <Console name="ConsoleAppender" target="SYSTEM_OUT">
             <PatternLayout>
                 <pattern>
-                    [%-5level] %d{HH:mm:ss.SSS} [%t] %c{1} - %msg%n
+                    [%-5level] %d{ABSOLUTE} - %msg%n
                 </pattern>
             </PatternLayout>
         </Console>
-        <RandomAccessFile name="RandomAccessFileAppenderError" fileName="Logs/ErrorLog.log" immediateFlush="false" append="true">
+        <RandomAccessFile name="RandomAccessFileAppenderError" fileName="Logs/WarnLog.log" immediateFlush="false" append="true">
             <PatternLayout>
                 <pattern>
-                    [%-5level] %d{yyyy-MM-dd HH:mm:ss.SSS} [%t] %c{1} - %msg%n
+                    [%-5level] %d{ISO8601} [%t] %c{1} - %msg%n
                 </pattern>
             </PatternLayout>
         </RandomAccessFile>
-        <RandomAccessFile name="RandomAccessFileAppenderInfo" fileName="Logs/InfoLog.log" immediateFlush="false" append="false">
+        <RandomAccessFile name="RandomAccessFileAppenderInfo" fileName="Logs/DebugLog.log" immediateFlush="false" append="true">
             <PatternLayout>
                 <pattern>
-                    [%-5level] %d{yyyy-MM-dd HH:mm:ss.SSS} [%t] %c{1} - %msg%n
+                    [%-5level] %d{ISO8601} [%t] %c{1} - %msg%n
                 </pattern>
             </PatternLayout>
         </RandomAccessFile>
         <RandomAccessFile name="RandomAccessFileAppenderTrace" fileName="Logs/TraceLog.log" immediateFlush="false" append="false">
             <PatternLayout>
                 <pattern>
-                    [%-5level] %d{yyyy-MM-dd HH:mm:ss.SSS} [%t] %c{1} - %msg%n
+                    [%-5level] %d{ISO8601} [%t] %c{1} - %msg%n
                 </pattern>
             </PatternLayout>
         </RandomAccessFile>
@@ -37,11 +37,11 @@
     </Appenders>
     <Loggers>
         <Root level="trace" includeLocation="false">
-            <AppenderRef ref="RandomAccessFileAppenderError" level="error"/>
-            <AppenderRef ref="RandomAccessFileAppenderInfo" level="info"/>
+            <AppenderRef ref="RandomAccessFileAppenderError" level="warn"/>
+            <AppenderRef ref="RandomAccessFileAppenderInfo" level="debug"/>
             <AppenderRef ref="RandomAccessFileAppenderTrace"/>
-            <AppenderRef ref="ConsoleAppender" level="trace"/>
-            <AppenderRef ref="VisualAppender" level="trace"/>
+            <AppenderRef ref="ConsoleAppender" level="debug"/>
+            <AppenderRef ref="VisualAppender" level="debug"/>
         </Root>
     </Loggers>
 </Configuration>

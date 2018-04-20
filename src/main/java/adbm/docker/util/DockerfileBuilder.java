@@ -105,7 +105,7 @@ public class DockerfileBuilder
                               "\n\n" +
                               "# Distributed Erlang Port Mapper" +
                               "\n" +
-                              "EXPOSE 4368" +
+                              "EXPOSE 4369" +
                               "\n" +
                               "# Ports for Antidote" +
                               "\n" +
