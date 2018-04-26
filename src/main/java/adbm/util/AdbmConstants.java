@@ -43,7 +43,8 @@ public class AdbmConstants
     }
 
     private static String IDEPath() {
-        if (Main.class.getResource("Main.class").getPath().startsWith("jar")) {
+        String path = Main.class.getResource("Main.class").toString();
+        if (path.startsWith("jar")) {
             return "";
         }
         else {
