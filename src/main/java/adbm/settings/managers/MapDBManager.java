@@ -54,6 +54,7 @@ public class MapDBManager implements ISettingsManager, IAntidoteKeyStoreManager
     @Override
     public boolean start()
     {
+        if (isReady()) return true;
         log.trace("Starting MapDBManager!");
         mapDB = DBMaker.fileDB(AdbmConstants.APP_SETTINGS_PATH).closeOnJvmShutdown().transactionEnable().make();
         keyTypeMapDB = mapDB
@@ -86,7 +87,6 @@ public class MapDBManager implements ISettingsManager, IAntidoteKeyStoreManager
         keyTypeMapDB = null;
         ycsbSettings = null;
         appSettings = null;
-        ycsbSettings = null;
         benchmarkCommits = null;
         return true;
     }

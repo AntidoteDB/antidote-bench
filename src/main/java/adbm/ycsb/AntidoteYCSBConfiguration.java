@@ -16,10 +16,7 @@ import org.apache.logging.log4j.Logger;
 
 import java.io.File;
 import java.text.SimpleDateFormat;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Date;
-import java.util.List;
+import java.util.*;
 
 import static adbm.util.helpers.FormatUtil.format;
 
@@ -266,7 +263,7 @@ public class AntidoteYCSBConfiguration
         settings.setYCSBSetting(showStatusName, String.valueOf(showStatus));
     }
 
-    public boolean runBenchmark(List<String> commits)
+    public boolean runBenchmark(Collection<String> commits)
     {
         return runBenchmark(commits.toArray(new String[0]));
     }

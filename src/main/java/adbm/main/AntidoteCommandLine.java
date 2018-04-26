@@ -129,7 +129,7 @@ public class AntidoteCommandLine
             Configurator.initialize(new NullConfiguration());
         }
         else {
-            String actualLogFile = null;
+            /*String actualLogFile = null;
             //TODO create file
             if (logfile != null) {
                 try {
@@ -155,7 +155,7 @@ public class AntidoteCommandLine
                 addFileAppender("AntidoteBenchmarkAppender", actualLogFile, Level.toLevel(logLevel, Level.DEBUG),
                                 false);
                 settings.setAppSetting(ISettingsManager.LOG_FOLDER_PATH_SETTING, actualLogFile);
-            }
+            }*/
         }
         if (checkCommits) {
             //TODO
@@ -198,7 +198,7 @@ public class AntidoteCommandLine
                 config.runBenchmark(commits);
             }
             else {
-                config.runBenchmark((String[]) settings.getBenchmarkCommits().toArray());
+                config.runBenchmark(settings.getBenchmarkCommits());
             }
         }
         return 2;
