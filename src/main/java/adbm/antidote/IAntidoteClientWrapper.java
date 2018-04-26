@@ -2,12 +2,15 @@ package adbm.antidote;
 
 import adbm.antidote.operations.Operation;
 import adbm.antidote.operations.UpdateOperation;
+import adbm.util.EverythingIsNonnullByDefault;
 import adbm.util.IStartStop;
 import eu.antidotedb.client.AntidoteClient;
 import eu.antidotedb.client.Bucket;
 
+import javax.annotation.Nullable;
 import java.util.List;
 
+@EverythingIsNonnullByDefault
 public interface IAntidoteClientWrapper extends IStartStop
 {
 
@@ -26,6 +29,7 @@ public interface IAntidoteClientWrapper extends IStartStop
      * For further extensions.
      * @return The AntidoteClient.
      */
+    @Nullable
     AntidoteClient getAntidoteClient();
 
     /**
@@ -33,6 +37,7 @@ public interface IAntidoteClientWrapper extends IStartStop
      * For further extensions.
      * @return The Bucket.
      */
+    @Nullable
     Bucket getBucket();
 
     /**

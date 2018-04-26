@@ -1,11 +1,12 @@
 package adbm.docker.util;
 
+import adbm.util.EverythingIsNonnullByDefault;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-import javax.annotation.Nonnull;
 import java.util.List;
 
+@EverythingIsNonnullByDefault
 public class DockerUtil {
 
     private static final Logger log = LogManager.getLogger(DockerUtil.class);
@@ -17,7 +18,7 @@ public class DockerUtil {
      * @param containerNameFromDocker The name of the container.
      * @return The name where the first character is removed if it was a '/'.
      */
-    private static String normalizeName(@Nonnull String containerNameFromDocker) {
+    private static String normalizeName(String containerNameFromDocker) {
         if (containerNameFromDocker.startsWith("/")) return containerNameFromDocker.substring(1);
         else return containerNameFromDocker;
     }
@@ -31,9 +32,8 @@ public class DockerUtil {
      * @param containerId The id of the container (for logging)
      * @return The first name of the container.
      */
-    @Nonnull
     public static String getFirstNameOfContainer(List<String> containerNames, String containerId) {
-        if (containerNames != null && containerNames.size() > 0) {
+        if (containerNames.size() > 0) {
             log.trace("Container (id: {}) first name before normalization: {}", containerId, containerNames.get(0));
             String firstName = normalizeName(containerNames.get(0));
             if (containerNames.size() > 1) {

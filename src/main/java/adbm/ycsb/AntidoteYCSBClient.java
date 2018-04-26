@@ -9,23 +9,28 @@ import adbm.antidote.operations.UpdateOperation;
 import adbm.antidote.util.AntidoteUtil;
 import adbm.antidote.wrappers.AntidoteClientWrapper;
 import adbm.util.AdbmConstants;
+import adbm.util.EverythingIsNullableByDefault;
 import com.yahoo.ycsb.*;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
+import javax.annotation.Nonnull;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 
 import static adbm.util.helpers.FormatUtil.format;
 
+@EverythingIsNullableByDefault
 public class AntidoteYCSBClient extends DB
 {
 
+    @Nonnull
     private static final Logger log = LogManager.getLogger(AntidoteYCSBClient.class);
 
     private IAntidoteClientWrapper antidoteClient;
 
+    @Nonnull
     private static AtomicInteger idCounter = new AtomicInteger(1);
 
     /**
@@ -77,15 +82,15 @@ public class AntidoteYCSBClient extends DB
         int size = fields.size();
         switch (size) {
             case 0:
-                log.debug("No field is read!");
+                log.trace("No field is read!");
                 return Status.OK;
             case 1:
-                log.debug("Single field is read!");
+                log.trace("Single field is read!");
                 String field = fields.iterator().next();
                 result.put(field, new ByteArrayByteIterator(antidoteClient.readKeyValue(field).toString().getBytes()));
                 return Status.OK;
             default:
-                log.debug("Multiple fields ({}) are read!", size);
+                log.trace("Multiple fields ({}) are read!", size);
                 // Keep order
                 List<String> orderedFields = new ArrayList<>(fields);
                 List<Object> orderedResults = antidoteClient.readKeyValues(orderedFields);
@@ -133,15 +138,15 @@ public class AntidoteYCSBClient extends DB
         int size = values.size();
         switch (size) {
             case 0:
-                log.debug("No update operation is performed.");
+                log.trace("No update operation is performed.");
                 return Status.OK;
             case 1:
-                log.debug("Single update operation is performed.");
+                log.trace("Single update operation is performed.");
                 Map.Entry<String, ByteIterator> entry = values.entrySet().iterator().next();
                 antidoteClient.updateKey(new UpdateOperation<>(entry.getKey(), AntidoteUtil.getOperation(), entry.getValue()));
                 return Status.OK;
             default:
-                log.debug("Multiple update operations ({}) are performed", size);
+                log.trace("Multiple update operations ({}) are performed", size);
                 antidoteClient
                         .updateKeys(values.entrySet().stream().map((s) -> new UpdateOperation<>(s.getKey(), AntidoteUtil
                                 .getOperation(), s.getValue())).collect(Collectors.toList()));

@@ -2,10 +2,12 @@ package adbm.git.ui;
 
 import adbm.main.Main;
 import adbm.main.ui.MainWindow;
+import adbm.util.EverythingIsNonnullByDefault;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.eclipse.jgit.revwalk.RevCommit;
 
+import javax.annotation.Nullable;
 import javax.swing.*;
 import java.awt.*;
 import java.text.DateFormat;
@@ -14,6 +16,7 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
+@EverythingIsNonnullByDefault
 public class GitDialog extends JDialog
 {
     private JList<String> listBranches;
@@ -38,24 +41,22 @@ public class GitDialog extends JDialog
 
     private static final Logger log = LogManager.getLogger(GitDialog.class);
 
+    @Nullable
     private static GitDialog gitDialog;
 
-    private static void checkGitDialog()
+    public static GitDialog getGitDialog()
     {
         if (gitDialog == null) {
             gitDialog = new GitDialog();
         }
-    }
-
-    public static GitDialog getGitDialog()
-    {
-        checkGitDialog();
         return gitDialog;
     }
 
     public static void showGitDialog()
     {
-        checkGitDialog();
+        if (gitDialog == null) {
+            gitDialog = new GitDialog();
+        }
         gitDialog.setVisible(true);
     }
 

@@ -1,6 +1,7 @@
 package adbm.resultsVisualization;
 
 import adbm.util.AdbmConstants;
+import adbm.util.EverythingIsNonnullByDefault;
 import au.com.bytecode.opencsv.CSVReader;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -21,6 +22,7 @@ import java.io.IOException;
 
 import static adbm.util.helpers.FormatUtil.format;
 
+@EverythingIsNonnullByDefault
 public class ChartUtils extends ApplicationFrame {
 
     private static final Logger log = LogManager.getLogger(ChartUtils.class);

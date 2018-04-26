@@ -3,6 +3,7 @@ package adbm.main;
 import adbm.antidote.IAntidoteClientWrapper;
 import adbm.settings.ISettingsManager;
 import adbm.util.AdbmConstants;
+import adbm.util.EverythingIsNonnullByDefault;
 import adbm.ycsb.AntidoteYCSBConfiguration;
 import eu.antidotedb.antidotepb.AntidotePB;
 import org.apache.logging.log4j.Level;
@@ -19,6 +20,7 @@ import org.apache.logging.log4j.core.config.NullConfiguration;
 import org.apache.logging.log4j.core.layout.PatternLayout;
 import picocli.CommandLine;
 
+import javax.annotation.Nullable;
 import java.io.File;
 import java.io.IOException;
 
@@ -26,6 +28,7 @@ import java.io.IOException;
  * @author Alka Scaria
  * Reviewed by Kevin Bartik
  */
+@EverythingIsNonnullByDefault
 @CommandLine.Command(name = "Antidote Benchmark", footer = "Copyright(c) 2018", sortOptions = false,
         description = "Run the Antidote Benchmark from the Console. Benchmarks are performed five times for each commit and the last 3 benchmark results of each commit are averaged for comparison (Compensates a little bit for JVM and Antidote warm up time). Can take a few minutes for each commit. If logging is active progress will be shown in the console.")
 public class AntidoteCommandLine
@@ -53,15 +56,18 @@ public class AntidoteCommandLine
     @CommandLine.Option(names = {"-nologging"}, description = "Disables all logging. Not recommended.")
     private boolean noLogging;
 
+    @Nullable
     @CommandLine.Option(names = {"-logfile"}, description = "Sets the log file path. Logs are always created in the folder of this application but an additional log file can be set. Default: None")
     private File logfile;
 
+    @Nullable
     @CommandLine.Option(names = {"-loglevel"}, description = "Defines the log level (ERROR, WARN, INFO, DEBUG, TRACE) of the logs that are written to the specified log file. Default: DEBUG")
-    private String logLevel;
+    private String logLevel = "DEBUG";
 
     @CommandLine.Option(names = {"-checkcommits", "-usegit"}, description = "Checks that the provided commits exist. Requires a local git repository of Antidote to be cloned. The location of the git repository can be set with another option.")
     private boolean checkCommits;
 
+    @Nullable
     @CommandLine.Option(names = {"-gitfolder"}, description = "Sets the git folder where the Antidote repository is cloned. Can be an existing Antidote repository but it must be in a clean state for this application to work properly. The folder path is stored in a persistent database and only needs to be set once. Default: The application directory.")
     private File gitfolder;
 
@@ -81,19 +87,22 @@ public class AntidoteCommandLine
     @CommandLine.Option(names = {"-onlyupdates"}, description = "Performs a benchmark that only performs updates.")
     private boolean onlyUpdates;
 
+    @Nullable
     @CommandLine.Option(names = {"-keytype"}, description = "Choose the key type that should be benchmarked. Options are\nRegister, MVRegister, Counter, FatCounter, Integer, Set.\nDefaults to Counter.")
     private String keyType;
 
+    @Nullable
     @CommandLine.Option(names = {"-operation"}, description = "Choose the operation that should be benchmarked. Options are\n reset for all key types;\nincrement, decrement for Counter, FatCounter and Integer;\nassign for Register, MVRegister;\nset for Integer;\nadd for Set.\nDefaults to the default operation (usually the first one e.g. increment).")
     private String operation;
 
+    @Nullable
     @CommandLine.Option(names = {"-transactiontype"}, description = "Choose the transaction type that should be benchmarked. Options are Interactive, Static, NoTransaction. Default is Interactive.")
     private String transactionType;
 
     @CommandLine.Option(names = {"-threads"}, description = "The number of threads that should be used in the benchmark. Default is 1 Thread. If a previous benchmark is rerun (default) then the previous number of threads is used.")
     private int threads; //Just for parsing
 
-
+    @Nullable
     @CommandLine.Option(names = "-commits", arity = "*", description = "Define the commits you want to benchmark. The defined commits are stored persistently for re-runs and are overwritten if new commits are provided. Default: Commits from the previous benchmark or none if no benchmark where performed.")
     private String[] commits;
 
@@ -102,7 +111,7 @@ public class AntidoteCommandLine
         ISettingsManager settings = Main.getSettingsManager();
         AntidoteYCSBConfiguration config = Main.getAntidoteYCSBConfiguration();
         if (help) {
-            log.info("{}", AdbmConstants.APP_NAME);
+            log.info("{} Version: {}", AdbmConstants.APP_NAME, AdbmConstants.APP_VERSION);
             CommandLine.usage(new AntidoteCommandLine(), System.out);
             return 0;
         }
@@ -110,7 +119,7 @@ public class AntidoteCommandLine
             //TODO show settings
         }
         if (resetSettings) {
-            //TODO
+            Main.getSettingsManager().resetAllSettings();
             return 0;
         }
         if (gui) {
@@ -140,12 +149,12 @@ public class AntidoteCommandLine
                 }
             }
             if (actualLogFile == null) {
-                //TODO
+                actualLogFile = settings.getAppSetting(ISettingsManager.LOG_FOLDER_PATH_SETTING);
             }
             if (!actualLogFile.isEmpty() && new File(actualLogFile).exists()) {
                 addFileAppender("AntidoteBenchmarkAppender", actualLogFile, Level.toLevel(logLevel, Level.DEBUG),
                                 false);
-                //TODO
+                settings.setAppSetting(ISettingsManager.LOG_FOLDER_PATH_SETTING, actualLogFile);
             }
         }
         if (checkCommits) {
@@ -172,6 +181,8 @@ public class AntidoteCommandLine
             if (norerun) {
                 config = new AntidoteYCSBConfiguration();
             }
+            config.setOnlyReads(onlyReads);
+            config.setOnlyUpdates(onlyUpdates); //TODO overwritten
             if (threads > 0) config.setNumberOfThreads(threads);
             if (keyType != null) config.setUsedKeyType(getKeyType());
             if (operation != null) config.setUsedOperation(operation);

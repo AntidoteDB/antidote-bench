@@ -1,5 +1,6 @@
 package adbm.resultsVisualization;
 
+import adbm.util.EverythingIsNonnullByDefault;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jfree.chart.ChartFactory;
@@ -17,6 +18,7 @@ import java.util.List;
 
 import static adbm.util.helpers.FormatUtil.format;
 
+@EverythingIsNonnullByDefault
 public class ResultsDialog extends JDialog
 {
 

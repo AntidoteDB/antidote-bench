@@ -3,8 +3,10 @@ package adbm.git.managers;
 import adbm.git.IGitManager;
 import adbm.main.Main;
 import adbm.main.ui.MainWindow;
+import adbm.settings.ISettingsManager;
 import adbm.settings.ui.SettingsDialog;
 import adbm.util.AdbmConstants;
+import adbm.util.EverythingIsNonnullByDefault;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.eclipse.jgit.api.CreateBranchCommand;
@@ -18,6 +20,7 @@ import org.eclipse.jgit.lib.TextProgressMonitor;
 import org.eclipse.jgit.revwalk.RevCommit;
 import org.eclipse.jgit.revwalk.RevWalk;
 
+import javax.annotation.Nullable;
 import javax.swing.*;
 import java.io.File;
 import java.io.IOException;
@@ -27,17 +30,18 @@ import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
 
-import static adbm.util.helpers.FileUtil.getAbsolutePath;
 import static adbm.util.helpers.FormatUtil.format;
 
 /**
  * The GitManager requires the MapDBManager to be ready.
  */
+@EverythingIsNonnullByDefault
 public class GitManager implements IGitManager
 {
 
     private static final Logger log = LogManager.getLogger(GitManager.class);
 
+    @Nullable
     private Git git;
 
     private int attempts = AdbmConstants.NUMBER_OF_ATTEMPTS_TO_START_GIT;
@@ -64,16 +68,15 @@ public class GitManager implements IGitManager
         }
         attempts--;
         if (!Main.isGuiMode()) return false;
-        String repoLocation = Main.getSettingsManager().getGitRepoLocation();
-        if (repoLocation.equals(AdbmConstants.DEFAULT_AD_GIT_REPO_PATH) && Files
-                .notExists(Paths.get(getAbsolutePath(AdbmConstants.DEFAULT_AD_GIT_REPO_PATH))))
+        String repoLocation = Main.getSettingsManager().getAppSetting(ISettingsManager.GIT_REPO_PATH_SETTING);
+        if (repoLocation.equals(AdbmConstants.DEFAULT_AD_GIT_REPO_PATH) && Files.notExists(Paths.get(AdbmConstants.DEFAULT_AD_GIT_REPO_PATH)))
         {
             //TODO remember decision
             int res = JOptionPane.showConfirmDialog(MainWindow.getMainWindow(),
                                                     format("Do you want to use the default path for the Antidote repository?\n\n" +
                                                                    "This will pull the Antidote repository if it doesn't exist in that directory.\n\n" +
                                                                    "Default Path: {}",
-                                                           getAbsolutePath(AdbmConstants.DEFAULT_AD_GIT_REPO_PATH)));
+                                                           AdbmConstants.DEFAULT_AD_GIT_REPO_PATH));
             if (res != JOptionPane.YES_OPTION) {
                 log.info("No location for the git repository was selected!");
                 //int res = JOptionPane.showConfirmDialog(MainWindow.getMainWindow(), "Do you want to use the default location");
@@ -163,6 +166,95 @@ public class GitManager implements IGitManager
     }
 
     @Override
+    public boolean start(@Nullable String folderPath, String... otherArgs)
+    {
+        boolean autofetch = otherArgs.length != 0 && Boolean.valueOf(otherArgs[0]);
+        log.trace("Starting GitManager!");
+        String repoLocation = folderPath;
+        if (repoLocation == null) {
+            repoLocation = AdbmConstants.DEFAULT_AD_GIT_REPO_PATH;
+            boolean success = new File(repoLocation).mkdirs();
+            if (!success) {
+                log.error("Folder creation has failed! Git cannot be started!");//TODO
+                return false;
+            }
+        }
+        File directory = new File(repoLocation);
+        if (!directory.exists()) {
+            boolean success = directory.mkdirs();
+            if (!success) {
+                log.error("Folder creation has failed! Git cannot be started!");//TODO
+                return false;
+            }
+        }
+        File[] contents = directory.listFiles();
+        if (contents == null) {
+            log.error("The location for the git repository is not a directory!");
+            return false;
+        }
+        try {
+            git = Git.open(directory);
+        } catch (IOException e) {
+            git = null;
+        }
+        if (git != null) {
+            try {
+                if (git.status().call().isClean()) {
+                    String url = git.getRepository().getConfig().getString("remote", "origin", "url");
+                    if (url.equals(AdbmConstants.AD_GIT_REPO_URL)) {
+                        log.info("Git connection was successfully established!");
+                        if (autofetch) {
+                            log.trace("Git Fetch: {}", git.fetch().call().getMessages());
+                        }
+                        return true;
+                    }
+                    else {
+                        log.error(
+                                "The location for the git repository contains a another repository that is not equal to {}!",AdbmConstants.AD_GIT_REPO_URL);
+                        log.info(
+                                "Please select another location in the settings or remove that git repository first!");
+                        git = null;
+                    }
+                }
+                else {
+                    log.error("The git repository is not clean!");
+                    log.info("Please commit all changes before using this application!");
+                    git = null;
+                }
+            } catch (GitAPIException e) {
+                log.error("An error occurred while checking the status of the git repository!", e);
+            }
+        }
+        else {
+            log.info("There is currently no git repository at the selected location!");
+            log.info(
+                    "The git repository {} will be cloned to the selected location if there are no files in that directory.", AdbmConstants.AD_GIT_REPO_URL);
+
+            if (contents.length == 0) {
+                log.info(
+                        "Cloning the git repository {} to the location {}!", AdbmConstants.AD_GIT_REPO_URL, repoLocation);
+                try {
+                    git = Git.cloneRepository()
+                             .setURI(AdbmConstants.AD_GIT_REPO_URL)
+                             .setDirectory(new File(repoLocation))
+                             .setProgressMonitor(new TextProgressMonitor(new PrintWriter(System.out)))
+                             .call();
+                } catch (GitAPIException e) {
+                    log.error("An error occurred while cloning the git repository!", e);
+                }
+                return true;
+            }
+            else {
+                log.error(
+                        "The directory at selected location contains files and cannot be used as a git repository.");
+                log.info(
+                        "Please select an empty directory in the settings or remove the existing files in that directory!");
+            }
+        }
+        return false;
+    }
+
+    @Override
     public boolean stop()
     {
         log.trace("Stopping GitManager!");
@@ -243,6 +335,7 @@ public class GitManager implements IGitManager
         return "";
     }
 
+    @Nullable
     @Override
     public RevCommit getCurrentCommit()
     {
@@ -305,6 +398,7 @@ public class GitManager implements IGitManager
         return list;
     }
 
+    @Nullable
     @Override
     public RevCommit getCommitFromId(String id)
     {

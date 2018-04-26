@@ -3,6 +3,7 @@ package adbm.antidote.ui;
 import adbm.antidote.operations.UpdateOperation;
 import adbm.antidote.wrappers.AntidoteClientWrapperGui;
 import adbm.main.Main;
+import adbm.util.EverythingIsNonnullByDefault;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -14,6 +15,7 @@ import java.util.List;
 
 import static adbm.antidote.util.AntidoteUtil.*;
 
+@EverythingIsNonnullByDefault
 public class AntidoteView
 {
 
@@ -71,10 +73,6 @@ public class AntidoteView
 
     public boolean isReady()
     {
-        if (activeAntidoteClient == null) {
-            log.error("ERROR: Antidote Client was null!");
-            return false;
-        }
         if (activeAntidoteClient.isReady()) return true;
         log.warn("Antidote Client is inactive!");
         return false;
@@ -82,7 +80,6 @@ public class AntidoteView
 
     public AntidoteView(AntidoteClientWrapperGui startClient)
     {
-        if (startClient == null) return;
         activeAntidoteClient = startClient;
         JFrame frame = new JFrame("AntidoteView");
 
@@ -113,11 +110,9 @@ public class AntidoteView
 
 
         executeButton.addActionListener(e -> {
-            if (activeAntidoteClient != null) {
-                activeAntidoteClient.updateKey(new UpdateOperation(listViewKeySelection.getSelectedValue(),
-                                                                   listViewOperationSelection.getSelectedValue(),
-                                                                   textFieldOperationValue.getText()));
-            }
+            activeAntidoteClient.updateKey(new UpdateOperation<>(listViewKeySelection.getSelectedValue(),
+                                                                 listViewOperationSelection.getSelectedValue(),
+                                                                 textFieldOperationValue.getText()));
         });
         listViewOperationSelection.addListSelectionListener(e -> refreshCommandTextFields());
         comboBoxKeyType.addActionListener(e -> refreshKeyList());
@@ -230,10 +225,11 @@ public class AntidoteView
 
     private void refreshKeyValue()
     {
-        if (listViewKeySelection.getSelectedValue() != null && activeAntidoteClient != null)
+        String selectedValue = listViewKeySelection.getSelectedValue();
+        if (selectedValue != null) {
             listViewKeyValueModel.clear();
-        listViewKeyValueModel
-                .addElement(activeAntidoteClient.readKeyValue(listViewKeySelection.getSelectedValue()).toString());
+            listViewKeyValueModel.addElement(activeAntidoteClient.readKeyValue(selectedValue).toString());
+        }
         if (listViewOperationSelection.getModel().getSize() > 0)
             listViewOperationSelection.setSelectedIndex(0);
     }

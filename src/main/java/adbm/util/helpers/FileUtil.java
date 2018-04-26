@@ -1,16 +1,19 @@
 package adbm.util.helpers;
 
 import adbm.util.AdbmConstants;
+import adbm.util.EverythingIsNonnullByDefault;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import java.io.*;
+import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
 
 import static adbm.util.helpers.FormatUtil.format;
 
+@EverythingIsNonnullByDefault
 public class FileUtil
 {
     private static final Logger log = LogManager.getLogger(FileUtil.class);
@@ -27,6 +30,18 @@ public class FileUtil
             }
         }
         return fileNames;
+    }
+
+    public static boolean deleteDirectory(File file) {
+        File[] contents = file.listFiles();
+        if (contents != null) {
+            for (File f : contents) {
+                if (!Files.isSymbolicLink(f.toPath())) {
+                    deleteDirectory(f);
+                }
+            }
+        }
+        return file.delete();
     }
 
     /**

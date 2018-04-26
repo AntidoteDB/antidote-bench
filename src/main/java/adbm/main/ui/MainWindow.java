@@ -1,17 +1,17 @@
 package adbm.main.ui;
 
-import adbm.antidote.ui.AntidoteView;
-import adbm.antidote.wrappers.AntidoteClientWrapperGui;
 import adbm.git.ui.GitDialog;
 import adbm.main.Main;
 import adbm.settings.ui.SettingsDialog;
 import adbm.util.AdbmConstants;
+import adbm.util.EverythingIsNonnullByDefault;
 import adbm.util.TextPaneAppender;
 import adbm.util.helpers.FileUtil;
 import adbm.ycsb.ui.AntidoteYCSBConfigurationDialog;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
+import javax.annotation.Nullable;
 import javax.swing.*;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
@@ -19,7 +19,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 import static adbm.util.helpers.FormatUtil.format;
-
+@EverythingIsNonnullByDefault
 public class MainWindow extends JFrame
 {
 
@@ -36,24 +36,23 @@ public class MainWindow extends JFrame
     private ExecutorService executorService = Executors.newSingleThreadExecutor();
 
     private DefaultComboBoxModel<String> comboBoxWorkloadModel = new DefaultComboBoxModel<>();
+
+    @Nullable
     private static MainWindow mainWindow;
 
-    private static void checkMainWindow()
+    public static MainWindow getMainWindow()
     {
         if (mainWindow == null) {
             mainWindow = new MainWindow();
         }
-    }
-
-    public static MainWindow getMainWindow()
-    {
-        checkMainWindow();
         return mainWindow;
     }
 
     public static void showMainWindow()
     {
-        checkMainWindow();
+        if (mainWindow == null) {
+            mainWindow = new MainWindow();
+        }
         mainWindow.setVisible(true);
     }
 
@@ -61,7 +60,7 @@ public class MainWindow extends JFrame
     {
         super();
         setTitle(AdbmConstants.APP_NAME);
-        setIconImage(new ImageIcon(format("{}/AntidoteIcon.PNG", AdbmConstants.IMAGES_PATH)).getImage());
+        //setIconImage(new ImageIcon(AdbmConstants.AD_ICON_URL).getImage()); //TODO
         setContentPane(panel);
         setDefaultCloseOperation(WindowConstants.DO_NOTHING_ON_CLOSE);
         pack();
@@ -158,7 +157,7 @@ public class MainWindow extends JFrame
     private void updateWorkloads()
     {
         comboBoxWorkloadModel.removeAllElements();
-        for (String fileName : FileUtil.getAllFileNamesInFolder(AdbmConstants.YCSB_WORKLOADS_PATH))
+        for (String fileName : FileUtil.getAllFileNamesInFolder(AdbmConstants.YCSB_WORKLOADS_FOLDER_PATH))
             comboBoxWorkloadModel.addElement(fileName);
         comboBoxWorkloadModel.setSelectedItem(Main.getAntidoteYCSBConfiguration().getUsedWorkLoad());
     }

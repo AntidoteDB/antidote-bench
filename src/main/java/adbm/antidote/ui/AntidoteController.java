@@ -1,5 +1,6 @@
 package adbm.antidote.ui;
 
+import adbm.util.EverythingIsNonnullByDefault;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -8,6 +9,7 @@ import java.beans.PropertyChangeListener;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
 
+@EverythingIsNonnullByDefault
 public class AntidoteController implements PropertyChangeListener
 {
     private static final Logger log = LogManager.getLogger(AntidoteController.class);

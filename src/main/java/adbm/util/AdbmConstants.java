@@ -1,5 +1,13 @@
 package adbm.util;
 
+import adbm.main.Main;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
+import java.io.File;
+import java.io.IOException;
+import java.net.URISyntaxException;
+import java.net.URL;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -11,90 +19,161 @@ import static adbm.util.helpers.FormatUtil.format;
  * They are mostly file paths and names.
  * Some of the constants may change in time.
  */
+@EverythingIsNonnullByDefault
 public class AdbmConstants
 {
+
+    private static final Logger log = LogManager.getLogger(AdbmConstants.class);
 
     // Antidote = AD
     // Benchmark = BM
     // Antidote Benchmark = ADBM
+
+    private static File appPath = new File("");
+
+    private static String canonicalAppPath = "";
+
+    static {
+        try {
+            appPath = new File(Main.class.getProtectionDomain().getCodeSource().getLocation().toURI().getPath());
+            canonicalAppPath = appPath.getParentFile().getCanonicalPath();
+        } catch (URISyntaxException | IOException e) {
+            log.error("", e); //TODO exit!
+        }
+    }
+
+    private static String IDEPath() {
+        if (Main.class.getResource("Main.class").getPath().startsWith("jar")) {
+            return "";
+        }
+        else {
+            return "classes/";
+        }
+    }
+
+    public static String getJarPath(String... paths)
+    {
+        StringBuilder res = new StringBuilder();
+        for (String path : paths) {
+            res.append("/");
+            res.append(path);
+        }
+        return res.toString();
+    }
+
+    public static File getAppPath() {
+        return appPath;
+    }
+
+    private static String getAppPath(String path) {
+        log.trace("AppPath: {}/{}{}", canonicalAppPath, IDEPath(), path);
+        return format("{}/{}{}", canonicalAppPath, IDEPath(), path);
+    }
+
+    private static URL getResource(String path) {
+        return Main.class.getResource(getJarPath(path));
+    }
 
     /**
      * The name of the application. Used for logging and gui.
      */
     public static final String APP_NAME = "Antidote Benchmark";
 
-    public static final String DATE_FORMAT_TIME = "HHmmssXX";
+    public static final String APP_VERSION = "0.0.1";
 
-    public static final String DATE_FORMAT_DATE = "yyyyMMdd";
+    public static final String APP_DATA_FOLDER_NAME = format("antidote-benchmark-{}-data", APP_VERSION);
 
     public static final String ADBM_CONTAINER_NAME = "AntidoteBenchmarkContainer";
 
     public static final String YCSB_DB_CLASS_NAME = "adbm.ycsb.AntidoteYCSBClient";
 
-    public static final String DATE_FORMAT = "yyyyMMdd'T'HHmmssXX";
+    public static final String DATE_FORMAT_TIME = "HHmmssXX";
 
-    public static final String RESULT_FILE_NAME_START = "Result";
+    public static final String DATE_FORMAT_DATE = "yyyyMMdd";
+
+    public static final String DATE_FORMAT_ISO = "yyyyMMdd'T'HHmmssXX";
+
+    public static final String YCSB_RESULT_FILE_NAME_START = "YCSB_Result";
+
+    public static final String YCSB_RESULT_FOLDER_NAME = "YCSB_Results";
+
+    public static final String YCSB_RESULT_FOLDER_PATH = getAppPath(YCSB_RESULT_FOLDER_NAME);
+
+    public static final String YCSB_SAMPLE_RESULT_FILE_NAME = "SampleResult.csv";
+
+    public static final String YCSB_SAMPLE_RESULT_PATH = format("{}/{}", YCSB_RESULT_FOLDER_PATH, YCSB_SAMPLE_RESULT_FILE_NAME);
 
     public static final int NUMBER_COMMIT_ABBREVIATION = 10; //Should be plenty
 
-    /**
-     * This is the path to the resources folder where all resource except some properties are stored.
-     */
-    public static final String RESOURCES_PATH = "resources";
-
-    public static final String YCSB_PATH = format("{}/YCSB", RESOURCES_PATH);
+    public static final String YCSB_WORKLOADS_FOLDER_NAME = "YCSB_Workloads";
 
     /**
      * This is the path to the workloads that can be used for benchmarking with YCSB.
      */
-    public static final String YCSB_WORKLOADS_PATH = format("{}/Workloads", YCSB_PATH);
+    public static final String YCSB_WORKLOADS_FOLDER_PATH = getAppPath(YCSB_WORKLOADS_FOLDER_NAME);
 
-    public static final String YCSB_SAMPLE_WORKLOAD_NAME = "SampleWorkload";
+    public static final String YCSB_SAMPLE_WORKLOAD_NAME = "SampleWorkload.txt";
 
     public static String getWorkloadPath(String workloadName) {
-        return format("{}/{}.txt", YCSB_WORKLOADS_PATH, workloadName);
+        return format("{}/{}", YCSB_WORKLOADS_FOLDER_PATH, workloadName);
     }
 
-    /**
-     * This is the path to the YCSB benchmark results.
-     */
-    public static final String YCSB_RESULTS_PATH = format("{}/Results", YCSB_PATH);
+    private static final String SETTINGS_FOLDER_NAME = "Settings";
 
-    public static final String YCSB_SAMPLE_RESULT_PATH = format("{}/SampleResult.csv", YCSB_RESULTS_PATH);
-
-    public static final String SETTINGS_PATH = format("{}/Settings", RESOURCES_PATH);
+    public static final String SETTINGS_FOLDER_PATH = getAppPath(SETTINGS_FOLDER_NAME);
 
     /**
      * This is the path to the application settings.
      */
-    public static final String APP_SETTINGS_PATH = format("{}/AppSettings", SETTINGS_PATH);
+    public static final String APP_SETTINGS_PATH = format("{}/AppSettings", SETTINGS_FOLDER_PATH);
 
     /**
      * This is the path to the log4j2.xml configuration file.
      */
-    public static final String LOG_SETTINGS_PATH = "log4j2.xml";
+    public static final String LOG_SETTINGS_PATH = getAppPath("log4j2.xml"); //TODO
 
-    /**
-     * This is the path to the Dockerfile that is used to build the benchmark image.
-     */
-    public static final String DOCKERFILE_RESOURCES_PATH = format("{}/Dockerfile", RESOURCES_PATH);
+    public static final String DOCKER_FOLDER_NAME = "Dockerfolder";
 
-    public static final String DOCKERFILE_PATH = format("{}/Dockerfile", DOCKERFILE_RESOURCES_PATH);
+    public static final String DOCKER_FOLDER_PATH = getAppPath(DOCKER_FOLDER_NAME);
+
+    public static final String DOCKERFILE_PATH = format("{}/Dockerfile", DOCKER_FOLDER_PATH);
+
+    public static final String ADBM_README_PATH = getAppPath("ADBM_README.txt");
+
+    public static final String ADBM_README_TEXT =
+            format("{}\nVersion: {}\n\nReadme\n\n" +
+                           "This application is packaged as a jar file and creates several folders which store user preferences and results.\n" +
+                           "The following folders belong to this application:\n\n" +
+                           "{}\n" +
+                           "{}\n" +
+                           "{}\n" +
+                        //Add new folders here!
+                           "\n" +
+                           "If you wish to keep the stored data when moving the application then also move these folders to the new location of the application.\n" +
+                           "Other folders and files including this readme can be deleted if the application is not currently running.\n"
+
+                    , APP_NAME, APP_VERSION, SETTINGS_FOLDER_NAME, YCSB_WORKLOADS_FOLDER_NAME, YCSB_RESULT_FOLDER_NAME);
 
     /**
      * This is the path to the images that are used in the gui.
      */
-    public static final String IMAGES_PATH = format("{}/Images", RESOURCES_PATH);
+    private static final String IMAGES_FOLDER_NAME = "Images";
+
+    public static final URL AD_ICON_URL = getResource(format("{}/AntidoteIcon.PNG", IMAGES_FOLDER_NAME));
+
+    private static final String DEFAULT_LOG_FOLDER_NAME = "Logs";
 
     /**
      * This is the default path to the folder of the application logs.
      */
-    public static final String DEFAULT_LOG_PATH = "Logs";
+    public static final String DEFAULT_LOG_FOLDER_PATH = getAppPath(DEFAULT_LOG_FOLDER_NAME);
+
+    private static final String DEFAULT_AD_GIT_REPO_FOLDER_NAME = "AntidoteGitRepo";
 
     /**
      * This is the default path to the folder of the Antidote git repository.
      */
-    public static final String DEFAULT_AD_GIT_REPO_PATH = "AntidoteGitRepo";
+    public static final String DEFAULT_AD_GIT_REPO_PATH = getAppPath(DEFAULT_AD_GIT_REPO_FOLDER_NAME);
 
     /**
      * This is the git url to the Antidote git repository.

@@ -1,5 +1,6 @@
 package adbm.antidote.ui;
 
+import adbm.util.EverythingIsNonnullByDefault;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -9,6 +10,7 @@ import java.beans.PropertyChangeSupport;
 /**
  *
  */
+@EverythingIsNonnullByDefault
 public class AntidoteModel
 {
 

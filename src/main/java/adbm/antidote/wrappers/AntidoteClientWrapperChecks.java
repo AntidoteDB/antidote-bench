@@ -4,29 +4,31 @@ import adbm.antidote.IAntidoteClientWrapper;
 import adbm.antidote.operations.Operation;
 import adbm.antidote.operations.UpdateOperation;
 import adbm.main.Main;
+import adbm.util.EverythingIsNonnullByDefault;
 import eu.antidotedb.client.AntidoteClient;
 import eu.antidotedb.client.Bucket;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
+import javax.annotation.Nullable;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.StreamSupport;
 
-import static adbm.util.helpers.GeneralUtil.anyNullOrPredicate;
-import static adbm.util.helpers.GeneralUtil.isNullOrEmpty;
-
+@EverythingIsNonnullByDefault
 public class AntidoteClientWrapperChecks implements IAntidoteClientWrapper
 {
     private static final Logger log = LogManager.getLogger(AntidoteClientWrapperChecks.class);
 
     private AntidoteClientWrapper wrapper;
 
-    public AntidoteClientWrapperChecks(String name, String containerName) {
-        wrapper = new AntidoteClientWrapper(name,containerName);
+    public AntidoteClientWrapperChecks(String name, String containerName)
+    {
+        wrapper = new AntidoteClientWrapper(name, containerName);
     }
 
-    public AntidoteClientWrapperChecks(AntidoteClientWrapper wrapper) {
+    public AntidoteClientWrapperChecks(AntidoteClientWrapper wrapper)
+    {
         this.wrapper = wrapper;
     }
 
@@ -37,7 +39,7 @@ public class AntidoteClientWrapperChecks implements IAntidoteClientWrapper
     }
 
     @Override
-    public boolean start(String address, int port)
+    public boolean start(@Nullable String address, int port)
     {
         return wrapper.start(address, port);
     }
@@ -54,12 +56,14 @@ public class AntidoteClientWrapperChecks implements IAntidoteClientWrapper
         return wrapper.isReady() && Main.getDockerManager().isContainerRunning(getName()); //TODO checks
     }
 
+    @Nullable
     @Override
     public AntidoteClient getAntidoteClient()
     {
         return wrapper.getAntidoteClient();
     }
 
+    @Nullable
     @Override
     public Bucket getBucket()
     {
@@ -93,7 +97,7 @@ public class AntidoteClientWrapperChecks implements IAntidoteClientWrapper
     @Override
     public Object readKeyValue(String keyName, TransactionType txType)
     {
-        if (isNullOrEmpty(keyName)) {
+        if (keyName.trim().isEmpty()) {
             log.error("The key name cannot be null or empty!");
             return "";
         }
@@ -109,12 +113,7 @@ public class AntidoteClientWrapperChecks implements IAntidoteClientWrapper
     @Override
     public List<Object> readKeyValues(Iterable<String> keyNames, TransactionType txType)
     {
-        if (keyNames == null) {
-            log.error("The list of key names was null!");
-            return new ArrayList<>();
-        }
-        if (anyNullOrPredicate(
-                StreamSupport.stream(keyNames.spliterator(), false), s -> s.trim().isEmpty())) {
+        if (StreamSupport.stream(keyNames.spliterator(), false).anyMatch(s -> s.trim().isEmpty())) {
             log.error("The list of key name had invalid values!");
             return new ArrayList<>();
         }
@@ -130,8 +129,8 @@ public class AntidoteClientWrapperChecks implements IAntidoteClientWrapper
     @Override
     public void updateKey(UpdateOperation operation, TransactionType txType)
     {
-        if (operation == null || !operation.isValidUpdateOperation()) {
-            log.error("The operation cannot be null or invalid!{}", operation == null ? "\nOperation: NULL" : operation);
+        if (!operation.isValidUpdateOperation()) {
+            log.error("The operation cannot be null or invalid!{}", operation);
             return;
         }
         wrapper.updateKey(operation, txType);
@@ -146,12 +145,8 @@ public class AntidoteClientWrapperChecks implements IAntidoteClientWrapper
     @Override
     public void updateKeys(Iterable<UpdateOperation> operations, TransactionType txType)
     {
-        if (operations == null) {
-            log.error("The list of operation was null!");
-            return;
-        }
-        if (anyNullOrPredicate(
-                StreamSupport.stream(operations.spliterator(), false), Operation::isValidUpdateOperation)) {
+        if (StreamSupport.stream(operations.spliterator(), false).anyMatch(Operation::isValidUpdateOperation))
+        {
             log.error("The list of operation had invalid values!");
             return;
         }
@@ -168,12 +163,8 @@ public class AntidoteClientWrapperChecks implements IAntidoteClientWrapper
     public List<Object> performKeyOperations(Iterable<Operation> operations,
                                              TransactionType txType)
     {
-        if (operations == null) {
-            log.error("The list of operation was null!");
-            return new ArrayList<>();
-        }
-        if (anyNullOrPredicate(
-                StreamSupport.stream(operations.spliterator(), false), o -> o.isValidReadOperation() || o.isValidUpdateOperation())) {
+        if (StreamSupport.stream(operations.spliterator(), false).anyMatch(o -> o.isValidReadOperation() || o.isValidUpdateOperation()))
+        {
             log.error("The list of operation had invalid values!");
             return new ArrayList<>();
         }

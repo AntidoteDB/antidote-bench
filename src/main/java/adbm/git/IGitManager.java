@@ -1,13 +1,16 @@
 package adbm.git;
 
+import adbm.util.EverythingIsNonnullByDefault;
 import adbm.util.IStartStop;
 import org.eclipse.jgit.revwalk.RevCommit;
 
+import javax.annotation.Nullable;
 import java.util.List;
 
 /**
  *
  */
+@EverythingIsNonnullByDefault
 public interface IGitManager extends IStartStop
 {
 
@@ -35,6 +38,7 @@ public interface IGitManager extends IStartStop
      *
      * @return
      */
+    @Nullable
     RevCommit getCurrentCommit();
 
     /**
@@ -61,6 +65,7 @@ public interface IGitManager extends IStartStop
      * @param commitId
      * @return
      */
+    @Nullable
     RevCommit getCommitFromId(String commitId);
 
     /**

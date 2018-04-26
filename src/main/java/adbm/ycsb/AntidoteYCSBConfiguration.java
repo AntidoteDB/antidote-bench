@@ -3,8 +3,10 @@ package adbm.ycsb;
 import adbm.antidote.IAntidoteClientWrapper;
 import adbm.antidote.util.AntidoteUtil;
 import adbm.main.Main;
+import adbm.resultsVisualization.ResultsDialog;
 import adbm.settings.ISettingsManager;
 import adbm.util.AdbmConstants;
+import adbm.util.EverythingIsNonnullByDefault;
 import adbm.util.helpers.FileUtil;
 import adbm.util.helpers.GeneralUtil;
 import com.yahoo.ycsb.Client;
@@ -26,6 +28,7 @@ import static adbm.util.helpers.FormatUtil.format;
  * Updated by Vishnu Vardhan Sundarrajan
  * Reviewed by Kevin Bartik
  */
+@EverythingIsNonnullByDefault
 public class AntidoteYCSBConfiguration
 {
     private static final Logger log = LogManager.getLogger(AntidoteYCSBConfiguration.class);
@@ -41,7 +44,6 @@ public class AntidoteYCSBConfiguration
 
     public void setUsedKeyType(AntidotePB.CRDT_type type)
     {
-        if (type == null) return;
         usedKeyType = type;
         if (!Arrays.asList(AntidoteUtil.typeOperationMap.get(usedKeyType)).contains(usedOperation)) {
             usedOperation = AntidoteUtil.typeOperationMap.get(usedKeyType)[0];
@@ -59,7 +61,7 @@ public class AntidoteYCSBConfiguration
 
     public void setUsedOperation(String operation)
     {
-        if (operation != null && Arrays.asList(AntidoteUtil.typeOperationMap.get(usedKeyType)).contains(operation)) {
+        if (Arrays.asList(AntidoteUtil.typeOperationMap.get(usedKeyType)).contains(operation)) {
             usedOperation = operation;
         }
     }
@@ -75,7 +77,6 @@ public class AntidoteYCSBConfiguration
 
     public void setUsedTransactionType(IAntidoteClientWrapper.TransactionType txType)
     {
-        if (txType == null) return;
         usedTransactionType = txType;
     }
 
@@ -104,7 +105,7 @@ public class AntidoteYCSBConfiguration
 
     public void setUsedWorkload(String workload)
     {
-        if (workload != null && FileUtil.getAllFileNamesInFolder(AdbmConstants.YCSB_WORKLOADS_PATH).contains(workload))
+        if (FileUtil.getAllFileNamesInFolder(AdbmConstants.YCSB_WORKLOADS_FOLDER_PATH).contains(workload))
         usedWorkload = workload;
     }
 
@@ -178,7 +179,6 @@ public class AntidoteYCSBConfiguration
 
     private boolean rebuildAntidote(String commit)
     {
-        if (commit == null) return true;
         String currentCommit = Main.getDockerManager().getCommitOfContainer(AdbmConstants.ADBM_CONTAINER_NAME).trim();
         log.trace("Current Commit: {}", currentCommit);
         log.trace("New Commit: {}", commit);
@@ -224,7 +224,7 @@ public class AntidoteYCSBConfiguration
         }
         config.usedWorkload = settings.getYCSBSetting(usedWorkloadName);
         //TODO extra check that workload exists
-        if (config.usedWorkload.isEmpty() || !FileUtil.getAllFileNamesInFolder(AdbmConstants.YCSB_WORKLOADS_PATH)
+        if (config.usedWorkload.isEmpty() || !FileUtil.getAllFileNamesInFolder(AdbmConstants.YCSB_WORKLOADS_FOLDER_PATH)
                                                       .contains(config.usedWorkload))
         {
             config.usedWorkload = defaultConfig.usedWorkload;
@@ -273,7 +273,6 @@ public class AntidoteYCSBConfiguration
 
     public boolean runBenchmark(String... commits)
     {
-
         if (!Main.isDockerRunning) return false;
         String currentDate = new SimpleDateFormat(AdbmConstants.DATE_FORMAT_DATE).format(new Date());
         String currentTime = new SimpleDateFormat(AdbmConstants.DATE_FORMAT_TIME).format(new Date());
@@ -293,25 +292,19 @@ public class AntidoteYCSBConfiguration
         if (commits.length == 0) {
             commits = new String[]{null};
         }
-        String resultsFolder = format("{}/{}", AdbmConstants.YCSB_RESULTS_PATH, currentDate);
+        String resultsFolder = format("{}/{}", AdbmConstants.YCSB_RESULT_FOLDER_PATH, currentDate);
         File folder = new File(resultsFolder);
         if (!folder.exists()) {
             if (!folder.mkdirs()) {
                 return false;
             }
         }
-        String fileNameStart = format("{}/{}_{}", resultsFolder, "YCSB_Result", currentTime);
+        String fileNameStart = format("{}/{}_{}", resultsFolder, AdbmConstants.YCSB_RESULT_FILE_NAME_START, currentTime);
         String fileEnd = ".csv";
         List<String> resultFiles = new ArrayList<>();
-        //String currentCommit = Main.getDockerManager().getCommitOfContainer(AdbmConstants.ADBM_CONTAINER_NAME).trim();
-        //List<String> commitList = Arrays.asList(commits);
-        //if (commitList.contains(currentCommit)) {
-
-        //}
         for (String commit : commits) {
-            if (!rebuildAntidote(commit)) return false;
-            if (commit == null)
-                commit = Main.getDockerManager().getCommitOfContainer(AdbmConstants.ADBM_CONTAINER_NAME);
+            if (commit != null) if (!rebuildAntidote(commit)) return false;
+            commit = Main.getDockerManager().getCommitOfContainer(AdbmConstants.ADBM_CONTAINER_NAME);
             String shortCommit = commit
                     .substring(0, Math.min(commit.length(), AdbmConstants.NUMBER_COMMIT_ABBREVIATION));
             String resultFileName = format("{}_{}{}", fileNameStart, shortCommit, fileEnd);
@@ -320,9 +313,29 @@ public class AntidoteYCSBConfiguration
             List<String> newArgList = new ArrayList<>(argList);
             GeneralUtil.addIfNotEmpty(newArgList, resultFileArg);
             String[] ycsbArgs = newArgList.toArray(new String[0]);
+            ycsbArgs[4] = AdbmConstants.getWorkloadPath("10R90U.txt");
             Client.main(ycsbArgs);
+
+            ycsbArgs[4] = AdbmConstants.getWorkloadPath("30R70U.txt");
+            Client.main(ycsbArgs);
+
+            ycsbArgs[4] = AdbmConstants.getWorkloadPath("50R50U.txt");
+            Client.main(ycsbArgs);
+
+            ycsbArgs[4] = AdbmConstants.getWorkloadPath("70R30U.txt");
+            Client.main(ycsbArgs);
+
+            ycsbArgs[4] = AdbmConstants.getWorkloadPath("90R10U.txt");
+            Client.main(ycsbArgs);
+
+            ycsbArgs[4] = AdbmConstants.getWorkloadPath("100R.txt");
+            Client.main(ycsbArgs);
+
+            ycsbArgs[4] = AdbmConstants.getWorkloadPath("100U.txt");
+            Client.main(ycsbArgs);
+
         }
-        //ResultsDialog.showResultsWindow(resultFiles.toArray(new String[0]));
+        ResultsDialog.showResultsWindow(false, resultFiles.toArray(new String[0]));
         return true;
     }
 

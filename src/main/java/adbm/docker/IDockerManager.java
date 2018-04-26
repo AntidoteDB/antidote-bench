@@ -1,5 +1,6 @@
 package adbm.docker;
 
+import adbm.util.EverythingIsNonnullByDefault;
 import adbm.util.IStartStop;
 
 import java.util.List;
@@ -10,6 +11,7 @@ import java.util.List;
  * https://github.com/spotify/docker-client
  * https://github.com/docker-java/docker-java
  */
+@EverythingIsNonnullByDefault
 public interface IDockerManager extends IStartStop
 {
 
