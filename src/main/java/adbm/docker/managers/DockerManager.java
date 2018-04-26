@@ -5,6 +5,7 @@ import adbm.docker.util.DockerUtil;
 import adbm.docker.util.DockerfileBuilder;
 import adbm.main.Main;
 import adbm.util.AdbmConstants;
+import adbm.util.EverythingIsNonnullByDefault;
 import adbm.util.SimpleProgressHandler;
 import com.spotify.docker.client.DefaultDockerClient;
 import com.spotify.docker.client.DockerClient;
@@ -15,15 +16,16 @@ import com.spotify.docker.client.messages.*;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
+import javax.annotation.Nullable;
 import javax.swing.*;
 import java.io.File;
 import java.io.IOException;
-import java.nio.file.Paths;
 import java.util.*;
 import java.util.stream.Collectors;
 
 import static adbm.util.helpers.FormatUtil.format;
 
+@EverythingIsNonnullByDefault
 public class DockerManager implements IDockerManager
 {
 
@@ -46,6 +48,7 @@ public class DockerManager implements IDockerManager
      * The Docker Client.
      * Is set to null when {@link #stop()} is called.
      */
+    @Nullable
     private DockerClient docker;
 
     /**
@@ -85,7 +88,7 @@ public class DockerManager implements IDockerManager
     }
 
     @Override
-    public boolean start(String uri, String... args)
+    public boolean start(@Nullable String uri, String... args)
     {
         log.trace("Starting DockerManager!");
         if (isReady()) {
@@ -294,7 +297,8 @@ public class DockerManager implements IDockerManager
         String[] copyAntidote = {"bash", "-c", "cp -R /usr/src/antidote/_build/default/rel/antidote /opt/"};
         String[] setUpPorts = {"bash", "-c", "sed -e '$i,{kernel, [{inet_dist_listen_min, 9100}, {inet_dist_listen_max, 9100}]}' /usr/src/antidote/_build/default/rel/antidote/releases/0.0.1/sys.config > /opt/antidote/releases/0.0.1/sys.config"};
         String[] startAndAttach = {"bash", "-c", "/opt/antidote/start_and_attach.sh"};
-        performExec(containerName, true, stopAntidote, /*pullAntidote,*/ checkoutCommit, makeRel, /*magicStop,*/ deleteAntidoteData, copyAntidote,
+        performExec(containerName, true, stopAntidote, /*pullAntidote,*/ checkoutCommit, makeRel, /*magicStop,*/
+                    deleteAntidoteData, copyAntidote,
                     setUpPorts);
         performExec(containerName, false, startAndAttach);
         log.info("Container was rebuild and is now restarted!");
@@ -309,13 +313,15 @@ public class DockerManager implements IDockerManager
     public boolean runContainer(String containerName)
     {
         if (!isReady()) return false;
-        boolean containerExists = getAllContainersAlsoNonRelevant().stream()
-                                                                   .anyMatch(container -> container
-                                                                           .names() != null && (Objects
-                                                                           .requireNonNull(container.names())
-                                                                           .contains(containerName) || Objects
-                                                                           .requireNonNull(container.names())
-                                                                           .contains("/" + containerName)));
+        log.trace("Trying to run Container {}", containerName);
+        boolean containerExists = false;
+        String altContainerName = "/" + containerName;
+        for (Container container : getAllContainersAlsoNonRelevant()) {
+            List<String> containerNames = container.names();
+            if (containerNames != null && (containerNames.contains(containerName) || containerNames.contains(altContainerName))) {
+                containerExists = true;
+            }
+        }
         if (containerExists) {
             String containerId = getContainerId(containerName, true);
             if (!containerId.isEmpty()) {
@@ -509,9 +515,12 @@ public class DockerManager implements IDockerManager
         log.debug("Getting running containers...");
         Set<String> containerSet = new HashSet<>();
         for (Container container : getRunningContainers()) {
-            String firstName = DockerUtil.getFirstNameOfContainer(container.names(), container.id());
-            if (!firstName.isEmpty())
-                containerSet.add(firstName);
+            List<String> containerNames = container.names();
+            if (containerNames != null) {
+                String firstName = DockerUtil.getFirstNameOfContainer(containerNames, container.id());
+                if (!firstName.isEmpty())
+                    containerSet.add(firstName);
+            }
         }
         log.debug("Running containers: {}", containerSet);
         return new ArrayList<>(containerSet);
@@ -526,9 +535,12 @@ public class DockerManager implements IDockerManager
         List<Container> notRunningContainers = getAllContainers();
         notRunningContainers.removeAll(getRunningContainers());
         for (Container container : notRunningContainers) {
-            String firstName = DockerUtil.getFirstNameOfContainer(container.names(), container.id());
-            if (!firstName.isEmpty())
-                containerSet.add(firstName);
+            List<String> containerNames = container.names();
+            if (containerNames != null) {
+                String firstName = DockerUtil.getFirstNameOfContainer(containerNames, container.id());
+                if (!firstName.isEmpty())
+                    containerSet.add(firstName);
+            }
         }
         log.debug("Exited and created containers: {}", containerSet);
         return new ArrayList<>(containerSet);
@@ -541,9 +553,12 @@ public class DockerManager implements IDockerManager
         log.debug("Getting all containers...");
         Set<String> containerSet = new HashSet<>();
         for (Container container : getAllContainers()) {
-            String firstName = DockerUtil.getFirstNameOfContainer(container.names(), container.id());
-            if (!firstName.isEmpty())
-                containerSet.add(firstName);
+            List<String> containerNames = container.names();
+            if (containerNames != null) {
+                String firstName = DockerUtil.getFirstNameOfContainer(containerNames, container.id());
+                if (!firstName.isEmpty())
+                    containerSet.add(firstName);
+            }
         }
         log.debug("All containers: {}", containerSet);
         return new ArrayList<>(containerSet);
@@ -685,8 +700,10 @@ public class DockerManager implements IDockerManager
         List<Integer> portList = new ArrayList<>();
         //if (!isReady()) return portList;
         for (Container container : getAllContainers()) {
-            portList.addAll(
-                    getHostPortsFromContainer(DockerUtil.getFirstNameOfContainer(container.names(), container.id())));
+            List<String> containerNames = container.names();
+            if (containerNames != null)
+                portList.addAll(
+                        getHostPortsFromContainer(DockerUtil.getFirstNameOfContainer(containerNames, container.id())));
         }
         if (new HashSet<>(portList).size() < portList.size()) {
             log.error("The list of used host ports contains duplicates which can lead to errors!");
@@ -703,6 +720,8 @@ public class DockerManager implements IDockerManager
             if (mustBeRunning) {
                 adbmContainersWithName = docker.listContainers(DockerClient.ListContainersParam.filter("name", name),
                                                                DockerClient.ListContainersParam
+                                                                       .filter("name", "/" + name),
+                                                               DockerClient.ListContainersParam
                                                                        .filter("ancestor",
                                                                                AdbmConstants.ADBM_DOCKER_IMAGE_NAME),
                                                                DockerClient.ListContainersParam.allContainers(),
@@ -710,6 +729,8 @@ public class DockerManager implements IDockerManager
             }
             else {
                 adbmContainersWithName = docker.listContainers(DockerClient.ListContainersParam.filter("name", name),
+                                                               DockerClient.ListContainersParam
+                                                                       .filter("name", "/" + name),
                                                                DockerClient.ListContainersParam
                                                                        .filter("ancestor",
                                                                                AdbmConstants.ADBM_DOCKER_IMAGE_NAME),

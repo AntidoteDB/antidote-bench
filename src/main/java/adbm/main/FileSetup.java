@@ -1,11 +1,14 @@
 package adbm.main;
 
 import adbm.util.AdbmConstants;
+import adbm.util.EverythingIsNonnullByDefault;
 import org.apache.commons.io.FileUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-import java.io.*;
+import java.io.File;
+import java.io.IOException;
+import java.io.PrintWriter;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
@@ -18,13 +21,14 @@ import java.util.Iterator;
 import java.util.stream.Stream;
 
 import static java.nio.file.StandardCopyOption.REPLACE_EXISTING;
-
+@EverythingIsNonnullByDefault
 public class FileSetup
 {
 
     private static final Logger log = LogManager.getLogger(Main.class);
 
-    public static boolean setupFoldersAndFiles() {
+    public static boolean setupFoldersAndFiles()
+    {
         return updateFolderContentFromResources();
     }
 
@@ -32,19 +36,22 @@ public class FileSetup
     {
         if (!initializeFolders()) return false;
         if (!copyFileFromResources(
-                getJarPath(AdbmConstants.YCSB_RESULT_FOLDER_NAME, AdbmConstants.YCSB_SAMPLE_RESULT_FILE_NAME),
+                AdbmConstants
+                        .getJarPath(AdbmConstants.YCSB_RESULT_FOLDER_NAME, AdbmConstants.YCSB_SAMPLE_RESULT_FILE_NAME),
                 AdbmConstants.YCSB_SAMPLE_RESULT_PATH))
         {
             log.error("The sample result could not be copied to the results folder!");
             return false;
         }
-        if (!copyFolderFromResources(getJarPath(AdbmConstants.YCSB_WORKLOADS_FOLDER_NAME),
+        if (!copyFolderFromResources(AdbmConstants.getJarPath(AdbmConstants.YCSB_WORKLOADS_FOLDER_NAME),
                                      AdbmConstants.YCSB_WORKLOADS_FOLDER_PATH))
         {
             log.error("The YCSB workloads could not be copied to the workloads folder!");
             return false;
         }
-        if (!copyFolderFromResources(getJarPath(AdbmConstants.DOCKER_FOLDER_NAME), AdbmConstants.DOCKER_FOLDER_PATH)) {
+        if (!copyFolderFromResources(AdbmConstants.getJarPath(AdbmConstants.DOCKER_FOLDER_NAME),
+                                     AdbmConstants.DOCKER_FOLDER_PATH))
+        {
             log.error("The Dockerfile and other required files could not be copied to the Docker folder!");
             return false;
         }
@@ -65,7 +72,8 @@ public class FileSetup
         }
         File ycsbWorkloadFolder = new File(AdbmConstants.YCSB_WORKLOADS_FOLDER_PATH);
         if (!ycsbWorkloadFolder.exists() && !ycsbWorkloadFolder.mkdirs()) {
-            log.error("The folder {} did not exist and could not be created.", AdbmConstants.YCSB_WORKLOADS_FOLDER_PATH);
+            log.error("The folder {} did not exist and could not be created.",
+                      AdbmConstants.YCSB_WORKLOADS_FOLDER_PATH);
             return false;
             //TODO copy sample result
             //TODO delete folder maybe
@@ -95,24 +103,15 @@ public class FileSetup
         return true;
     }
 
-    private static String getJarPath(String... paths)
-    {
-        StringBuilder res = new StringBuilder();
-        for (String path : paths) {
-            res.append("/");
-            res.append(path);
-        }
-        return res.toString();
-    }
-
     private static boolean copyFolderFromResources(String folderJarPath, String path)
     {
         try {
             URI uri = Main.class.getResource(folderJarPath).toURI();
             Path myPath;
             log.info("URI: {}", uri);
-            FileSystem fileSystem = null;
+            FileSystem fileSystem;
             if (uri.getScheme().equals("jar")) {
+                AdbmConstants.IntellijHack = "";
                 log.info("jar file");
                 fileSystem = FileSystems.newFileSystem(uri, Collections.emptyMap());
                 myPath = fileSystem.getPath(folderJarPath);
@@ -127,13 +126,12 @@ public class FileSetup
                 Path source = it.next();
                 Path target = new File(path).toPath();
                 log.info("Filename: {}", source.getFileName().toString());
+                if (Files.isDirectory(source)) continue;
                 log.info("Copy from {}", source);
                 log.info("Copy to {}", target);
                 Files.copy(source, target.resolve(myPath.relativize(source).toString()), REPLACE_EXISTING);
             }
-            if (fileSystem != null) {
-                fileSystem.close();
-            }
+            fileSystem.close();
             return true;
         } catch (URISyntaxException | IOException e) {
             log.error("", e);

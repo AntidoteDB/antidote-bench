@@ -2,12 +2,15 @@ package adbm.util;
 
 import org.apache.logging.log4j.LogManager;
 
+import javax.annotation.Nullable;
+
 import static adbm.util.helpers.FormatUtil.format;
 
 /**
  * This interface specifies that the implementing class can be started and stopped.
  * This is a utility to define common methods of classes that require a setup before they can be used.
  */
+@EverythingIsNonnullByDefault
 public interface IStartStop
 {
 
@@ -34,7 +37,7 @@ public interface IStartStop
      * @param port The port.
      * @return true if the start was successful. Otherwise false.
      */
-    default boolean start(String address, int port) {
+    default boolean start(@Nullable String address, int port) {
         return start();
     }
 
@@ -50,7 +53,7 @@ public interface IStartStop
      * @param args The string arguments e.g. a path to a file.
      * @return true if the start was successful. Otherwise false.
      */
-    default boolean start(String arg, String... args) {
+    default boolean start(@Nullable String arg, String... args) {
         return start();
     }
 

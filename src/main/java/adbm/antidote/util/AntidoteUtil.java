@@ -1,6 +1,7 @@
 package adbm.antidote.util;
 
 import adbm.main.Main;
+import adbm.util.EverythingIsNonnullByDefault;
 import com.google.protobuf.ByteString;
 import eu.antidotedb.antidotepb.AntidotePB;
 import eu.antidotedb.client.Key;
@@ -10,9 +11,8 @@ import java.util.*;
 /**
  *
  */
+@EverythingIsNonnullByDefault
 public class AntidoteUtil {
-
-
 
     public static final EnumMap<AntidotePB.CRDT_type, String> typeGUIMap = createTypeGUIMap();
 

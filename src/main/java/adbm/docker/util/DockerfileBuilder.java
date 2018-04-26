@@ -1,6 +1,7 @@
 package adbm.docker.util;
 
 import adbm.util.AdbmConstants;
+import adbm.util.EverythingIsNonnullByDefault;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -8,6 +9,7 @@ import java.io.*;
 
 import static adbm.util.helpers.FormatUtil.format;
 
+@EverythingIsNonnullByDefault
 public class DockerfileBuilder
 {
 

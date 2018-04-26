@@ -6,12 +6,14 @@ import adbm.git.ui.GitDialog;
 import adbm.main.Main;
 import adbm.main.ui.MainWindow;
 import adbm.util.AdbmConstants;
+import adbm.util.EverythingIsNonnullByDefault;
 import adbm.util.TextPaneAppender;
 import adbm.util.helpers.FileUtil;
 import eu.antidotedb.antidotepb.AntidotePB;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
+import javax.annotation.Nullable;
 import javax.swing.*;
 import javax.swing.text.DefaultFormatter;
 import java.awt.*;
@@ -22,6 +24,7 @@ import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
+@EverythingIsNonnullByDefault
 public class AntidoteYCSBConfigurationDialog extends JDialog
 {
     private static final Logger log = LogManager.getLogger(AntidoteYCSBConfigurationDialog.class);
@@ -48,6 +51,7 @@ public class AntidoteYCSBConfigurationDialog extends JDialog
     private DefaultComboBoxModel<String> comboBoxOperationModel = new DefaultComboBoxModel<>();
     private DefaultListModel<String> listCommitsModel = new DefaultListModel<>();
 
+    @Nullable
     private static AntidoteYCSBConfigurationDialog antidoteYCSBConfigurationDialog;
 
     private ExecutorService executorService = Executors.newSingleThreadExecutor();
@@ -174,15 +178,13 @@ public class AntidoteYCSBConfigurationDialog extends JDialog
                 log.error("An error occurred while opening the Workload file with standard .txt file editor.", e1);
             }
         });
-        buttonRunYCSBBenchmark.addActionListener(e -> {
-            executorService.execute(() -> {
-                List<String> commits = new ArrayList<>();
-                for (Object element : listCommitsModel.toArray()) {
-                    commits.add(element.toString());
-                }
-                Main.getAntidoteYCSBConfiguration().runBenchmark(commits);
-            });
-        });
+        buttonRunYCSBBenchmark.addActionListener(e -> executorService.execute(() -> {
+            List<String> commits = new ArrayList<>();
+            for (Object element : listCommitsModel.toArray()) {
+                commits.add(element.toString());
+            }
+            Main.getAntidoteYCSBConfiguration().runBenchmark(commits);
+        }));
     }
 
     public void invokeCommitChange()

@@ -11,18 +11,18 @@ import adbm.settings.IAntidoteKeyStoreManager;
 import adbm.settings.ISettingsManager;
 import adbm.settings.managers.MapDBManager;
 import adbm.util.AdbmConstants;
-import adbm.util.helpers.FileUtil;
+import adbm.util.EverythingIsNonnullByDefault;
 import adbm.ycsb.AntidoteYCSBConfiguration;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import picocli.CommandLine;
 
+import javax.annotation.Nullable;
 import javax.swing.*;
-import java.io.File;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
-
+@EverythingIsNonnullByDefault
 public class Main
 {
 
@@ -75,7 +75,13 @@ public class Main
         return gitManager;
     }
 
-    private static AntidoteYCSBConfiguration antidoteYCSBConfiguration = new AntidoteYCSBConfiguration();
+    static {
+
+        if (!FileSetup.setupFoldersAndFiles() || !settingsManager.start())
+            closeApp();
+    }
+
+    private static AntidoteYCSBConfiguration antidoteYCSBConfiguration = AntidoteYCSBConfiguration.loadFromSettings();
 
     public static AntidoteYCSBConfiguration getAntidoteYCSBConfiguration()
     {
@@ -93,14 +99,17 @@ public class Main
         gitManager.stop();
         settingsManager.stop();
         keyManager.stop();
-        Runtime.getRuntime().removeShutdownHook(shutdownHook);
+        try {
+            Runtime.getRuntime().removeShutdownHook(shutdownHook);
+        } catch (Exception e) {
+            //Ignore
+        }
         //TODO maybe delete folder
         //FileUtil.deleteDirectory(new File(AdbmConstants.DOCKER_FOLDER_PATH));
         System.exit(0);
     }
 
-
-
+    @Nullable
     public static AntidoteClientWrapperGui startAntidoteClient(String name, String containerName)
     {
         if (clientList.containsKey(name)) {
@@ -134,6 +143,7 @@ public class Main
     public static boolean startBenchmarkContainer()
     {
         if (!dockerManager.isReady()) {
+            log.trace("Starting Docker and running Benchmark Container.");
             if (!dockerManager.start()) {
                 log.error("Docker could not be started!");
                 return false;
@@ -162,14 +172,39 @@ public class Main
         } catch (UnsupportedLookAndFeelException | ClassNotFoundException | InstantiationException | IllegalAccessException e) {
             log.error("An error occurred while setting the LookAndFeel!", e);
         }
-        boolean success = FileSetup.setupFoldersAndFiles();
-        if (!success) {
-            log.error("Failed File Setup!");
-        }
+        //TODO check state of folder and settings
         isDockerRunning = startBenchmarkContainer();
         if (!isDockerRunning) closeApp();
+        guiMode = true;
         MainWindow.showMainWindow();
         if (1 == 1) return;
+        //System.exit(0);
+        if (args.length > 0) {
+            log.info("Arguments: {}", Arrays.toString(args));
+            AntidoteCommandLine parser = null;
+            try {
+                parser = CommandLine.populateCommand(new AntidoteCommandLine(), args);
+            } catch (Exception e) {
+                log.error("Parsing the arguments caused an exception!", e);
+                closeApp();
+            }
+            if (parser == null) {
+                log.error("Parsing the arguments failed!");
+                closeApp();
+            }
+            else {
+                int result = parser.parseInput();
+                switch (result) {
+                    case 0:
+                        closeApp();
+                        break;
+                    case 1:
+                        break;
+                    default:
+                        break;
+                }
+            }
+        }
 
         guiMode = true;
         settingsManager.start();

@@ -11,6 +11,7 @@ import org.apache.logging.log4j.core.config.plugins.PluginElement;
 import org.apache.logging.log4j.core.config.plugins.PluginFactory;
 import org.apache.logging.log4j.core.layout.PatternLayout;
 
+import javax.annotation.Nonnull;
 import javax.swing.*;
 import javax.swing.text.BadLocationException;
 import javax.swing.text.Style;
@@ -24,6 +25,7 @@ import java.util.List;
 /**
  * TextAreaAppender for Log4j 2
  */
+@EverythingIsNullableByDefault
 @Plugin(
         name = "TextPaneAppender",
         category = "Core",
@@ -31,10 +33,10 @@ import java.util.List;
         printObject = true)
 public final class TextPaneAppender extends AbstractAppender
 {
-
+    @Nonnull
     private static List<JTextPane> textPaneList = new ArrayList<>();
 
-    private TextPaneAppender(String name, Filter filter,
+    private TextPaneAppender(@Nonnull String name, Filter filter,
                              Layout<? extends Serializable> layout,
                              final boolean ignoreExceptions)
     {
@@ -49,6 +51,7 @@ public final class TextPaneAppender extends AbstractAppender
     @Override
     public void append(LogEvent event)
     {
+        if (event == null) return;
         final String message = new String(getLayout().toByteArray(event));
 
         // append log text to TextArea
@@ -71,9 +74,9 @@ public final class TextPaneAppender extends AbstractAppender
             else if (event.getLevel().equals(Level.FATAL)) {
                 appendToPane(message, Color.RED, 20);
             }
-        } catch (Exception ex) {
+        } catch (Exception e) {
             // Do not log exceptions that were caused by logging.
-            // ex.printStackTrace();
+            e.printStackTrace();
         }
     }
 
@@ -105,9 +108,9 @@ public final class TextPaneAppender extends AbstractAppender
 
 
     /**
-     * Set TextArea to append
+     * Set TextPane to append
      *
-     * @param textPane TextArea to append
+     * @param textPane TextPane to append
      */
     public static void addTextPane(JTextPane textPane)
     {
@@ -127,7 +130,7 @@ public final class TextPaneAppender extends AbstractAppender
                 try {
                     doc.insertString(doc.getLength(), msg + "\n", style);
                 } catch (BadLocationException e) {
-                    //e.printStackTrace();
+                    e.printStackTrace();
                 }
             }
         });

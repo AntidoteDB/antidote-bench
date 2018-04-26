@@ -1,18 +1,20 @@
 package adbm.ycsb;
 
 import adbm.antidote.IAntidoteClientWrapper;
-import adbm.antidote.operations.UpdateOperation;
 import adbm.antidote.util.AntidoteUtil;
-import adbm.antidote.wrappers.AntidoteClientWrapper;
 import adbm.main.Main;
 import adbm.resultsVisualization.ResultsDialog;
+import adbm.settings.ISettingsManager;
 import adbm.util.AdbmConstants;
+import adbm.util.EverythingIsNonnullByDefault;
+import adbm.util.helpers.FileUtil;
 import adbm.util.helpers.GeneralUtil;
 import com.yahoo.ycsb.Client;
 import eu.antidotedb.antidotepb.AntidotePB;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
+import java.io.File;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -21,9 +23,17 @@ import java.util.List;
 
 import static adbm.util.helpers.FormatUtil.format;
 
+/**
+ * @author Kevin Bartik
+ * Updated by Vishnu Vardhan Sundarrajan
+ * Reviewed by Kevin Bartik
+ */
+@EverythingIsNonnullByDefault
 public class AntidoteYCSBConfiguration
 {
     private static final Logger log = LogManager.getLogger(AntidoteYCSBConfiguration.class);
+
+    private static final String usedKeyTypeName = "usedKeyType";
 
     private AntidotePB.CRDT_type usedKeyType = AntidotePB.CRDT_type.COUNTER;
 
@@ -32,9 +42,15 @@ public class AntidoteYCSBConfiguration
         return usedKeyType;
     }
 
-    public void setUsedKeyType(AntidotePB.CRDT_type type) {
+    public void setUsedKeyType(AntidotePB.CRDT_type type)
+    {
         usedKeyType = type;
+        if (!Arrays.asList(AntidoteUtil.typeOperationMap.get(usedKeyType)).contains(usedOperation)) {
+            usedOperation = AntidoteUtil.typeOperationMap.get(usedKeyType)[0];
+        }
     }
+
+    private static final String usedOperationName = "usedOperation";
 
     private String usedOperation = "increment";
 
@@ -43,9 +59,14 @@ public class AntidoteYCSBConfiguration
         return usedOperation;
     }
 
-    public void setUsedOperation(String operation) {
-        usedOperation = operation;
+    public void setUsedOperation(String operation)
+    {
+        if (Arrays.asList(AntidoteUtil.typeOperationMap.get(usedKeyType)).contains(operation)) {
+            usedOperation = operation;
+        }
     }
+
+    private static final String usedTransactionTypeName = "usedTransactionType";
 
     private IAntidoteClientWrapper.TransactionType usedTransactionType = IAntidoteClientWrapper.TransactionType.InteractiveTransaction;
 
@@ -54,21 +75,26 @@ public class AntidoteYCSBConfiguration
         return usedTransactionType;
     }
 
-    public void setUsedTransactionType(IAntidoteClientWrapper.TransactionType txType) {
+    public void setUsedTransactionType(IAntidoteClientWrapper.TransactionType txType)
+    {
         usedTransactionType = txType;
     }
 
-    private boolean useTransactions = true;
+    private static final String useTransactionsName = "useTransactions";
 
-    public void setUseTransactions(boolean bool)
-    {
-        useTransactions = bool;
-    }
+    private boolean useTransactions = true;
 
     public boolean getUseTransactions()
     {
         return useTransactions;
     }
+
+    public void setUseTransactions(boolean useTransactions)
+    {
+        this.useTransactions = useTransactions;
+    }
+
+    private static final String usedWorkloadName = "usedWorkload";
 
     private String usedWorkload = AdbmConstants.YCSB_SAMPLE_WORKLOAD_NAME;
 
@@ -79,8 +105,11 @@ public class AntidoteYCSBConfiguration
 
     public void setUsedWorkload(String workload)
     {
+        if (FileUtil.getAllFileNamesInFolder(AdbmConstants.YCSB_WORKLOADS_FOLDER_PATH).contains(workload))
         usedWorkload = workload;
     }
+
+    private static final String numberOfThreadsName = "numberOfThreads";
 
     private int numberOfThreads = 1;
 
@@ -94,6 +123,8 @@ public class AntidoteYCSBConfiguration
         if (number > 0) numberOfThreads = number;
     }
 
+    private static final String targetNumberName = "targetNumber";
+
     private int targetNumber = 0;
 
     public int getTargetNumber()
@@ -106,19 +137,48 @@ public class AntidoteYCSBConfiguration
         if (number >= 0) targetNumber = number;
     }
 
+    private static final String showStatusName = "showStatus";
+
     private boolean showStatus = true;
 
-    public boolean getShowStatus() {
+    public boolean getShowStatus()
+    {
         return showStatus;
     }
 
-    public void setShowStatus(boolean status) {
+    public void setShowStatus(boolean status)
+    {
         showStatus = status;
+    }
+
+    //TODO one time or stored?
+
+    private boolean onlyReads = false;
+
+    public boolean isOnlyReads()
+    {
+        return onlyReads;
+    }
+
+    public void setOnlyReads(boolean onlyReads)
+    {
+        this.onlyReads = onlyReads;
+    }
+
+    private boolean onlyUpdates = false;
+
+    public boolean isOnlyUpdates()
+    {
+        return onlyUpdates;
+    }
+
+    public void setOnlyUpdates(boolean onlyUpdates)
+    {
+        this.onlyUpdates = onlyUpdates;
     }
 
     private boolean rebuildAntidote(String commit)
     {
-        if (commit == null) return true;
         String currentCommit = Main.getDockerManager().getCommitOfContainer(AdbmConstants.ADBM_CONTAINER_NAME).trim();
         log.trace("Current Commit: {}", currentCommit);
         log.trace("New Commit: {}", commit);
@@ -128,15 +188,94 @@ public class AntidoteYCSBConfiguration
         return Main.getDockerManager().rebuildAntidoteInContainer(AdbmConstants.ADBM_CONTAINER_NAME, commit);
     }
 
-    public boolean runBenchmark(List<String> commits) {
+    public static AntidoteYCSBConfiguration loadFromSettings()
+    {
+        AntidoteYCSBConfiguration config = new AntidoteYCSBConfiguration();
+        AntidoteYCSBConfiguration defaultConfig = new AntidoteYCSBConfiguration();
+        ISettingsManager settings = Main.getSettingsManager();
+        try {
+            config.usedKeyType = AntidotePB.CRDT_type.valueOf(settings.getYCSBSetting(usedKeyTypeName));
+        } catch (IllegalArgumentException e) {
+            config.usedKeyType = defaultConfig.usedKeyType;
+            settings.setYCSBSetting(usedKeyTypeName, config.usedKeyType.name());
+        }
+        //TODO extra check that operation exists
+        config.usedOperation = settings.getYCSBSetting(usedOperationName);
+        if (config.usedOperation.isEmpty() || !Arrays.asList(AntidoteUtil.typeOperationMap.get(config.usedKeyType))
+                                                     .contains(config.usedOperation))
+        {
+            config.usedOperation = defaultConfig.usedOperation;
+            settings.setYCSBSetting(usedOperationName, config.usedOperation);
+        }
+        try {
+            config.usedTransactionType = IAntidoteClientWrapper.TransactionType
+                    .valueOf(settings.getYCSBSetting(usedTransactionTypeName));
+        } catch (IllegalArgumentException e) {
+            config.usedTransactionType = defaultConfig.usedTransactionType;
+            settings.setYCSBSetting(usedTransactionTypeName, config.usedTransactionType.name());
+        }
+        String ut = settings.getYCSBSetting(useTransactionsName);
+        if (!ut.equals("true") && !ut.equals("false")) {
+            config.useTransactions = defaultConfig.useTransactions;
+            settings.setYCSBSetting(useTransactionsName, String.valueOf(config.useTransactions));
+        }
+        else {
+            config.useTransactions = Boolean.valueOf(ut);
+        }
+        config.usedWorkload = settings.getYCSBSetting(usedWorkloadName);
+        //TODO extra check that workload exists
+        if (config.usedWorkload.isEmpty() || !FileUtil.getAllFileNamesInFolder(AdbmConstants.YCSB_WORKLOADS_FOLDER_PATH)
+                                                      .contains(config.usedWorkload))
+        {
+            config.usedWorkload = defaultConfig.usedWorkload;
+            settings.setYCSBSetting(usedWorkloadName, config.usedWorkload);
+        }
+        try {
+            config.numberOfThreads = Integer.valueOf(settings.getYCSBSetting(numberOfThreadsName));
+        } catch (NumberFormatException e) {
+            config.numberOfThreads = defaultConfig.numberOfThreads;
+            settings.setYCSBSetting(numberOfThreadsName, String.valueOf(config.numberOfThreads));
+        }
+        try {
+            config.targetNumber = Integer.valueOf(settings.getYCSBSetting(targetNumberName));
+        } catch (NumberFormatException e) {
+            config.targetNumber = defaultConfig.targetNumber;
+            settings.setYCSBSetting(targetNumberName, String.valueOf(config.targetNumber));
+        }
+        String ss = settings.getYCSBSetting(showStatusName);
+        if (!ss.equals("true") && !ss.equals("false")) {
+            config.showStatus = defaultConfig.showStatus;
+            settings.setYCSBSetting(showStatusName, String.valueOf(config.showStatus));
+        }
+        else {
+            config.showStatus = Boolean.valueOf(ss);
+        }
+        return config;
+    }
+
+    public void saveInSettings()
+    {
+        ISettingsManager settings = Main.getSettingsManager();
+        settings.setYCSBSetting(usedKeyTypeName, usedKeyType.name());
+        settings.setYCSBSetting(usedOperationName, usedOperation);
+        settings.setYCSBSetting(usedTransactionTypeName, usedTransactionType.name());
+        settings.setYCSBSetting(useTransactionsName, String.valueOf(useTransactions));
+        settings.setYCSBSetting(usedWorkloadName, usedWorkload);
+        settings.setYCSBSetting(numberOfThreadsName, String.valueOf(numberOfThreads));
+        settings.setYCSBSetting(targetNumberName, String.valueOf(targetNumber));
+        settings.setYCSBSetting(showStatusName, String.valueOf(showStatus));
+    }
+
+    public boolean runBenchmark(List<String> commits)
+    {
         return runBenchmark(commits.toArray(new String[0]));
     }
 
     public boolean runBenchmark(String... commits)
     {
-
         if (!Main.isDockerRunning) return false;
-        String currentDateTime = new SimpleDateFormat(AdbmConstants.DATE_FORMAT_TIME).format(new Date());
+        String currentDate = new SimpleDateFormat(AdbmConstants.DATE_FORMAT_DATE).format(new Date());
+        String currentTime = new SimpleDateFormat(AdbmConstants.DATE_FORMAT_TIME).format(new Date());
         String usedDB = AdbmConstants.YCSB_DB_CLASS_NAME;
         String[] threadsArg = numberOfThreads <= 1 ? new String[0] : new String[]{"-threads", format("{}",
                                                                                                      numberOfThreads)};
@@ -153,27 +292,49 @@ public class AntidoteYCSBConfiguration
         if (commits.length == 0) {
             commits = new String[]{null};
         }
-        String fileNameStart = format("{}/{}", AdbmConstants.YCSB_RESULT_FOLDER_PATH, AdbmConstants.YCSB_RESULT_FILE_NAME_START);
+        String resultsFolder = format("{}/{}", AdbmConstants.YCSB_RESULT_FOLDER_PATH, currentDate);
+        File folder = new File(resultsFolder);
+        if (!folder.exists()) {
+            if (!folder.mkdirs()) {
+                return false;
+            }
+        }
+        String fileNameStart = format("{}/{}_{}", resultsFolder, AdbmConstants.YCSB_RESULT_FILE_NAME_START, currentTime);
         String fileEnd = ".csv";
         List<String> resultFiles = new ArrayList<>();
-        //String currentCommit = Main.getDockerManager().getCommitOfContainer(AdbmConstants.ADBM_CONTAINER_NAME).trim();
-        //List<String> commitList = Arrays.asList(commits);
-        //if (commitList.contains(currentCommit)) {
-
-        //}
         for (String commit : commits) {
-            if (!rebuildAntidote(commit)) return false;
-            if (commit == null) commit = Main.getDockerManager().getCommitOfContainer(AdbmConstants.ADBM_CONTAINER_NAME);
-            String shortCommit = commit.substring(0, Math.min(commit.length(), AdbmConstants.NUMBER_COMMIT_ABBREVIATION));
-            String resultFileName = format("{}_{}_{}{}", fileNameStart, shortCommit, currentDateTime, fileEnd);
+            if (commit != null) if (!rebuildAntidote(commit)) return false;
+            commit = Main.getDockerManager().getCommitOfContainer(AdbmConstants.ADBM_CONTAINER_NAME);
+            String shortCommit = commit
+                    .substring(0, Math.min(commit.length(), AdbmConstants.NUMBER_COMMIT_ABBREVIATION));
+            String resultFileName = format("{}_{}{}", fileNameStart, shortCommit, fileEnd);
             resultFiles.add(resultFileName);
-            String[] resultFileArg = new String[]{"-p", format("exportfile={}", resultFileName)};
+            String[] resultFileArg = new String[]{"-p", format("exportfile=\"{}\"", resultFileName)};
             List<String> newArgList = new ArrayList<>(argList);
             GeneralUtil.addIfNotEmpty(newArgList, resultFileArg);
             String[] ycsbArgs = newArgList.toArray(new String[0]);
+            ycsbArgs[4] = AdbmConstants.getWorkloadPath("10R90U.txt");
             Client.main(ycsbArgs);
+
+            ycsbArgs[4] = AdbmConstants.getWorkloadPath("30R70U.txt");
+            Client.main(ycsbArgs);
+
+            ycsbArgs[4] = AdbmConstants.getWorkloadPath("50R50U.txt");
+            Client.main(ycsbArgs);
+
+            ycsbArgs[4] = AdbmConstants.getWorkloadPath("70R30U.txt");
+            Client.main(ycsbArgs);
+
+            ycsbArgs[4] = AdbmConstants.getWorkloadPath("90R10U.txt");
+            Client.main(ycsbArgs);
+
+            ycsbArgs[4] = AdbmConstants.getWorkloadPath("100R.txt");
+            Client.main(ycsbArgs);
+
+            ycsbArgs[4] = AdbmConstants.getWorkloadPath("100U.txt");
+            Client.main(ycsbArgs);
+
         }
-        ResultsDialog.showResultsWindow(true, resultFiles.toArray(new String[0]));
         ResultsDialog.showResultsWindow(false, resultFiles.toArray(new String[0]));
         return true;
     }

@@ -6,12 +6,15 @@ import adbm.antidote.operations.UpdateOperation;
 import adbm.antidote.ui.AntidoteController;
 import adbm.antidote.ui.AntidoteModel;
 import adbm.main.Main;
+import adbm.util.EverythingIsNonnullByDefault;
 import eu.antidotedb.antidotepb.AntidotePB;
 import eu.antidotedb.client.AntidoteClient;
 import eu.antidotedb.client.Bucket;
 
+import javax.annotation.Nullable;
 import java.util.List;
 
+@EverythingIsNonnullByDefault
 public class AntidoteClientWrapperGui extends AntidoteModel implements IAntidoteClientWrapper
 {
 
@@ -52,7 +55,7 @@ public class AntidoteClientWrapperGui extends AntidoteModel implements IAntidote
     }
 
     @Override
-    public boolean start(String address, int port)
+    public boolean start(@Nullable String address, int port)
     {
         boolean success = wrapper.start(address, port);
         this.firePropertyChange(AntidoteController.DCListChanged, "", "");
@@ -75,12 +78,14 @@ public class AntidoteClientWrapperGui extends AntidoteModel implements IAntidote
 
     // TODO implement isReadyInfo()
 
+    @Nullable
     @Override
     public AntidoteClient getAntidoteClient()
     {
         return wrapper.getAntidoteClient();
     }
 
+    @Nullable
     @Override
     public Bucket getBucket()
     {

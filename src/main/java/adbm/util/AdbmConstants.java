@@ -19,6 +19,7 @@ import static adbm.util.helpers.FormatUtil.format;
  * They are mostly file paths and names.
  * Some of the constants may change in time.
  */
+@EverythingIsNonnullByDefault
 public class AdbmConstants
 {
 
@@ -41,16 +42,36 @@ public class AdbmConstants
         }
     }
 
+    private static String IDEPath() {
+        if (Main.class.getResource("Main.class").getPath().startsWith("jar")) {
+            return "";
+        }
+        else {
+            return "classes/";
+        }
+    }
+
+    public static String getJarPath(String... paths)
+    {
+        StringBuilder res = new StringBuilder();
+        for (String path : paths) {
+            res.append("/");
+            res.append(path);
+        }
+        return res.toString();
+    }
+
     public static File getAppPath() {
         return appPath;
     }
 
     private static String getAppPath(String path) {
-        return format("{}/{}", canonicalAppPath, path);
+        log.trace("AppPath: {}/{}{}", canonicalAppPath, IDEPath(), path);
+        return format("{}/{}{}", canonicalAppPath, IDEPath(), path);
     }
 
     private static URL getResource(String path) {
-        return Main.class.getResource(path);
+        return Main.class.getResource(getJarPath(path));
     }
 
     /**

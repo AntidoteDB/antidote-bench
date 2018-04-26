@@ -4,15 +4,14 @@ import adbm.main.Main;
 import adbm.main.ui.MainWindow;
 import adbm.settings.ISettingsManager;
 import adbm.util.AdbmConstants;
+import adbm.util.EverythingIsNonnullByDefault;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import javax.swing.*;
-import java.awt.*;
 import java.io.File;
 
-import static adbm.util.helpers.FormatUtil.format;
-
+@EverythingIsNonnullByDefault
 public class SettingsDialog extends JDialog
 {
 

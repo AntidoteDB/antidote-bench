@@ -1,11 +1,13 @@
 package adbm.git.ui;
 
 import adbm.main.Main;
+import adbm.util.EverythingIsNonnullByDefault;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import javax.swing.*;
 
+@EverythingIsNonnullByDefault
 public class AddBranchDialog extends JDialog
 {
     private static final Logger log = LogManager.getLogger(AddBranchDialog.class);

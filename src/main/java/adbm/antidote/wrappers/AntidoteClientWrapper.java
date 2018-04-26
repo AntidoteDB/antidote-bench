@@ -6,6 +6,7 @@ import adbm.antidote.operations.UpdateOperation;
 import adbm.antidote.util.AntidoteUtil;
 import adbm.main.Main;
 import adbm.util.AdbmConstants;
+import adbm.util.EverythingIsNonnullByDefault;
 import eu.antidotedb.client.*;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -14,8 +15,6 @@ import javax.annotation.Nullable;
 import java.net.InetSocketAddress;
 import java.util.ArrayList;
 import java.util.List;
-
-import static adbm.util.helpers.GeneralUtil.isNullOrEmpty;
 
 /**
  * Bridge between Antidote and benchmarking tools
@@ -26,6 +25,7 @@ import static adbm.util.helpers.GeneralUtil.isNullOrEmpty;
  * Of course you need to be sure that the input parameters are always valid otherwise there will be unhandled exceptions.
  * If you can't be sure the input parameter will always be valid then use the AntidoteClientWrapperChecks class.
  */
+@EverythingIsNonnullByDefault
 public class AntidoteClientWrapper implements IAntidoteClientWrapper
 {
 
@@ -36,11 +36,13 @@ public class AntidoteClientWrapper implements IAntidoteClientWrapper
     /**
      * The AntidoteClient that is used to create transactions.
      */
+    @Nullable
     private AntidoteClient antidoteClient;
 
     /**
      * The bucket that is used for performing database operations.
      */
+    @Nullable
     private Bucket bucket;
 
     /**
@@ -66,13 +68,7 @@ public class AntidoteClientWrapper implements IAntidoteClientWrapper
      */
     public AntidoteClientWrapper(String name, String containerName)
     {
-        if (isNullOrEmpty(name)) {
-            name = "BAD_NAME";
-        }
         this.name = name;
-        if (isNullOrEmpty(containerName)) {
-            containerName = AdbmConstants.ADBM_CONTAINER_NAME;
-        }
         this.containerName = containerName;
     }
 
@@ -83,7 +79,7 @@ public class AntidoteClientWrapper implements IAntidoteClientWrapper
     }
 
     @Override
-    public boolean start(String address, int port)
+    public boolean start(@Nullable String address, int port)
     {
         if (isReady()) return true;
         log.trace("Starting Antidote Client {} with connection to Container {}", name, containerName);
@@ -93,7 +89,7 @@ public class AntidoteClientWrapper implements IAntidoteClientWrapper
             hostPort = Main.getDockerManager().getHostPortsFromContainer(containerName).get(0);
             if (hostPort <= 0) return false;
         }
-        if (isNullOrEmpty(address)) {
+        if (address == null || address.trim().isEmpty()) {
             address = AdbmConstants.ADBM_CLIENT_HOST;
         }
         try {
@@ -122,12 +118,14 @@ public class AntidoteClientWrapper implements IAntidoteClientWrapper
         return hostPort <= 0 && antidoteClient != null && bucket != null;
     }
 
+    @Nullable
     @Override
     public AntidoteClient getAntidoteClient()
     {
         return antidoteClient;
     }
 
+    @Nullable
     @Override
     public Bucket getBucket()
     {
@@ -457,6 +455,7 @@ public class AntidoteClientWrapper implements IAntidoteClientWrapper
      * @param operation The operation that is called.
      * @return Calls returnFailure which always returns null.
      */
+    @Nullable
     private UpdateOp operationDoesNotExist(Key key, UpdateOperation operation)
     {
         log.error("The key type {} does not have the operation {}!", AntidoteUtil.typeGUIMap.get(key.getType()),
@@ -472,6 +471,7 @@ public class AntidoteClientWrapper implements IAntidoteClientWrapper
      * @param operation The update operation that failed.
      * @return null.
      */
+    @Nullable
     private UpdateOp returnFailure(Key key, UpdateOperation operation)
     {
         log.error("Operation on Key failed!\nKey: {}{}", key, operation);

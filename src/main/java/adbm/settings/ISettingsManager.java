@@ -1,6 +1,7 @@
 package adbm.settings;
 
 import adbm.util.AdbmConstants;
+import adbm.util.EverythingIsNonnullByDefault;
 import adbm.util.IStartStop;
 
 import java.util.HashSet;
@@ -8,6 +9,7 @@ import java.util.HashSet;
 /**
  *
  */
+@EverythingIsNonnullByDefault
 public interface ISettingsManager extends IStartStop
 {
 
@@ -24,7 +26,7 @@ public interface ISettingsManager extends IStartStop
 
     default String checkDefaultSetting(String settingName, String result)
     {
-        if (result != null && !result.isEmpty()) return result;
+        if (!result.isEmpty()) return result;
         switch (settingName) {
             case GIT_REPO_PATH_SETTING:
                 return GIT_REPO_DEFAULT_PATH;

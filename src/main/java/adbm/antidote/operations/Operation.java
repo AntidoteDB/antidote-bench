@@ -1,14 +1,21 @@
 package adbm.antidote.operations;
 
 import adbm.antidote.util.AntidoteUtil;
+import adbm.util.EverythingIsNonnullByDefault;
+
+import javax.annotation.Nullable;
 
 import static adbm.util.helpers.FormatUtil.format;
 
+@EverythingIsNonnullByDefault
 public class Operation<T> {
 
     public final boolean read;
+
     public final String keyName;
+    @Nullable
     public final String operationName;
+    @Nullable
     public final T value;
 
     /**
@@ -37,7 +44,7 @@ public class Operation<T> {
     }
 
     public boolean isValid() {
-        return keyName != null && !keyName.isEmpty();
+        return !keyName.isEmpty();
     }
 
     public boolean isValidReadOperation() {
@@ -45,7 +52,7 @@ public class Operation<T> {
     }
 
     public boolean isValidUpdateOperation() {
-        return !read && isValid() && AntidoteUtil.isValidOperation(operationName) && value != null;
+        return !read && isValid() && operationName != null && AntidoteUtil.isValidOperation(operationName) && value != null;
     }
 
     private static final String notAllowed = " (NOT ALLOWED)";
@@ -56,7 +63,7 @@ public class Operation<T> {
 
     @Override
     public String toString() {
-        String key = keyName == null ? nullNotAllowed : keyName
+        String key = keyName
                 .isEmpty() ? emptyStringNotAllowed : keyName;
         String operation = operationName == null ? nullNotAllowed : AntidoteUtil
                 .isValidOperation(operationName) ? operationName : operationName + notAllowed;

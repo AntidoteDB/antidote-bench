@@ -5,6 +5,7 @@ import adbm.main.Main;
 import adbm.settings.IAntidoteKeyStoreManager;
 import adbm.settings.ISettingsManager;
 import adbm.util.AdbmConstants;
+import adbm.util.EverythingIsNonnullByDefault;
 import eu.antidotedb.antidotepb.AntidotePB;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -13,22 +14,29 @@ import org.mapdb.DBMaker;
 import org.mapdb.HTreeMap;
 import org.mapdb.Serializer;
 
+import javax.annotation.Nullable;
 import java.util.*;
 
 import static adbm.util.helpers.FormatUtil.format;
 
+@EverythingIsNonnullByDefault
 public class MapDBManager implements ISettingsManager, IAntidoteKeyStoreManager
 {
     private static final Logger log = LogManager.getLogger(MapDBManager.class);
 
+    @Nullable
     private DB mapDB;
 
+    @Nullable
     private HTreeMap<String, String> keyTypeMapDB;
 
+    @Nullable
     private HTreeMap<String, String> ycsbSettings;
 
+    @Nullable
     private HTreeMap<String, String> appSettings;
 
+    @Nullable
     private HTreeMap.KeySet<String> benchmarkCommits;
 
     private static MapDBManager instance = new MapDBManager();

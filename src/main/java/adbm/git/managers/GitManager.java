@@ -6,6 +6,7 @@ import adbm.main.ui.MainWindow;
 import adbm.settings.ISettingsManager;
 import adbm.settings.ui.SettingsDialog;
 import adbm.util.AdbmConstants;
+import adbm.util.EverythingIsNonnullByDefault;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.eclipse.jgit.api.CreateBranchCommand;
@@ -19,6 +20,7 @@ import org.eclipse.jgit.lib.TextProgressMonitor;
 import org.eclipse.jgit.revwalk.RevCommit;
 import org.eclipse.jgit.revwalk.RevWalk;
 
+import javax.annotation.Nullable;
 import javax.swing.*;
 import java.io.File;
 import java.io.IOException;
@@ -28,17 +30,18 @@ import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
 
-import static adbm.util.helpers.FileUtil.getAbsolutePath;
 import static adbm.util.helpers.FormatUtil.format;
 
 /**
  * The GitManager requires the MapDBManager to be ready.
  */
+@EverythingIsNonnullByDefault
 public class GitManager implements IGitManager
 {
 
     private static final Logger log = LogManager.getLogger(GitManager.class);
 
+    @Nullable
     private Git git;
 
     private int attempts = AdbmConstants.NUMBER_OF_ATTEMPTS_TO_START_GIT;
@@ -66,15 +69,14 @@ public class GitManager implements IGitManager
         attempts--;
         if (!Main.isGuiMode()) return false;
         String repoLocation = Main.getSettingsManager().getAppSetting(ISettingsManager.GIT_REPO_PATH_SETTING);
-        if (repoLocation.equals(AdbmConstants.DEFAULT_AD_GIT_REPO_PATH) && Files
-                .notExists(Paths.get(getAbsolutePath(AdbmConstants.DEFAULT_AD_GIT_REPO_PATH))))
+        if (repoLocation.equals(AdbmConstants.DEFAULT_AD_GIT_REPO_PATH) && Files.notExists(Paths.get(AdbmConstants.DEFAULT_AD_GIT_REPO_PATH)))
         {
             //TODO remember decision
             int res = JOptionPane.showConfirmDialog(MainWindow.getMainWindow(),
                                                     format("Do you want to use the default path for the Antidote repository?\n\n" +
                                                                    "This will pull the Antidote repository if it doesn't exist in that directory.\n\n" +
                                                                    "Default Path: {}",
-                                                           getAbsolutePath(AdbmConstants.DEFAULT_AD_GIT_REPO_PATH)));
+                                                           AdbmConstants.DEFAULT_AD_GIT_REPO_PATH));
             if (res != JOptionPane.YES_OPTION) {
                 log.info("No location for the git repository was selected!");
                 //int res = JOptionPane.showConfirmDialog(MainWindow.getMainWindow(), "Do you want to use the default location");
@@ -164,7 +166,7 @@ public class GitManager implements IGitManager
     }
 
     @Override
-    public boolean start(String folderPath, String... otherArgs)
+    public boolean start(@Nullable String folderPath, String... otherArgs)
     {
         boolean autofetch = otherArgs.length != 0 && Boolean.valueOf(otherArgs[0]);
         log.trace("Starting GitManager!");
@@ -333,6 +335,7 @@ public class GitManager implements IGitManager
         return "";
     }
 
+    @Nullable
     @Override
     public RevCommit getCurrentCommit()
     {
@@ -395,6 +398,7 @@ public class GitManager implements IGitManager
         return list;
     }
 
+    @Nullable
     @Override
     public RevCommit getCommitFromId(String id)
     {

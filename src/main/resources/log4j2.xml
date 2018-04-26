@@ -40,8 +40,8 @@
             <AppenderRef ref="RandomAccessFileAppenderError" level="warn"/>
             <AppenderRef ref="RandomAccessFileAppenderInfo" level="debug"/>
             <AppenderRef ref="RandomAccessFileAppenderTrace"/>
-            <AppenderRef ref="ConsoleAppender" level="debug"/>
-            <AppenderRef ref="VisualAppender" level="debug"/>
+            <AppenderRef ref="ConsoleAppender" level="trace"/>
+            <AppenderRef ref="VisualAppender" level="trace"/>
         </Root>
     </Loggers>
 </Configuration>

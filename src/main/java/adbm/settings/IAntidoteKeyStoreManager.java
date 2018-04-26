@@ -1,5 +1,6 @@
 package adbm.settings;
 
+import adbm.util.EverythingIsNonnullByDefault;
 import adbm.util.IStartStop;
 import eu.antidotedb.antidotepb.AntidotePB;
 
@@ -9,6 +10,7 @@ import java.util.Map;
 /**
  *
  */
+@EverythingIsNonnullByDefault
 public interface IAntidoteKeyStoreManager extends IStartStop
 {
     /**

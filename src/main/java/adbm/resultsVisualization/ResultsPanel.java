@@ -1,5 +1,6 @@
 package adbm.resultsVisualization;
 
+import adbm.util.EverythingIsNonnullByDefault;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jfree.chart.ChartPanel;
@@ -16,6 +17,7 @@ import java.util.ArrayList;
 
 import static adbm.util.helpers.FormatUtil.format;
 
+@EverythingIsNonnullByDefault
 public class ResultsPanel
 {
     private static final Logger log = LogManager.getLogger(ResultsPanel.class);
