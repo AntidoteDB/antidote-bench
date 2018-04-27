@@ -1,3 +1,56 @@
+# Installation Instructions for AntidoteBenchmark<br />
+
+Before you can run mvn install or mvn package on the maven project in this repository you must install some additional dependencies.<br />
+
+Just run the installdependencies.sh (Windows -> run with Git Bash alias Git for Windows) to install all necessary dependencies.
+
+Check the script to make sure it does not do anything you don't want to happen.
+
+The script installs several maven plugins and dependencies that are required to build this project.
+
+In the folder SNAPSHOT_BUILD is the latest build of the project (subject to change because of potential conflicts)
+
+The build is shaded which means it contains everything and can be run anywhere
+
+To run the build, Docker must be running. (Not sure if this will work properly with Linux)
+
+In Windows, the following Docker Settings are required (not sure for Linux)
+
+- In General Settings -> Activate "Expose daemon to tcp://localhost:2375 without TLS"
+- In Daemon Setting (not sure if always necessary) -> Use Basic and Deactivate "Experimental features"
+
+Also on Windows the Docker Host is sometimes in a "bad" state which prevents proper interaction with containers.
+
+This typically is the case when Docker starts instantly without needing extra starting time.
+
+If the Docker Host is in a "bad" state this application will tell you and you need to restart Docker.
+
+
+Other stuff that is relevant but not described properly.
+
+Link to Intellij Designer solution explanation -> https://stackoverflow.com/questions/32747917/intellij-gui-designer-maven-executable-jar-export/45125398#45125398 <br />
+
+Link to repository -> https://github.com/jorichard/ideauidesigner-maven-plugin <br />
+
+If everything worked you can now run mvn install or mvn package on the maven project in the folder AntidoteBenchmark.
+
+
+https://syncfree.github.io/antidote/  <br />
+https://arewefastyet.com/  <br />
+https://github.com/brianfrankcooper/YCSB/wiki  <br />
+https://github.com/basho/basho_bench  <br />
+https://www.docker.com/  <br />
+https://github.com/SyncFree/antidote
+
+java benchmarking frameworks  <br />
+
+https://github.com/brianfrankcooper/YCSB  <br />
+http://jmeter.apache.org/  <br />
+
+Antidote java client  <br />
+https://github.com/SyncFree/antidote-java-client
+
+
 Links for Documentation
 
 
