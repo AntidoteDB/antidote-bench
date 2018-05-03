@@ -4,9 +4,9 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
-    <groupId>antidote.antidotebenchmark</groupId>
-    <artifactId>antidote-benchmark</artifactId>
-    <version>0.0.1</version>
+    <groupId>eu.antidotedb</groupId>
+    <artifactId>antidote-bench</artifactId>
+    <version>0.0.1-SNAPSHOT</version>
     <packaging>jar</packaging>
 
     <properties>
@@ -15,43 +15,15 @@
         <disruptor.version>3.4.2</disruptor.version>
         <intellijdesigner.version>18.1</intellijdesigner.version>
         <kotlin.version>1.2.40</kotlin.version>
+        <snapshotbuilddir>SNAPSHOT_BUILD</snapshotbuilddir>
     </properties>
 
     <build>
         <plugins>
             <plugin>
-                <artifactId>maven-antrun-plugin</artifactId>
-                <executions>
-                    <execution>
-                        <id>delete1</id>
-                        <phase>prepare-package</phase>
-                        <goals>
-                            <goal>run</goal>
-                        </goals>
-                        <configuration>
-                            <tasks>
-                                <delete file="SNAPSHOT_BUILD/${project.build.finalName}-shaded.jar"/>
-                            </tasks>
-                        </configuration>
-                    </execution>
-                    <execution>
-                        <id>delete2</id>
-                        <phase>prepare-package</phase>
-                        <goals>
-                            <goal>run</goal>
-                        </goals>
-                        <configuration>
-                            <tasks>
-                                <delete file="SNAPSHOT_BUILD/${project.build.finalName}.jar"/>
-                            </tasks>
-                        </configuration>
-                    </execution>
-                </executions>
-            </plugin>
-            <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-dependency-plugin</artifactId>
-                <version>3.0.2</version>
+                <version>3.1.0</version>
                 <executions>
                     <execution>
                         <id>copy-dependencies</id>
@@ -60,7 +32,7 @@
                             <goal>copy-dependencies</goal>
                         </goals>
                         <configuration>
-                            <outputDirectory>${project.build.directory}/${project.build.finalName}-libs</outputDirectory>
+                            <outputDirectory>${snapshotbuilddir}/${project.build.finalName}-libs</outputDirectory>
                         </configuration>
                     </execution>
                 </executions>
@@ -68,8 +40,9 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-jar-plugin</artifactId>
-                <version>3.0.2</version>
+                <version>3.1.0</version>
                 <configuration>
+                    <outputDirectory>${snapshotbuilddir}</outputDirectory>
                     <archive>
                         <manifest>
                             <addClasspath>true</addClasspath>
@@ -79,17 +52,17 @@
                     </archive>
                 </configuration>
             </plugin>
-            <plugin>
+            <!--<plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-shade-plugin</artifactId>
-                <version>3.1.0</version>
+                <version>3.1.1</version>
                 <executions>
                     <execution>
                         <goals>
                             <goal>shade</goal>
                         </goals>
                         <configuration>
-                            <outputDirectory>SNAPSHOT_BUILD</outputDirectory>
+                            <outputDirectory>${snapshotbuilddir}</outputDirectory>
                             <shadedArtifactAttached>true</shadedArtifactAttached>
                             <shadedClassifierName>shaded</shadedClassifierName>
                             <minimizeJar>false</minimizeJar>
@@ -111,7 +84,7 @@
                                         <exclude>META-INF/*.RSA</exclude>
                                     </excludes>
                                 </filter>
-                                <!--<filter>
+                                <filter>
                                     <artifact>org.apache.logging.log4j:log4j-api</artifact>
                                     <includes>
                                         <include>**</include>
@@ -152,7 +125,7 @@
                                     <includes>
                                         <include>**</include>
                                     </includes>
-                                </filter>-->
+                                </filter>
                             </filters>
                         </configuration>
                     </execution>
@@ -164,7 +137,7 @@
                         <version>${log4j2.version}</version>
                     </dependency>
                 </dependencies>
-            </plugin>
+            </plugin>-->
             <plugin>
                 <groupId>org.codehaus.mojo</groupId>
                 <artifactId>ideauidesigner-maven-plugin</artifactId>
@@ -182,14 +155,14 @@
                     <failOnError>true</failOnError>
                 </configuration>
             </plugin>
-            <plugin>
+            <!--<plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-javadoc-plugin</artifactId>
                 <version>3.0.0</version>
                 <configuration>
                     <outputDirectory>${project.build.outputDirectory}/javadoc</outputDirectory>
                 </configuration>
-            </plugin>
+            </plugin>-->
             <!--<plugin>
                 <groupId>org.jetbrains.kotlin</groupId>
                 <artifactId>kotlin-maven-plugin</artifactId>

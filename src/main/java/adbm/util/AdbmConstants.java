@@ -78,11 +78,11 @@ public class AdbmConstants
     /**
      * The name of the application. Used for logging and gui.
      */
-    public static final String APP_NAME = "Antidote Benchmark";
+    public static final String APP_NAME = "antidote-bench";
 
     public static final String APP_VERSION = "0.0.1";
 
-    public static final String APP_DATA_FOLDER_NAME = format("antidote-benchmark-{}-data", APP_VERSION);
+    public static final String APP_DATA_FOLDER_NAME = format("antidote-bench-{}-data", APP_VERSION);
 
     public static final String ADBM_CONTAINER_NAME = "AntidoteBenchmarkContainer";
 
