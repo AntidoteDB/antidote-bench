@@ -209,6 +209,7 @@ public class DockerManager implements IDockerManager
     @Override
     public boolean buildAntidoteBenchmarkImage()
     {
+        if (AdbmConstants.AD_DEFAULT_IMAGE_NAME.equals(AdbmConstants.ADBM_DOCKER_IMAGE_NAME)) return false;
         if (!isReady()) return false;
         try {
             isBuildingImage = true;

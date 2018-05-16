@@ -270,6 +270,7 @@ public class AntidoteYCSBConfiguration
 
     public boolean runBenchmark(String... commits)
     {
+        commits = new String[0]; //TODO for testing now because container cannot be rebuilt
         if (!Main.isDockerRunning) return false;
         String currentDate = new SimpleDateFormat(AdbmConstants.DATE_FORMAT_DATE).format(new Date());
         String currentTime = new SimpleDateFormat(AdbmConstants.DATE_FORMAT_TIME).format(new Date());

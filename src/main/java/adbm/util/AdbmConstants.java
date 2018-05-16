@@ -196,7 +196,9 @@ public class AdbmConstants
      * It is similar to the regular Antidote image.
      * However it keeps the Antidote git repository intact so that other commits can be checked out.
      */
-    public static final String ADBM_DOCKER_IMAGE_NAME = "antidotedb/benchmark";
+    public static final String ADBM_DOCKER_IMAGE_NAME = "antidotedb/antidote";//"antidotedb/benchmark";
+
+    public static final String AD_DEFAULT_IMAGE_NAME = "antidotedb/antidote";
 
     /**
      * The standart client port used by Antidote containers.
