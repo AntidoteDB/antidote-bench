@@ -110,7 +110,7 @@ public class DockerManager implements IDockerManager
                 boolean confirm = true;
                 if (Main.isGuiMode()) confirm = JOptionPane.showConfirmDialog(null,
                                                                               "The image " + AdbmConstants.REQUIRED_IMAGE + " is not available in Docker and must be pulled before the " + AdbmConstants.APP_NAME + " application can be used.\nPressing \"Cancel\" this will terminate the application.",
-                                                                              "Image need to be pulled",
+                                                                              "Image needs to be pulled",
                                                                               JOptionPane.OK_CANCEL_OPTION,
                                                                               JOptionPane.INFORMATION_MESSAGE) == JOptionPane.OK_OPTION;
                 if (confirm) docker.pull(AdbmConstants.REQUIRED_IMAGE, new SimpleProgressHandler("Image"));
@@ -118,6 +118,22 @@ public class DockerManager implements IDockerManager
             }
             else {
                 log.debug(AdbmConstants.REQUIRED_IMAGE + " is available.");
+            }
+            log.debug("Checking that image {} is available...", AdbmConstants.AD_DEFAULT_IMAGE_NAME);
+            if (docker.listImages(DockerClient.ListImagesParam.byName(AdbmConstants.AD_DEFAULT_IMAGE_NAME)).isEmpty()) {
+                log.info("Image {} is not available and must be pulled.", AdbmConstants.AD_DEFAULT_IMAGE_NAME);
+                //TODO add confirm
+                boolean confirm = true;
+                if (Main.isGuiMode()) confirm = JOptionPane.showConfirmDialog(null,
+                                                                              "The image " + AdbmConstants.AD_DEFAULT_IMAGE_NAME + " is not available in Docker and must be pulled before the " + AdbmConstants.APP_NAME + " application can be used.\nPressing \"Cancel\" this will terminate the application.",
+                                                                              "Image needs to be pulled",
+                                                                              JOptionPane.OK_CANCEL_OPTION,
+                                                                              JOptionPane.INFORMATION_MESSAGE) == JOptionPane.OK_OPTION;
+                if (confirm) docker.pull(AdbmConstants.AD_DEFAULT_IMAGE_NAME, new SimpleProgressHandler("Image"));
+                else return false;
+            }
+            else {
+                log.debug(AdbmConstants.AD_DEFAULT_IMAGE_NAME + " is available.");
             }
             log.debug("Checking that Network {} exists...", AdbmConstants.ADBM_DOCKER_NETWORK_NAME);
             boolean containsNetwork = false;
